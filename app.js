@@ -177,6 +177,17 @@ function getStatusClass(status) {
   return 'status-preparing';
 }
 
+function getCategoryClass(category) {
+  const normalized = String(category || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR');
+  if (normalized.includes('midia')) return 'category-media';
+  if (normalized.includes('grade')) return 'category-grade';
+  if (normalized.includes('comercial')) return 'category-commercial';
+  if (normalized.includes('rotina')) return 'category-routine';
+  return 'category-default';
+}
+
 function normalizeUrl(value) {
   const text = String(value || '').trim();
   if (!text) return '';
@@ -500,12 +511,16 @@ function showPreview() {
       <div class="preview-cards">${content}</div>
     </section>` : '';
 
-  const highlightsHtml = highlights.map(item => card(
-    item.title || 'Destaque estratégico',
-    item.details,
-    [item.category && `Categoria: ${item.category}`, item.priority && `Prioridade: ${item.priority}`].filter(Boolean).join('  |  '),
-    item.urgent ? 'urgent' : item.priority === 'Alta' ? 'priority-high' : item.priority === 'Baixa' ? 'priority-low' : 'priority-medium'
-  )).join('');
+  const highlightsHtml = highlights.map(item => {
+    const accent = item.urgent ? 'urgent' : item.priority === 'Alta' ? 'priority-high' : item.priority === 'Baixa' ? 'priority-low' : 'priority-medium';
+    return `
+      <article class="preview-card highlight-preview-card ${accent}">
+        ${item.category ? `<span class="highlight-category-badge ${getCategoryClass(item.category)}">${escapeHtml(item.category)}</span>` : ''}
+        <h3>${escapeHtml(item.title || 'Destaque estratégico')}</h3>
+        ${item.details ? `<p>${escapeHtml(item.details).replaceAll('\n', '<br>')}</p>` : ''}
+        ${item.priority ? `<div class="preview-meta">Prioridade: ${escapeHtml(item.priority)}</div>` : ''}
+      </article>`;
+  }).join('');
 
   const newsHtml = news.map(item => {
     const presenter = getNewsPresenter(item.name);
@@ -558,13 +573,16 @@ function showPreview() {
 
   const programsHtml = programs.map(item => `
     <article class="preview-card program-preview-card">
-      <h3>${escapeHtml(item.name || 'Programa local')}</h3>
+      <div class="program-title-row">
+        <span class="status-badge ${getStatusClass(item.status)}">${escapeHtml(item.status || 'Em preparação')}</span>
+        <h3>${escapeHtml(item.name || 'Programa local')}</h3>
+      </div>
       <div class="program-preview-footer">
+        <div class="program-ids">${item.ids ? `<span class="program-category">ID's: ${escapeHtml(item.ids)}</span>` : ''}</div>
         <div class="preview-meta">${[
           item.start && `Início: ${item.start}`,
           item.duration && `Duração: ${item.duration}`
         ].filter(Boolean).map(escapeHtml).join(' &nbsp;|&nbsp; ')}</div>
-        <div class="program-badges">${item.ids ? `<span class="program-category">ID's: ${escapeHtml(item.ids)}</span>` : ''}<span class="status-badge ${getStatusClass(item.status)}">${escapeHtml(item.status || 'Em preparação')}</span></div>
       </div>
     </article>`).join('');
 

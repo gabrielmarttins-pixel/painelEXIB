@@ -101,15 +101,17 @@ button:disabled{cursor:wait;opacity:.7}
 .news-card-content{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;max-width:70%;min-height:125px}
 .news-card-content .preview-meta{margin-top:14px}
 .program-preview-card:before{background:linear-gradient(180deg,#751cff,#db007b)}
-.program-preview-footer{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:16px}
-.program-preview-footer .preview-meta{margin-top:0}
+.program-title-row{display:flex;align-items:center;gap:10px;min-width:0}
+.program-title-row h3{min-width:0}
+.program-preview-footer{display:grid;grid-template-columns:minmax(90px,max-content) 1fr;align-items:end;gap:12px 16px;margin-top:16px}
+.program-preview-footer .preview-meta{margin-top:0;text-align:right}
 .status-badge{display:inline-flex;align-items:center;justify-content:center;flex:none;min-width:104px;padding:8px 12px;border-radius:8px;color:#fff;font-size:11px;font-weight:700;letter-spacing:.035em;box-shadow:0 5px 12px #00000014}
 .status-preparing{background:linear-gradient(110deg,#85878d,#606269)}
 .status-sent{background:linear-gradient(110deg,#ff9d00,#ff5600)}
 .status-captured{background:linear-gradient(110deg,#00a86b,#00c97b)}
 .status-live{background:linear-gradient(110deg,#ff1744,#d50031)}
 @media(max-width:850px){.program-row{grid-template-columns:1fr 1fr}.news-card-content{max-width:72%}}
-@media(max-width:520px){.program-row{grid-template-columns:1fr}.news-card-content{max-width:76%}.program-preview-footer{align-items:flex-start;flex-direction:column}.status-badge{min-width:96px}}
+@media(max-width:520px){.program-row{grid-template-columns:1fr}.news-card-content{max-width:76%}.program-title-row{align-items:flex-start;flex-direction:column}.program-preview-footer{grid-template-columns:1fr;align-items:start}.program-preview-footer .preview-meta{text-align:left}.program-badges{justify-content:flex-start}.status-badge{min-width:96px}}
 @media print{.program-row{grid-template-columns:1.5fr 80px 90px 120px}.news-preview-card{min-height:140px}.status-badge{box-shadow:none}}
 
 /* Composição mais compacta na edição e na visualização consolidada. */
@@ -160,6 +162,14 @@ button:disabled{cursor:wait;opacity:.7}
 .preview-card.urgent:before{background:rgba(255,255,255,.75)}
 .preview-card.urgent p,.preview-card.urgent .preview-meta{color:#fff}
 .preview-card.urgent .preview-meta{opacity:.88}
+.highlight-preview-card{padding-top:18px}
+.highlight-category-badge{display:inline-flex;align-items:center;justify-content:center;width:max-content;max-width:100%;margin-bottom:12px;padding:7px 11px;border-radius:8px;color:#fff;font-size:10px;font-weight:700;letter-spacing:.045em;text-transform:uppercase;box-shadow:0 6px 14px #00000012}
+.highlight-category-badge.category-media{background:linear-gradient(110deg,#00a7ff,#2860ff)}
+.highlight-category-badge.category-grade{background:linear-gradient(110deg,#00a86b,#00c97b)}
+.highlight-category-badge.category-commercial{background:linear-gradient(110deg,#ff9d00,#ff5600)}
+.highlight-category-badge.category-routine{background:linear-gradient(110deg,#751cff,#db007b)}
+.highlight-category-badge.category-default{background:linear-gradient(110deg,#85878d,#606269)}
+.preview-card.urgent .highlight-category-badge{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.45);box-shadow:none}
 .news-row{grid-template-columns:1.1fr 120px 135px 90px 2fr}
 .strategy-section .preview-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .strategy-section .preview-card{padding:13px 16px 12px 20px}
@@ -167,6 +177,7 @@ button:disabled{cursor:wait;opacity:.7}
 .strategy-section .preview-card p{font-size:13px;line-height:1.35;margin-top:6px}
 .strategy-section .strategy-badges{margin-top:9px;gap:5px}
 .strategy-section .strategy-badge{padding:5px 8px;font-size:9px}
+.program-ids{display:flex;align-items:center;justify-content:flex-start;min-width:0}
 .program-badges{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:7px}
 .program-category{display:inline-flex;padding:8px 11px;border-radius:8px;background:#eee7ff;color:#6513d3;font-size:11px;font-weight:700}
 .program-row{grid-template-columns:1.35fr 110px 120px 120px 160px}
