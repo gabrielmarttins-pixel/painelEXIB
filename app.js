@@ -271,9 +271,9 @@ function isFormFieldActive() {
 function save() {
   const data = getData();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  saveStatus.textContent = supabaseClient ? 'Salvo localmente' : 'Salvo neste navegador';
+  saveStatus.textContent = supabaseClient ? 'Salvo localmente; salvando online...' : 'Salvo neste navegador';
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => saveStatus.textContent = supabaseClient ? 'Sincronizando...' : 'Salvo automaticamente', 1200);
+  if (!supabaseClient) saveTimer = setTimeout(() => saveStatus.textContent = 'Salvo automaticamente', 1200);
   updateFooter();
   if (!isLoading) scheduleRemoteSave(data);
 }
@@ -288,6 +288,7 @@ function scheduleRemoteSave(data = getData()) {
 
 async function saveRemoteReport(data = getData()) {
   if (!supabaseClient) return;
+  clearTimeout(saveTimer);
   const { data: savedRow, error } = await supabaseClient
     .from(SUPABASE_TABLE)
     .upsert({ id: SUPABASE_REPORT_ID, dados: data, atualizado_em: new Date().toISOString() }, { onConflict: 'id' })
@@ -1346,18 +1347,6 @@ async function syncFromRemote(force = false) {
 document.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', () => addItem(button.dataset.add)));
 document.querySelector('#refreshButton').addEventListener('click', () => syncFromRemote(true));
 document.querySelector('#printButton').addEventListener('click', showPreview);
-document.querySelector('#clearButton').addEventListener('click', async () => {
-  if (!confirm('Limpar todas as informações deste painel?')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  if (supabaseClient) {
-    const { error } = await supabaseClient
-      .from(SUPABASE_TABLE)
-      .update({ dados: {}, atualizado_em: new Date().toISOString() })
-      .eq('id', SUPABASE_REPORT_ID);
-    if (error) console.error(error);
-  }
-  location.reload();
-});
 
 load();
 setInterval(updateDayInfo, 60000);
