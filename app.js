@@ -48,16 +48,17 @@ const teamCrests = {
 const countryCodes = {
   'brasil':'BR','argentina':'AR','uruguai':'UY','paraguai':'PY','chile':'CL','colombia':'CO','equador':'EC','peru':'PE','bolivia':'BO','venezuela':'VE',
   'mexico':'MX','estados unidos':'US','eua':'US','canada':'CA','costa rica':'CR','panama':'PA','honduras':'HN','jamaica':'JM',
-  'alemanha':'DE','franca':'FR','espanha':'ES','portugal':'PT','italia':'IT','inglaterra':'GB','escocia':'GB','pais de gales':'GB','irlanda':'IE','irlanda do norte':'GB',
+  'alemanha':'DE','franca':'FR','espanha':'ES','portugal':'PT','italia':'IT','inglaterra':'GB-ENG','escocia':'GB-SCT','pais de gales':'GB-WLS','gales':'GB-WLS','irlanda':'IE','irlanda do norte':'GB-NIR',
   'holanda':'NL','paises baixos':'NL','belgica':'BE','croacia':'HR','suica':'CH','austria':'AT','dinamarca':'DK','suecia':'SE','noruega':'NO','polonia':'PL','servia':'RS','turquia':'TR','grecia':'GR','ucrania':'UA','russia':'RU',
   'japao':'JP','coreia do sul':'KR','coreia':'KR','china':'CN','australia':'AU','nova zelandia':'NZ','arabia saudita':'SA','catar':'QA','ira':'IR',
-  'marrocos':'MA','senegal':'SN','egito':'EG','nigeria':'NG','camaroes':'CM','gana':'GH','africa do sul':'ZA','argelia':'DZ','tunisia':'TN','costa do marfim':'CI'
+  'marrocos':'MA','senegal':'SN','egito':'EG','nigeria':'NG','camaroes':'CM','gana':'GH','africa do sul':'ZA','argelia':'DZ','tunisia':'TN','costa do marfim':'CI',
+  'congo':'CG','republica do congo':'CG','congo brazzaville':'CG','republica democratica do congo':'CD','rd congo':'CD','dr congo':'CD','congo kinshasa':'CD'
 };
 
 Object.assign(countryCodes, {
   'brasileira':'BR','uruguaia':'UY','paraguaia':'PY','chilena':'CL','colombiana':'CO','equatoriana':'EC','peruana':'PE','boliviana':'BO','venezuelana':'VE','mexicana':'MX','americana':'US','canadense':'CA',
-  'alema':'DE','francesa':'FR','espanhola':'ES','portuguesa':'PT','italiana':'IT','inglesa':'GB','holandesa':'NL','belga':'BE','croata':'HR','dinamarquesa':'DK','sueca':'SE','norueguesa':'NO','polonesa':'PL','servia':'RS','turca':'TR','grega':'GR','ucraniana':'UA',
-  'japonesa':'JP','sul-coreana':'KR','chinesa':'CN','australiana':'AU','marroquina':'MA','senegalesa':'SN','egipcia':'EG','nigeriana':'NG','camaronesa':'CM','ganesa':'GH'
+  'alema':'DE','francesa':'FR','espanhola':'ES','portuguesa':'PT','italiana':'IT','inglesa':'GB-ENG','escocesa':'GB-SCT','galesa':'GB-WLS','norte-irlandesa':'GB-NIR','norte irlandesa':'GB-NIR','holandesa':'NL','belga':'BE','croata':'HR','dinamarquesa':'DK','sueca':'SE','norueguesa':'NO','polonesa':'PL','servia':'RS','turca':'TR','grega':'GR','ucraniana':'UA',
+  'japonesa':'JP','sul-coreana':'KR','chinesa':'CN','australiana':'AU','marroquina':'MA','senegalesa':'SN','egipcia':'EG','nigeriana':'NG','camaronesa':'CM','ganesa':'GH','congolesa':'CG'
 });
 
 const weekdayNews = [
@@ -584,8 +585,7 @@ function showPreview() {
     </header>
     <main class="preview-shell">
       <section class="preview-hero">
-        <p class="eyebrow">TV Globo DF</p>
-        <h1>Relatório diário <span>de Exibição</span></h1>
+        <h1>Relatório diário de <span>Exibição</span></h1>
         <p>${escapeHtml(formatReportDate(data.reportDate))} &nbsp;|&nbsp; ${escapeHtml(data.weekday)}</p>
       </section>
       ${section('01', 'Destaques', highlightsHtml)}
@@ -749,15 +749,14 @@ async function exportImageReport() {
 
     let y = OUTER;
     roundRect(OUTER, y, WIDTH - OUTER * 2, heroHeight, 24, '#ffffff');
-    ctx.fillStyle = '#087bff'; ctx.font = font(14, 700); ctx.fillText('TV GLOBO DF', OUTER + 28, y + 30);
     ctx.fillStyle = '#686b73'; ctx.font = font(14, 400); ctx.textAlign = 'right';
     ctx.fillText(`${formatReportDate(data.reportDate)} | ${data.weekday}`, WIDTH - OUTER - 28, y + 30); ctx.textAlign = 'left';
     ctx.font = font(36, 700); ctx.fillStyle = '#101116';
-    const reportTitle = 'Relatório diário ';
+    const reportTitle = 'Relatório diário de ';
     ctx.fillText(reportTitle, OUTER + 28, y + 82);
     const reportTitleWidth = ctx.measureText(reportTitle).width;
     ctx.fillStyle = gradientFor('blue', OUTER + 28 + reportTitleWidth, 210);
-    ctx.fillText('de Exibição', OUTER + 28 + reportTitleWidth, y + 82);
+    ctx.fillText('Exibição', OUTER + 28 + reportTitleWidth, y + 82);
     y += heroHeight + 18;
 
     sectionLayouts.forEach(section => {
@@ -1006,7 +1005,7 @@ function generateHtmlReport() {
   </header>
   <main class="page">
     <div class="hero">
-      <div><p class="eyebrow">TV GLOBO DF</p><h1>Relatório diário <span>de Exibição</span></h1><p class="date">${escapeHtml(formatReportDate(data.reportDate))} &nbsp;|&nbsp; ${escapeHtml(data.weekday)}</p></div>
+      <div><h1>Relatório diário de <span>Exibição</span></h1><p class="date">${escapeHtml(formatReportDate(data.reportDate))} &nbsp;|&nbsp; ${escapeHtml(data.weekday)}</p></div>
       <div class="orbit"><i></i></div>
     </div>
     ${section('01', 'Destaques', highlightsHtml)}
@@ -1147,18 +1146,17 @@ async function generatePdf() {
       roundedRect(ctx, MARGIN, y, CONTENT_W, height, 34);
       ctx.fillStyle = '#f4f4f5';
       ctx.fill();
-      ctx.fillStyle = '#087bff';
-      ctx.font = font(18, 700);
-      ctx.fillText('TV GLOBO DF', MARGIN + 38, y + 50);
       ctx.fillStyle = '#101116';
       ctx.font = font(57, 700);
-      ctx.fillText('Relatório diário', MARGIN + 38, y + 124);
+      const titlePrefix = 'Relatório diário de ';
+      ctx.fillText(titlePrefix, MARGIN + 38, y + 104);
+      const titlePrefixWidth = ctx.measureText(titlePrefix).width;
       const gradient = ctx.createLinearGradient(MARGIN + 38, 0, MARGIN + 470, 0);
       gradient.addColorStop(0, '#00a7ff');
       gradient.addColorStop(0.52, '#2860ff');
       gradient.addColorStop(1, '#8200ff');
       ctx.fillStyle = gradient;
-      ctx.fillText('de Exibição', MARGIN + 38, y + 188);
+      ctx.fillText('Exibição', MARGIN + 38 + titlePrefixWidth, y + 104);
       ctx.fillStyle = '#686b73';
       ctx.font = font(25, 400);
       ctx.fillText(`${formatReportDate(data.reportDate)}  |  ${cleanText(data.weekday)}`, MARGIN + 38, y + 244);

@@ -97,7 +97,7 @@ button:disabled{cursor:wait;opacity:.7}
 .news-preview-card{min-height:170px;isolation:isolate}
 .news-preview-card:before{z-index:4}
 .news-preview-card:after{content:"";position:absolute;z-index:1;inset:0;background:linear-gradient(90deg,rgba(244,244,245,.98) 0%,rgba(244,244,245,.92) 48%,rgba(244,244,245,.22) 100%);pointer-events:none}
-.news-presenter{position:absolute;z-index:0;right:-2%;bottom:0;width:58%;height:96%;object-fit:contain;object-position:right bottom;opacity:.5;filter:drop-shadow(0 6px 12px #00000018)}
+.news-presenter{position:absolute;z-index:0;right:-2%;bottom:0;width:58%;height:96%;object-fit:contain;object-position:right bottom;opacity:1;filter:drop-shadow(0 6px 12px #00000018)}
 .news-card-content{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;max-width:70%;min-height:125px}
 .news-card-content .preview-meta{margin-top:14px}
 .program-preview-card:before{background:linear-gradient(180deg,#751cff,#db007b)}
@@ -203,7 +203,7 @@ button:disabled{cursor:wait;opacity:.7}
 .export-report .game-schedule strong{font-size:10px}
 .export-report .news-preview-card{min-height:108px}
 .export-report .news-card-content{min-height:78px;max-width:78%}
-.export-report .news-presenter{height:88%;opacity:.28}
+.export-report .news-presenter{height:88%;opacity:1}
 .export-report .useful-link{min-height:34px;padding:7px 9px;font-size:10px;border-radius:8px;box-shadow:none}
 .export-report footer{padding:12px 4px 0;font-size:9px}
 
