@@ -201,6 +201,7 @@ function addItem(section, values = {}, shouldSave = true) {
   const item = fragment.querySelector('.item-card');
   item.dataset.id = values.id || makeId();
   item.dataset.default = values._default ? 'true' : 'false';
+  item.dataset.permanent = section === 'links' && (!shouldSave || values._permanent) ? 'true' : 'false';
   item.querySelectorAll('[data-field]').forEach(field => {
     if (values[field.dataset.field] == null) return;
     if (field.type === 'checkbox') field.checked = Boolean(values[field.dataset.field]);
@@ -213,7 +214,12 @@ function addItem(section, values = {}, shouldSave = true) {
       select.addEventListener('change', () => updateCustomTeamFields(item));
     });
   }
-  item.querySelector('.remove').addEventListener('click', () => { item.remove(); updateEmpty(section); updateMoveButtons(section); save(); });
+  const removeButton = item.querySelector('.remove');
+  if (item.dataset.permanent === 'true') {
+    removeButton.remove();
+  } else {
+    removeButton.addEventListener('click', () => { item.remove(); updateEmpty(section); updateMoveButtons(section); save(); });
+  }
   item.querySelectorAll('[data-move]').forEach(moveButton => moveButton.addEventListener('click', () => {
     const container = item.parentElement;
     if (moveButton.dataset.move === 'up') {
@@ -239,7 +245,7 @@ function addItem(section, values = {}, shouldSave = true) {
 
 function collectItems(section) {
   return [...document.querySelector(`#${sections[section].container}`).querySelectorAll('.item-card')].map(item => {
-    const value = { id: item.dataset.id, _default: item.dataset.default === 'true' };
+    const value = { id: item.dataset.id, _default: item.dataset.default === 'true', _permanent: item.dataset.permanent === 'true' };
     item.querySelectorAll('[data-field]').forEach(field => {
       value[field.dataset.field] = field.type === 'checkbox' ? field.checked : field.value;
     });
