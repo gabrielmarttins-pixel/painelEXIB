@@ -101,6 +101,7 @@ const saveStatus = document.querySelector('#saveStatus');
 let saveTimer;
 let remoteSaveTimer;
 let isLoading = false;
+let lastRemoteSignature = '';
 const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function makeId() { return `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
@@ -259,6 +260,14 @@ function hasReportContent(data) {
   return Object.keys(sections).some(section => Array.isArray(data[section]) && data[section].length);
 }
 
+function getReportSignature(data) {
+  return JSON.stringify(data || {});
+}
+
+function isFormFieldActive() {
+  return ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
+}
+
 function save() {
   const data = getData();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -279,30 +288,33 @@ function scheduleRemoteSave(data = getData()) {
 
 async function saveRemoteReport(data = getData()) {
   if (!supabaseClient) return;
-  const { error } = await supabaseClient
+  const { data: savedRow, error } = await supabaseClient
     .from(SUPABASE_TABLE)
-    .update({ dados: data, atualizado_em: new Date().toISOString() })
-    .eq('id', SUPABASE_REPORT_ID);
+    .upsert({ id: SUPABASE_REPORT_ID, dados: data, atualizado_em: new Date().toISOString() }, { onConflict: 'id' })
+    .select('id, atualizado_em')
+    .single();
   if (error) {
     console.error(error);
-    saveStatus.textContent = 'Salvo localmente; falha ao sincronizar';
+    saveStatus.textContent = `Falha ao sincronizar: ${error.message}`;
     return;
   }
-  saveStatus.textContent = 'Salvo e sincronizado';
+  lastRemoteSignature = getReportSignature(data);
+  saveStatus.textContent = savedRow ? 'Salvo e sincronizado' : 'Salvo localmente; Supabase não confirmou';
 }
 
-async function loadRemoteReport() {
+async function loadRemoteReport(silent = false) {
   if (!supabaseClient) return null;
   const { data, error } = await supabaseClient
     .from(SUPABASE_TABLE)
-    .select('dados')
+    .select('dados, atualizado_em')
     .eq('id', SUPABASE_REPORT_ID)
     .maybeSingle();
   if (error) {
     console.error(error);
-    saveStatus.textContent = 'Modo local; falha ao carregar Supabase';
+    if (!silent) saveStatus.textContent = `Falha ao carregar Supabase: ${error.message}`;
     return null;
   }
+  if (data?.dados && !silent) lastRemoteSignature = getReportSignature(data.dados);
   return data?.dados || null;
 }
 
@@ -1275,16 +1287,8 @@ function loadLocalReport() {
   return data;
 }
 
-async function load() {
-  isLoading = true;
-  saveStatus.textContent = supabaseClient ? 'Carregando dados online...' : 'Carregando dados locais...';
-  const remoteData = await loadRemoteReport();
-  const localData = loadLocalReport();
-  const data = hasReportContent(remoteData) ? remoteData : localData || remoteData;
-  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-  dateInput.value = todayKey;
+function renderReportData(data) {
   clearReportFields();
-  updateDayInfo();
   if (data) {
     Object.keys(sections).forEach(section => {
       (data[section] || []).forEach(item => addItem(section, item, false));
@@ -1294,6 +1298,18 @@ async function load() {
   } else {
     Object.keys(sections).forEach(section => updateEmpty(section));
   }
+}
+
+async function load() {
+  isLoading = true;
+  saveStatus.textContent = supabaseClient ? 'Carregando dados online...' : 'Carregando dados locais...';
+  const remoteData = await loadRemoteReport();
+  const localData = loadLocalReport();
+  const data = hasReportContent(remoteData) ? remoteData : localData || remoteData;
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  dateInput.value = todayKey;
+  updateDayInfo();
+  renderReportData(data);
   applyDateDefaults();
   isLoading = false;
   save();
@@ -1302,7 +1318,33 @@ async function load() {
   localStorage.removeItem(LEGACY_STORAGE_KEY);
 }
 
+async function syncFromRemote(force = false) {
+  if (!supabaseClient || isLoading || (!force && isFormFieldActive())) return;
+  if (force) saveStatus.textContent = 'Atualizando dados...';
+  const remoteData = await loadRemoteReport(true);
+  if (!hasReportContent(remoteData)) {
+    if (force) saveStatus.textContent = 'Nenhum dado online encontrado';
+    return;
+  }
+  const remoteSignature = getReportSignature(remoteData);
+  const currentSignature = getReportSignature(getData());
+  if (remoteSignature === currentSignature || remoteSignature === lastRemoteSignature) {
+    if (force) saveStatus.textContent = 'Dados já estão atualizados';
+    return;
+  }
+
+  isLoading = true;
+  renderReportData(remoteData);
+  applyDateDefaults();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
+  updateFooter();
+  isLoading = false;
+  lastRemoteSignature = remoteSignature;
+  saveStatus.textContent = 'Atualizado com dados online';
+}
+
 document.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', () => addItem(button.dataset.add)));
+document.querySelector('#refreshButton').addEventListener('click', () => syncFromRemote(true));
 document.querySelector('#printButton').addEventListener('click', showPreview);
 document.querySelector('#clearButton').addEventListener('click', async () => {
   if (!confirm('Limpar todas as informações deste painel?')) return;
@@ -1319,3 +1361,4 @@ document.querySelector('#clearButton').addEventListener('click', async () => {
 
 load();
 setInterval(updateDayInfo, 60000);
+setInterval(syncFromRemote, 60000);
