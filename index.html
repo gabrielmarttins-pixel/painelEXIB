@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel de Exibição - TV Globo DF</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand" aria-label="tvglobo DF">
+      <img class="brand-icon" src="assets/PLIMPLIM.png" alt="">
+      <span>tvglobo <b>DF</b></span>
+    </div>
+    <div class="top-actions">
+      <span class="save-status" id="saveStatus">Salvo automaticamente</span>
+      <button class="button secondary" id="clearButton" type="button">Limpar</button>
+      <button class="button primary" id="printButton" type="button">Visualização</button>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">TV Globo DF</p>
+        <h1>Painel diário <span>de Exibição</span></h1>
+        <p class="hero-copy">Informações essenciais para alinhar o dia, antecipar movimentos e garantir uma exibição consistente.</p>
+      </div>
+    </section>
+
+    <section class="date-panel section-card">
+      <div class="section-heading compact">
+        <div><span class="section-number">01</span><h2>Informações do dia</h2></div>
+      </div>
+      <div class="date-grid">
+        <input id="reportDate" type="hidden">
+        <input id="weekday" type="hidden">
+        <div class="day-info"><span>Data</span><strong id="reportDateDisplay"></strong></div>
+        <div class="day-info"><span>Dia da semana</span><strong id="weekdayDisplay"></strong></div>
+      </div>
+    </section>
+
+    <section class="section-card strategic">
+      <div class="section-heading">
+        <div><span class="section-number">02</span><h2>Destaques</h2><p>Prioridades, pontos de atenção e decisões que orientam a exibição.</p></div>
+        <button class="add-button" data-add="highlights" type="button">+ Adicionar destaque</button>
+      </div>
+      <div class="items-grid highlights-grid" id="highlights"></div>
+    </section>
+
+    <section class="section-card">
+      <div class="section-heading">
+        <div><span class="section-number">03</span><h2>Previsão dos jornais</h2><p>Organize horários, durações e observações dos telejornais.</p></div>
+        <button class="add-button" data-add="news" type="button">+ Adicionar jornal</button>
+      </div>
+      <div class="news-table" id="news"></div>
+    </section>
+
+    <section class="section-card">
+      <div class="section-heading">
+        <div><h2>Estratégia de grade</h2><p>Defina exibição em rede, local e observações para cada programa.</p></div>
+        <button class="add-button" data-add="strategy" type="button">+ Adicionar programa</button>
+      </div>
+      <div class="strategy-list" id="strategy"></div>
+    </section>
+
+    <section class="section-card">
+      <div class="section-heading">
+        <div><span class="section-number">04</span><h2>Próximos jogos</h2><p>Organize as próximas partidas que serão transmitidas.</p></div>
+        <button class="add-button" data-add="games" type="button">+ Adicionar jogo</button>
+      </div>
+      <div class="games-list" id="games"></div>
+    </section>
+
+    <section class="section-card">
+      <div class="section-heading">
+        <div><span class="section-number">05</span><h2>Programas locais</h2><p>Acompanhe preparação, envio, captura e exibição dos programas.</p></div>
+        <button class="add-button" data-add="programs" type="button">+ Adicionar programa</button>
+      </div>
+      <div class="programs-list" id="programs"></div>
+    </section>
+
+    <section class="section-card">
+      <div class="section-heading">
+        <div><span class="section-number">06</span><h2>Informações diversas</h2><p>Registre avisos operacionais, pendências, contatos e outros recados.</p></div>
+        <button class="add-button" data-add="notes" type="button">+ Adicionar informação</button>
+      </div>
+      <div class="items-grid notes-grid" id="notes"></div>
+    </section>
+
+    <section class="section-card">
+      <div class="section-heading">
+        <div><h2>Links úteis</h2><p>Reúna os principais acessos usados na operação.</p></div>
+        <button class="add-button" data-add="links" type="button">+ Adicionar link</button>
+      </div>
+      <div class="links-list" id="links"></div>
+    </section>
+
+    <footer><span>Exibição - TV Globo DF</span><span id="footerDate"></span></footer>
+  </main>
+
+  <div id="previewView" class="preview-view" hidden></div>
+
+  <template id="highlightTemplate">
+    <article class="item-card highlight-card">
+      <div class="item-actions"><button data-move="up" type="button" aria-label="Mover para cima">↑</button><button data-move="down" type="button" aria-label="Mover para baixo">↓</button><button class="remove" type="button" aria-label="Remover item">x</button></div>
+      <label>Titulo<input data-field="title" type="text" placeholder="Titulo do destaque"></label>
+      <label>Detalhamento<textarea data-field="details" rows="4" placeholder="Contexto, impacto e encaminhamento..."></textarea></label>
+      <div class="split"><label>Categoria<select data-field="category"><option>Mídia técnica</option><option>Grade</option><option>Ação comercial</option><option>Rotina</option></select></label><label>Prioridade<select data-field="priority"><option>Alta</option><option selected>Média</option><option>Baixa</option></select></label></div>
+      <label class="urgent-option"><input data-field="urgent" type="checkbox"><span>Urgente</span></label>
+    </article>
+  </template>
+
+  <template id="newsTemplate">
+    <article class="news-row item-card">
+      <div class="item-actions"><button data-move="up" type="button" aria-label="Mover para cima">↑</button><button data-move="down" type="button" aria-label="Mover para baixo">↓</button><button class="remove" type="button" aria-label="Remover item">x</button></div>
+      <label>Jornal<input data-field="name" type="text" placeholder="Nome do jornal"></label>
+      <label>Início<input data-field="start" type="time"></label>
+      <label>Produção<input data-field="production" type="time" step="1" placeholder="00:00:00"></label>
+      <label>Blocos<input data-field="blocks" type="number" min="0" step="1" placeholder="Ex.: 4"></label>
+      <label class="wide">Observações<input data-field="notes" type="text" placeholder="Edição, entradas, ajustes ou pontos de atenção"></label>
+    </article>
+  </template>
+
+  <template id="strategyTemplate">
+    <article class="strategy-row item-card">
+      <div class="item-actions"><button data-move="up" type="button" aria-label="Mover para cima">↑</button><button data-move="down" type="button" aria-label="Mover para baixo">↓</button><button class="remove" type="button" aria-label="Remover item">x</button></div>
+      <label>Programa<input data-field="name" type="text" placeholder="Nome do programa"></label>
+      <div class="strategy-checks">
+        <label class="check-option"><input data-field="network" type="checkbox"><span>Em rede</span></label>
+        <label class="check-option"><input data-field="local" type="checkbox"><span>Local</span></label>
+      </div>
+      <label>Observação<input data-field="observation" type="text" placeholder="Observação da estratégia"></label>
+    </article>
+  </template>
+
+  <template id="gameTemplate">
+    <article class="game-card item-card">
+      <div class="item-actions"><button data-move="up" type="button" aria-label="Mover para cima">↑</button><button data-move="down" type="button" aria-label="Mover para baixo">↓</button><button class="remove" type="button" aria-label="Remover item">x</button></div>
+      <div class="game-details">
+        <label>Data<input data-field="date" type="date"></label>
+        <label>Horário<input data-field="time" type="time"></label>
+        <label>Sinal<select data-field="signal"><option>REDE</option><option>SP</option></select></label>
+        <label>Campeonato<select data-field="championship"><option value="">Selecione</option><option>Brasileirão M</option><option>Brasileirão F</option><option>Copa do Brasil M</option><option>Copa do Brasil F</option><option>Amistoso M</option><option>Amistoso F</option><option>Copa do Mundo</option></select></label>
+      </div>
+      <div class="game-teams">
+        <div class="team-picker"><label>Time 1<select data-field="team1"><option value="">Selecione</option><option>Athletico-PR</option><option>Atlético-MG</option><option>Bahia</option><option>Botafogo</option><option>Chapecoense</option><option>Corinthians</option><option>Coritiba</option><option>Cruzeiro</option><option>Flamengo</option><option>Fluminense</option><option>Grêmio</option><option>Internacional</option><option>Mirassol</option><option>Palmeiras</option><option>RB Bragantino</option><option>Remo</option><option>Santos</option><option>São Paulo</option><option>Vasco</option><option>Vitória</option><option value="Outro">Outro time</option></select></label><input class="custom-team" data-field="team1Custom" type="text" placeholder="Digite o nome do time" hidden></div>
+        <span class="versus">X</span>
+        <div class="team-picker"><label>Time 2<select data-field="team2"><option value="">Selecione</option><option>Athletico-PR</option><option>Atlético-MG</option><option>Bahia</option><option>Botafogo</option><option>Chapecoense</option><option>Corinthians</option><option>Coritiba</option><option>Cruzeiro</option><option>Flamengo</option><option>Fluminense</option><option>Grêmio</option><option>Internacional</option><option>Mirassol</option><option>Palmeiras</option><option>RB Bragantino</option><option>Remo</option><option>Santos</option><option>São Paulo</option><option>Vasco</option><option>Vitória</option><option value="Outro">Outro time</option></select></label><input class="custom-team" data-field="team2Custom" type="text" placeholder="Digite o nome do time" hidden></div>
+      </div>
+    </article>
+  </template>
+
+  <template id="programTemplate">
+    <article class="program-row item-card">
+      <div class="item-actions"><button data-move="up" type="button" aria-label="Mover para cima">↑</button><button data-move="down" type="button" aria-label="Mover para baixo">↓</button><button class="remove" type="button" aria-label="Remover item">x</button></div>
+      <label>Programa<input data-field="name" type="text" placeholder="Nome do programa"></label>
+      <label>Início<input data-field="start" type="time"></label>
+      <label>Duração<input data-field="duration" type="text" placeholder="Ex.: 30 min"></label>
+      <label>ID's<input data-field="ids" type="text" placeholder="Informe os ID's"></label>
+      <label>Status<select data-field="status"><option>Em preparação</option><option>Enviado</option><option>Capturado</option><option>Ao Vivo</option></select></label>
+    </article>
+  </template>
+
+  <template id="noteTemplate">
+    <article class="item-card note-card">
+      <div class="item-actions"><button data-move="up" type="button" aria-label="Mover para cima">↑</button><button data-move="down" type="button" aria-label="Mover para baixo">↓</button><button class="remove" type="button" aria-label="Remover item">x</button></div>
+      <label>Assunto<input data-field="subject" type="text" placeholder="Assunto"></label>
+      <label>Informação<textarea data-field="text" rows="3" placeholder="Escreva a informação..."></textarea></label>
+    </article>
+  </template>
+
+  <template id="linkTemplate">
+    <article class="link-row item-card">
+      <div class="item-actions"><button data-move="up" type="button" aria-label="Mover para cima">↑</button><button data-move="down" type="button" aria-label="Mover para baixo">↓</button><button class="remove" type="button" aria-label="Remover item">x</button></div>
+      <label>Nome do link<input data-field="label" type="text" placeholder="Ex.: GradeWeb"></label>
+      <label>Endereço<input data-field="url" type="url" placeholder="https://..."></label>
+    </article>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
