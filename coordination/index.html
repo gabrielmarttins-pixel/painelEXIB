@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coordenação | Painel de Programação</title>
+    <meta name="description" content="Entrada de informações do Painel de Programação" />
+    <link rel="stylesheet" href="../styles.css?v=68" />
+  </head>
+  <body>
+    <main class="coordination-shell">
+      <header class="coordination-header">
+        <img class="brand-mark" src="../assets/PLIMPLIM.png" alt="" aria-hidden="true" />
+        <div>
+          <p class="eyebrow">Painel de Programação</p>
+          <h1>PREVISÃO DE PROGRAMAS</h1>
+        </div>
+        <a class="ghost-link" href="../index.html">Ver painel</a>
+      </header>
+
+      <section class="status-row single-status" aria-label="Status do preenchimento">
+        <div>
+          <span class="status-label">Última atualização</span>
+          <strong id="last-update">Ainda não salvo</strong>
+        </div>
+      </section>
+
+      <form id="coordination-form" class="input-panel">
+        <fieldset class="program-card">
+          <legend>INFORMAÇÕES DO PROGRAMA</legend>
+
+          <label>
+            <span>PROGRAMA</span>
+            <select name="program">
+              <option value="">Selecione</option>
+              <option value="BOM DIA DF">BOM DIA DF</option>
+              <option value="DF1">DF1</option>
+              <option value="GLOBO ESPORTE">GLOBO ESPORTE</option>
+              <option value="DF2">DF2</option>
+              <option value="GLOBO COMUNIDADE">GLOBO COMUNIDADE</option>
+              <option value="CAPITAL MOTO WEEK">CAPITAL MOTO WEEK</option>
+            </select>
+          </label>
+
+          <label>
+            <span>DATA</span>
+            <input name="date" type="date" />
+          </label>
+
+          <label>
+            <span>HORÁRIO</span>
+            <input name="time" type="time" step="1" />
+          </label>
+
+          <label>
+            <span>PRODUÇÃO</span>
+            <input name="production" type="time" step="1" />
+          </label>
+
+          <label class="blocks-count-field">
+            <span>BLOCOS</span>
+            <select name="blocks">
+              <option value="">Selecione</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+            </select>
+          </label>
+
+          <div class="community-block-fields is-hidden">
+            <label>
+              <span>BLOCO 1</span>
+              <input name="block1" type="text" placeholder="ID DO BLOCO 1" />
+            </label>
+            <label>
+              <span>BLOCO 2</span>
+              <input name="block2" type="text" placeholder="ID DO BLOCO 2" />
+            </label>
+          </div>
+
+          <section class="calls-section wide-field" aria-label="Chamadas">
+            <div class="section-title">
+              <span>CHAMADAS</span>
+              <button class="secondary-button compact-button add-button" type="button" id="add-call" aria-label="Criar mais chamada">+</button>
+            </div>
+            <div id="calls-list" class="calls-list"></div>
+          </section>
+
+          <section class="bulletin-section wide-field" aria-label="Boletim">
+            <div class="section-title">
+              <span id="bulletin-title">BOLETIM</span>
+            </div>
+            <div class="bulletin-row">
+              <label>
+                <span>ID</span>
+                <input data-bulletin-field="id" placeholder="ID DO BOLETIM" />
+              </label>
+              <label>
+                <span>NOME</span>
+                <input data-bulletin-field="name" placeholder="NOME DO BOLETIM" />
+              </label>
+              <label>
+                <span>DURAÇÃO</span>
+                <input data-bulletin-field="duration" type="time" step="1" />
+              </label>
+              <label>
+                <span>HORÁRIO</span>
+                <input data-bulletin-field="time" type="time" />
+              </label>
+            </div>
+          </section>
+
+          <section class="wide-field notes-editor-field" aria-label="Observa&ccedil;&otilde;es">
+            <span>OBSERVA&Ccedil;&Otilde;ES</span>
+            <div class="notes-toolbar" aria-label="Formata&ccedil;&atilde;o das observa&ccedil;&otilde;es">
+              <button type="button" data-notes-command="bold" aria-label="Negrito">B</button>
+              <button type="button" data-notes-color="#5d6a72" aria-label="Cinza" style="--swatch-color: #5d6a72"></button>
+              <button type="button" data-notes-color="#007ed6" aria-label="Azul" style="--swatch-color: #007ed6"></button>
+              <button type="button" data-notes-color="#ff7a00" aria-label="Laranja" style="--swatch-color: #ff7a00"></button>
+              <button type="button" data-notes-color="#d71964" aria-label="Rosa" style="--swatch-color: #d71964"></button>
+            </div>
+            <div id="notes-editor" class="notes-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Observa&ccedil;&otilde;es para o painel"></div>
+            <textarea name="notes" rows="5" hidden></textarea>
+            <input name="notesRich" type="hidden" />
+          </section>
+
+        </fieldset>
+
+        <div class="actions">
+          <button class="secondary-button" type="button" id="clear-panel">Limpar Painel</button>
+          <button class="primary-button" type="submit">Enviar previsão</button>
+          <button class="primary-button generate-image-button" type="button" id="generate-image">Gerar imagem</button>
+        </div>
+        <p class="image-generation-status" id="image-generation-status" role="status" aria-live="polite"></p>
+      </form>
+    </main>
+
+    <template id="call-template">
+      <div class="call-row">
+        <label>
+          <span>ID</span>
+          <input data-call-field="id" placeholder="ID DA CHAMADA" />
+        </label>
+        <label>
+          <span>NOME</span>
+          <input data-call-field="name" placeholder="NOME DA CHAMADA" />
+        </label>
+        <label>
+          <span>DURAÇÃO</span>
+          <input data-call-field="duration" type="time" step="1" />
+        </label>
+        <label>
+          <span>HORÁRIO</span>
+          <input data-call-field="time" type="time" />
+        </label>
+        <button class="secondary-button icon-button" type="button" data-remove-call aria-label="Remover chamada">X</button>
+      </div>
+    </template>
+
+    <script src="../config.js?v=32"></script>
+    <script src="../app.js?v=68"></script>
+  </body>
+</html>
