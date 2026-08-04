@@ -243,8 +243,8 @@ async function saveRemoteReport(data = getData()) {
   const localSignature = getReportSignature(data);
   const hasConflict = latestPayload && latestSignature !== lastRemoteSignature && latestSignature !== localSignature;
   if (hasConflict) {
-    saveStatus.textContent = 'Há alterações novas online';
-    const shouldUpdate = confirm('Há alterações novas salvas por outro usuário. Atualizar antes de salvar?');
+    saveStatus.textContent = 'H alteraes novas online';
+    const shouldUpdate = confirm('H alteraes novas salvas por outro usurio. Atualizar antes de salvar?');
     if (shouldUpdate) {
       isLoading = true;
       currentRemotePayload = latestPayload;
@@ -270,7 +270,7 @@ async function saveRemoteReport(data = getData()) {
   currentRemotePayload = payload;
   lastRemoteSignature = getReportSignature(payload);
   if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload?._meta);
-  saveStatus.textContent = row ? 'Salvo e sincronizado' : 'Salvo localmente; Supabase não confirmou';
+  saveStatus.textContent = row ? 'Salvo e sincronizado' : 'Salvo localmente; Supabase no confirmou';
 }
 async function loadRemoteReport(silent = false) {
   if (!supabaseClient) return null;
@@ -414,7 +414,7 @@ function mergeDateReports(dateStore) {
 }
 
 function formatReportDate(value) {
-  if (!value) return 'Data não informada';
+  if (!value) return 'Data no informada';
   const [year, month, day] = value.split('-').map(Number);
   return new Intl.DateTimeFormat('pt-BR').format(new Date(year, month - 1, day));
 }
@@ -427,7 +427,7 @@ function formatGameDate(value) {
   return `${weekday}, ${formatReportDate(value)}`;
 }
 
-function cleanText(value, fallback = 'Não informado') {
+function cleanText(value, fallback = 'No informado') {
   const text = String(value || '').trim();
   return text || fallback;
 }
@@ -475,7 +475,7 @@ function showPreview() {
     return `
       <article class="preview-card highlight-preview-card ${accent}">
         ${item.category ? `<span class="highlight-category-badge ${getCategoryClass(item.category)}">${escapeHtml(item.category)}</span>` : ''}
-        <h3>${escapeHtml(item.title || 'Destaque estratégico')}</h3>
+        <h3>${escapeHtml(item.title || 'Destaque estratgico')}</h3>
         ${item.details ? `<p>${escapeHtml(item.details).replaceAll('\n', '<br>')}</p>` : ''}
         ${item.priority ? `<div class="preview-meta">Prioridade: ${escapeHtml(item.priority)}</div>` : ''}
       </article>`;
@@ -490,8 +490,8 @@ function showPreview() {
           <h3>${escapeHtml(item.name || 'Jornal')}</h3>
           ${item.notes ? `<p>${escapeHtml(item.notes)}</p>` : ''}
           <div class="preview-meta">${[
-            item.start && `Início: ${item.start}`,
-            item.production && `Produção: ${item.production}`,
+            item.start && `Incio: ${item.start}`,
+            item.production && `Produo: ${item.production}`,
             item.blocks && `Blocos: ${item.blocks}`
           ].filter(Boolean).map(escapeHtml).join(' &nbsp;|&nbsp; ')}</div>
         </div>
@@ -533,20 +533,20 @@ function showPreview() {
   const programsHtml = programs.map(item => `
     <article class="preview-card program-preview-card">
       <div class="program-title-row">
-        <span class="status-badge ${getStatusClass(item.status)}">${escapeHtml(item.status || 'Em preparação')}</span>
+        <span class="status-badge ${getStatusClass(item.status)}">${escapeHtml(item.status || 'Em preparao')}</span>
         <h3>${escapeHtml(item.name || 'Programa local')}</h3>
       </div>
       <div class="program-preview-footer">
         <div class="program-ids">${item.ids ? `<span class="program-category">ID's: ${escapeHtml(item.ids)}</span>` : ''}</div>
         <div class="preview-meta">${[
-          item.start && `Início: ${item.start}`,
-          item.duration && `Duração: ${item.duration}`
+          item.start && `Incio: ${item.start}`,
+          item.duration && `Durao: ${item.duration}`
         ].filter(Boolean).map(escapeHtml).join(' &nbsp;|&nbsp; ')}</div>
       </div>
     </article>`).join('');
 
   const notesHtml = notes.map(item => card(
-    item.subject || 'Informação',
+    item.subject || 'Informao',
     item.text,
     '',
     'violet'
@@ -562,19 +562,19 @@ function showPreview() {
     </header>
     <main class="preview-shell">
       <section class="preview-hero">
-        <h1>Relatório diário de <span>Exibição</span></h1>
+        <h1>Relatrio dirio de <span>Exibio</span></h1>
         <p>${escapeHtml(formatReportDate(data.reportDate))} &nbsp;|&nbsp; ${escapeHtml(data.weekday)}</p>
       </section>
       ${section('01', 'Destaques', highlightsHtml)}
-      ${section('02', 'Previsão dos jornais', newsHtml)}
-      ${section('03', 'Estratégia de grade', strategyHtml, 'strategy-section')}
-      ${section('04', 'Próximos jogos', gamesHtml)}
+      ${section('02', 'Previso dos jornais', newsHtml)}
+      ${section('03', 'Estratgia de grade', strategyHtml, 'strategy-section')}
+      ${section('04', 'Prximos jogos', gamesHtml)}
       ${section('05', 'Programas locais', programsHtml)}
-      ${section('06', 'Informações diversas', notesHtml)}
-      ${section('07', 'Links úteis', linksHtml, 'links-section')}
-      ${!highlightsHtml && !newsHtml && !strategyHtml && !gamesHtml && !programsHtml && !notesHtml && !linksHtml ? '<div class="preview-empty">Nenhuma informação preenchida.</div>' : ''}
-      <div class="preview-export"><button class="button primary" id="exportCsvButton" type="button">Exportar relatório</button></div>
-      <footer><span>Exibição - TV Globo DF</span><span>${escapeHtml(formatReportDate(data.reportDate))}</span></footer>
+      ${section('06', 'Informaes diversas', notesHtml)}
+      ${section('07', 'Links teis', linksHtml, 'links-section')}
+      ${!highlightsHtml && !newsHtml && !strategyHtml && !gamesHtml && !programsHtml && !notesHtml && !linksHtml ? '<div class="preview-empty">Nenhuma informao preenchida.</div>' : ''}
+      <div class="preview-export"><button class="button primary" id="exportCsvButton" type="button">Exportar relatrio</button></div>
+      <footer><span>Exibio - TV Globo DF</span><span>${escapeHtml(formatReportDate(data.reportDate))}</span></footer>
     </main>`;
 
   document.querySelector('body > .topbar').hidden = true;
@@ -606,22 +606,22 @@ async function exportImageReport() {
         .sort((a, b) => Number(Boolean(b.urgent)) - Number(Boolean(a.urgent)))
         .map(item => ({ title: item.title || 'Destaque', body: item.details, meta: [item.category, item.priority].filter(Boolean).join(' | '), theme: item.urgent ? 'urgent' : item.priority === 'Alta' ? 'high' : item.priority === 'Baixa' ? 'low' : 'medium', full: Boolean(item.urgent) })),
       news: data.news.filter(item => hasMeaningfulFields(item, ['name', 'start', 'production', 'blocks', 'notes']))
-        .map(item => ({ title: item.name || 'Jornal', body: item.notes, meta: [item.start && `Início ${item.start}`, item.production && `Produção ${item.production}`, item.blocks && `${item.blocks} blocos`].filter(Boolean).join(' | '), theme: 'blue' })),
+        .map(item => ({ title: item.name || 'Jornal', body: item.notes, meta: [item.start && `Incio ${item.start}`, item.production && `Produo ${item.production}`, item.blocks && `${item.blocks} blocos`].filter(Boolean).join(' | '), theme: 'blue' })),
       strategy: data.strategy.filter(item => item.network || item.local || String(item.observation || '').trim())
         .map(item => ({ title: item.name || 'Programa', body: item.observation, meta: [item.network && 'Em rede', item.local && 'Local'].filter(Boolean).join(' + '), theme: 'blue' })),
       games: data.games.filter(item => hasMeaningfulFields(item, ['date', 'time', 'championship', 'team1', 'team1Custom', 'team2', 'team2Custom']))
         .map(item => ({ title: `${getGameTeam(item, 'team1')} x ${getGameTeam(item, 'team2')}`, body: item.championship, meta: [item.date && formatGameDate(item.date), item.time, item.signal].filter(Boolean).join(' | '), theme: 'green' })),
       programs: data.programs.filter(item => hasMeaningfulFields(item, ['name', 'start', 'duration', 'ids']))
-        .map(item => ({ title: item.name || 'Programa local', body: '', meta: [item.start && `Início ${item.start}`, item.duration, item.ids && `ID's ${item.ids}`, item.status].filter(Boolean).join(' | '), theme: item.status === 'Ao Vivo' ? 'high' : item.status === 'Capturado' ? 'green' : item.status === 'Enviado' ? 'orange' : 'gray' })),
+        .map(item => ({ title: item.name || 'Programa local', body: '', meta: [item.start && `Incio ${item.start}`, item.duration, item.ids && `ID's ${item.ids}`, item.status].filter(Boolean).join(' | '), theme: item.status === 'Ao Vivo' ? 'high' : item.status === 'Capturado' ? 'green' : item.status === 'Enviado' ? 'orange' : 'gray' })),
       notes: data.notes.filter(item => hasMeaningfulFields(item, ['subject', 'text']))
-        .map(item => ({ title: item.subject || 'Informação', body: item.text, meta: '', theme: 'violet' })),
+        .map(item => ({ title: item.subject || 'Informao', body: item.text, meta: '', theme: 'violet' })),
       links: data.links.filter(item => normalizeUrl(item.url))
         .map(item => ({ title: item.label || item.url, body: normalizeUrl(item.url), meta: '', theme: 'blue' }))
     };
 
     const sectionsToDraw = [
-      ['Destaques', cards.highlights], ['Previsão dos jornais', cards.news], ['Estratégia de grade', cards.strategy],
-      ['Próximos jogos', cards.games], ['Programas locais', cards.programs], ['Informações diversas', cards.notes]
+      ['Destaques', cards.highlights], ['Previso dos jornais', cards.news], ['Estratgia de grade', cards.strategy],
+      ['Prximos jogos', cards.games], ['Programas locais', cards.programs], ['Informaes diversas', cards.notes]
     ].filter(([, items]) => items.length);
 
     const WIDTH = 1200;
@@ -729,11 +729,11 @@ async function exportImageReport() {
     ctx.fillStyle = '#686b73'; ctx.font = font(14, 400); ctx.textAlign = 'right';
     ctx.fillText(`${formatReportDate(data.reportDate)} | ${data.weekday}`, WIDTH - OUTER - 28, y + 30); ctx.textAlign = 'left';
     ctx.font = font(36, 700); ctx.fillStyle = '#101116';
-    const reportTitle = 'Relatório diário de ';
+    const reportTitle = 'Relatrio dirio de ';
     ctx.fillText(reportTitle, OUTER + 28, y + 82);
     const reportTitleWidth = ctx.measureText(reportTitle).width;
     ctx.fillStyle = gradientFor('blue', OUTER + 28 + reportTitleWidth, 210);
-    ctx.fillText('Exibição', OUTER + 28 + reportTitleWidth, y + 82);
+    ctx.fillText('Exibio', OUTER + 28 + reportTitleWidth, y + 82);
     y += heroHeight + 18;
 
     sectionLayouts.forEach(section => {
@@ -759,7 +759,7 @@ async function exportImageReport() {
       y += sectionHeight + sectionGap;
     });
 
-    ctx.fillStyle = '#686b73'; ctx.font = font(11); ctx.fillText('Exibição - TV Globo DF', OUTER, height - 24);
+    ctx.fillStyle = '#686b73'; ctx.font = font(11); ctx.fillText('Exibio - TV Globo DF', OUTER, height - 24);
     ctx.textAlign = 'right'; ctx.fillText(formatReportDate(data.reportDate), WIDTH - OUTER, height - 24); ctx.textAlign = 'left';
 
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
@@ -772,7 +772,7 @@ async function exportImageReport() {
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   } catch (error) {
     console.error(error);
-    alert('Não foi possível gerar a imagem. Recarregue a página e tente novamente.');
+    alert('No foi possvel gerar a imagem. Recarregue a pgina e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -865,7 +865,7 @@ async function exportImageReportLegacy() {
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   } catch (error) {
     console.error(error);
-    alert('Não foi possível gerar a imagem. Recarregue a página e tente novamente.');
+    alert('No foi possvel gerar a imagem. Recarregue a pgina e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -875,27 +875,27 @@ async function exportImageReportLegacy() {
 function exportCsvReport() {
   save();
   const data = getData();
-  const rows = [['Bloco', 'Ordem', 'Item', 'Data', 'Horário', 'Tempo', 'Classificação', 'Detalhes', 'Time 1', 'Time 2', 'Prioridade']];
-  rows.push(['Informações do dia', '1', data.weekday, formatReportDate(data.reportDate), '', '', '', '', '', '', '']);
+  const rows = [['Bloco', 'Ordem', 'Item', 'Data', 'Horrio', 'Tempo', 'Classificao', 'Detalhes', 'Time 1', 'Time 2', 'Prioridade']];
+  rows.push(['Informaes do dia', '1', data.weekday, formatReportDate(data.reportDate), '', '', '', '', '', '', '']);
 
   data.highlights.filter(item => hasMeaningfulFields(item, ['title', 'details'])).forEach((item, index) => {
     rows.push(['Destaques', index + 1, item.title, '', '', '', item.category, item.details, '', '', item.priority]);
   });
   data.news.filter(item => hasMeaningfulFields(item, ['name', 'start', 'production', 'notes'])).forEach((item, index) => {
-    rows.push(['Previsão dos jornais', index + 1, item.name, '', item.start, item.production, '', item.notes, '', '', '']);
+    rows.push(['Previso dos jornais', index + 1, item.name, '', item.start, item.production, '', item.notes, '', '', '']);
   });
   data.strategy.filter(item => item.network || item.local || String(item.observation || '').trim()).forEach((item, index) => {
     const selections = [item.network && 'Em rede', item.local && 'Local'].filter(Boolean).join(' + ');
-    rows.push(['Estratégia de grade', index + 1, item.name, '', '', '', selections, item.observation, '', '', '']);
+    rows.push(['Estratgia de grade', index + 1, item.name, '', '', '', selections, item.observation, '', '', '']);
   });
   data.games.filter(item => hasMeaningfulFields(item, ['date', 'time', 'championship', 'team1', 'team1Custom', 'team2', 'team2Custom'])).forEach((item, index) => {
-    rows.push(['Próximos jogos', index + 1, item.championship, item.date ? formatGameDate(item.date) : '', item.time, '', item.signal, '', getGameTeam(item, 'team1'), getGameTeam(item, 'team2'), '']);
+    rows.push(['Prximos jogos', index + 1, item.championship, item.date ? formatGameDate(item.date) : '', item.time, '', item.signal, '', getGameTeam(item, 'team1'), getGameTeam(item, 'team2'), '']);
   });
   data.programs.filter(item => hasMeaningfulFields(item, ['name', 'start', 'duration', 'ids'])).forEach((item, index) => {
     rows.push(['Programas locais', index + 1, item.name, '', item.start, item.duration, item.status, item.ids ? `ID's: ${item.ids}` : '', '', '', '']);
   });
   data.notes.filter(item => hasMeaningfulFields(item, ['subject', 'text'])).forEach((item, index) => {
-    rows.push(['Informações diversas', index + 1, item.subject, '', '', '', item.category, item.text, '', '', '']);
+    rows.push(['Informaes diversas', index + 1, item.subject, '', '', '', item.category, item.text, '', '', '']);
   });
 
   const csvCell = value => `"${String(value ?? '').replaceAll('"', '""').replaceAll(/\r?\n/g, ' ')}"`;
@@ -942,7 +942,7 @@ function generateHtmlReport() {
       </section>` : '';
 
     const highlightsHtml = highlights.map(item => card(
-      item.title || 'Destaque estratégico',
+      item.title || 'Destaque estratgico',
       item.details,
       [item.category && `Categoria: ${item.category}`, item.priority && `Prioridade: ${item.priority}`].filter(Boolean).join('  |  ')
     )).join('');
@@ -950,11 +950,11 @@ function generateHtmlReport() {
     const newsHtml = news.map(item => card(
       item.name || 'Jornal',
       item.notes,
-      [item.start && `Início: ${item.start}`, item.duration && `Duração: ${item.duration}`].filter(Boolean).join('  |  ')
+      [item.start && `Incio: ${item.start}`, item.duration && `Durao: ${item.duration}`].filter(Boolean).join('  |  ')
     )).join('');
 
     const notesHtml = notes.map(item => card(
-      item.subject || 'Informação',
+      item.subject || 'Informao',
       item.text,
       item.category ? `Categoria: ${item.category}` : '',
       'violet'
@@ -965,7 +965,7 @@ function generateHtmlReport() {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Relatório de Exibição - ${escapeHtml(data.reportDate || 'TV Globo DF')}</title>
+  <title>Relatrio de Exibio - ${escapeHtml(data.reportDate || 'TV Globo DF')}</title>
   <style>
     @font-face{font-family:Globotipo;src:url('${regularFont}') format('truetype');font-weight:400;font-display:swap}
     @font-face{font-family:Globotipo;src:url('${boldFont}') format('truetype');font-weight:700;font-display:swap}
@@ -982,14 +982,14 @@ function generateHtmlReport() {
   </header>
   <main class="page">
     <div class="hero">
-      <div><h1>Relatório diário de <span>Exibição</span></h1><p class="date">${escapeHtml(formatReportDate(data.reportDate))} &nbsp;|&nbsp; ${escapeHtml(data.weekday)}</p></div>
+      <div><h1>Relatrio dirio de <span>Exibio</span></h1><p class="date">${escapeHtml(formatReportDate(data.reportDate))} &nbsp;|&nbsp; ${escapeHtml(data.weekday)}</p></div>
       <div class="orbit"><i></i></div>
     </div>
     ${section('01', 'Destaques', highlightsHtml)}
-    ${section('02', 'Previsão dos jornais', newsHtml)}
-    ${section('03', 'Informações diversas', notesHtml)}
-    ${!highlightsHtml && !newsHtml && !notesHtml ? '<div class="empty">Nenhuma informação preenchida para este relatório.</div>' : ''}
-    <footer><span>Exibição - TV Globo DF</span><span>${escapeHtml(formatReportDate(data.reportDate))}</span></footer>
+    ${section('02', 'Previso dos jornais', newsHtml)}
+    ${section('03', 'Informaes diversas', notesHtml)}
+    ${!highlightsHtml && !newsHtml && !notesHtml ? '<div class="empty">Nenhuma informao preenchida para este relatrio.</div>' : ''}
+    <footer><span>Exibio - TV Globo DF</span><span>${escapeHtml(formatReportDate(data.reportDate))}</span></footer>
   </main>
 </body>
 </html>`;
@@ -1003,10 +1003,10 @@ function generateHtmlReport() {
     link.click();
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
-    saveStatus.textContent = 'Relatório HTML gerado';
+    saveStatus.textContent = 'Relatrio HTML gerado';
   } catch (error) {
     console.error(error);
-    alert('Não foi possível gerar o relatório HTML. Recarregue a página e tente novamente.');
+    alert('No foi possvel gerar o relatrio HTML. Recarregue a pgina e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -1068,7 +1068,7 @@ async function generatePdf() {
       context.fillStyle = '#686b73';
       context.font = font(16, 700);
       context.textAlign = 'right';
-      context.fillText('EXIBIÇÃO', PAGE_W - MARGIN, 88);
+      context.fillText('EXIBIO', PAGE_W - MARGIN, 88);
       context.textAlign = 'left';
       context.strokeStyle = '#dedfe3';
       context.lineWidth = 2;
@@ -1105,7 +1105,7 @@ async function generatePdf() {
         });
         if (line) lines.push(line);
       });
-      return lines.length ? lines : ['Não informado'];
+      return lines.length ? lines : ['No informado'];
     }
 
     function drawTextLines(lines, x, top, textFont, color, lineHeight) {
@@ -1125,7 +1125,7 @@ async function generatePdf() {
       ctx.fill();
       ctx.fillStyle = '#101116';
       ctx.font = font(57, 700);
-      const titlePrefix = 'Relatório diário de ';
+      const titlePrefix = 'Relatrio dirio de ';
       ctx.fillText(titlePrefix, MARGIN + 38, y + 104);
       const titlePrefixWidth = ctx.measureText(titlePrefix).width;
       const gradient = ctx.createLinearGradient(MARGIN + 38, 0, MARGIN + 470, 0);
@@ -1133,7 +1133,7 @@ async function generatePdf() {
       gradient.addColorStop(0.52, '#2860ff');
       gradient.addColorStop(1, '#8200ff');
       ctx.fillStyle = gradient;
-      ctx.fillText('Exibição', MARGIN + 38 + titlePrefixWidth, y + 104);
+      ctx.fillText('Exibio', MARGIN + 38 + titlePrefixWidth, y + 104);
       ctx.fillStyle = '#686b73';
       ctx.font = font(25, 400);
       ctx.fillText(`${formatReportDate(data.reportDate)}  |  ${cleanText(data.weekday)}`, MARGIN + 38, y + 244);
@@ -1176,7 +1176,7 @@ async function generatePdf() {
       for (let index = 0; index < allBodyLines.length; index += 38) chunks.push(allBodyLines.slice(index, index + 38));
 
       chunks.forEach((bodyLines, index) => {
-        const currentTitle = index ? [`${titleLines[0]} (continuação)`] : titleLines;
+        const currentTitle = index ? [`${titleLines[0]} (continuao)`] : titleLines;
         const cardHeight = 42 + currentTitle.length * 34 + bodyLines.length * 29 + (meta ? 42 : 12);
         ensureSpace(cardHeight + 22);
         roundedRect(ctx, MARGIN, y, CONTENT_W, cardHeight, 24);
@@ -1202,15 +1202,15 @@ async function generatePdf() {
     newPage();
     drawHero();
     sectionTitle('01', 'Destaques');
-    if (!data.highlights.length) drawCard('Sem destaques', 'Nenhum destaque estratégico foi informado.');
+    if (!data.highlights.length) drawCard('Sem destaques', 'Nenhum destaque estratgico foi informado.');
     data.highlights.forEach(item => drawCard(item.title, item.details, `Categoria: ${cleanText(item.category)}   |   Prioridade: ${cleanText(item.priority)}`));
 
-    sectionTitle('02', 'Previsão dos jornais');
-    if (!data.news.length) drawCard('Sem previsão', 'Nenhum jornal foi informado para esta data.');
-    data.news.forEach(item => drawCard(item.name, cleanText(item.notes, 'Sem observações.'), `${cleanText(item.start)}  |  Duração: ${cleanText(item.duration)}`, '#2860ff'));
+    sectionTitle('02', 'Previso dos jornais');
+    if (!data.news.length) drawCard('Sem previso', 'Nenhum jornal foi informado para esta data.');
+    data.news.forEach(item => drawCard(item.name, cleanText(item.notes, 'Sem observaes.'), `${cleanText(item.start)}  |  Durao: ${cleanText(item.duration)}`, '#2860ff'));
 
-    sectionTitle('03', 'Informações diversas');
-    if (!data.notes.length) drawCard('Sem informações', 'Nenhuma informação adicional foi registrada.', '', '#8200ff');
+    sectionTitle('03', 'Informaes diversas');
+    if (!data.notes.length) drawCard('Sem informaes', 'Nenhuma informao adicional foi registrada.', '', '#8200ff');
     data.notes.forEach(item => drawCard(item.subject, item.text, `Categoria: ${cleanText(item.category)}`, '#8200ff'));
 
     canvases.forEach((pageCanvas, index) => {
@@ -1223,7 +1223,7 @@ async function generatePdf() {
       pageContext.stroke();
       pageContext.fillStyle = '#686b73';
       pageContext.font = font(16, 400);
-      pageContext.fillText('Exibição - TV Globo DF', MARGIN, PAGE_H - 43);
+      pageContext.fillText('Exibio - TV Globo DF', MARGIN, PAGE_H - 43);
       pageContext.textAlign = 'right';
       pageContext.fillText(`${index + 1} / ${canvases.length}`, PAGE_W - MARGIN, PAGE_H - 43);
       pageContext.textAlign = 'left';
@@ -1248,7 +1248,7 @@ async function generatePdf() {
     saveStatus.textContent = 'PDF gerado com sucesso';
   } catch (error) {
     console.error(error);
-    alert('Não foi possível gerar o PDF. Recarregue a página e tente novamente.');
+    alert('No foi possvel gerar o PDF. Recarregue a pgina e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -1291,7 +1291,7 @@ async function load() {
     remoteData = await loadRemoteReport();
   } catch (error) {
     console.error(error);
-    saveStatus.textContent = 'Não foi possível carregar dados online; usando dados locais';
+    saveStatus.textContent = 'No foi possvel carregar dados online; usando dados locais';
   }
   const localData = loadLocalReport();
   const data = hasReportContent(remoteData) ? remoteData : localData || remoteData;
@@ -1324,7 +1324,7 @@ async function syncFromRemote(force = false) {
   const { payload, error } = await fetchRemoteReport(supabaseClient, dateInput.value);
   if (error) {
     console.error(error);
-    saveStatus.textContent = 'Não foi possível atualizar online agora';
+    saveStatus.textContent = 'No foi possvel atualizar online agora';
     if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: sem conexão com Supabase';
     return;
   }
@@ -1338,7 +1338,7 @@ async function syncFromRemote(force = false) {
   const remoteSignature = getReportSignature(remoteData);
   const currentSignature = getReportSignature(getData());
   if (remoteSignature === currentSignature || remoteSignature === lastRemoteSignature) {
-    if (force) saveStatus.textContent = 'Dados já estão atualizados';
+    if (force) saveStatus.textContent = 'Dados j esto atualizados';
     if (payload?._meta && lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload._meta);
     return;
   }
@@ -1357,12 +1357,12 @@ async function syncFromRemote(force = false) {
 
 document.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', () => addItem(button.dataset.add)));
 document.querySelector('#refreshButton').addEventListener('click', () => syncFromRemote(true));
-document.querySelector('#printButton').addEventListener('click', showPreview);
+document.querySelector('#printButton')?.addEventListener('click', showPreview);
 
 load().catch(error => {
   console.error(error);
   setReportDate(getTodayKey());
-  saveStatus.textContent = 'Falha ao iniciar; recarregue a página';
+  saveStatus.textContent = 'Falha ao iniciar; recarregue a pgina';
   if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: indisponível';
 });
 setInterval(updateDayInfo, 60000);

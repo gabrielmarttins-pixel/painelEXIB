@@ -265,3 +265,22 @@ button:disabled{cursor:wait;opacity:.7}
 
 .sync-meta{max-width:270px;color:#8b8d94;font-size:11px;line-height:1.15;text-align:right}
 @media(max-width:850px){.sync-meta{display:none}}
+
+.top-actions a.button{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.analyst-shell{width:min(1120px,calc(100% - 32px))}
+.analyst-hero{display:block}
+.analyst-hero .eyebrow{margin-bottom:12px}
+.analyst-hero .hero-copy{font-size:15px;margin-top:18px}
+.analyst-hint{color:var(--muted);font-size:13px;margin:8px 0 0}
+.analyst-editable{cursor:pointer;outline:none;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.analyst-editable:hover,.analyst-editable:focus{transform:translateY(-2px);box-shadow:0 12px 25px #1d2b4a18;border-color:#dbe7ff}
+.edit-chip{display:inline-flex;margin-top:14px;padding:7px 10px;border-radius:999px;background:#e9f3ff;color:var(--blue);font-size:11px;font-weight:700}
+.analyst-editor{position:relative;z-index:5;margin-top:16px;padding:14px;border-radius:14px;background:#fff;border:1px solid #dfe0e6;box-shadow:0 12px 24px #1d2b4a14}
+.analyst-editor label{color:#555861}
+.analyst-editor input,.analyst-editor select{font-size:14px;padding:10px 11px}
+.analyst-editor-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.analyst-editor .analyst-checks{margin:12px 0}
+.analyst-editor-actions{display:flex;justify-content:flex-end;margin-top:12px}
+.analyst-empty{grid-column:1/-1;margin:0}
+.flag-crest{display:grid;place-items:center;font-size:80px;line-height:1}
+@media(max-width:680px){.analyst-editor-grid{grid-template-columns:1fr}.analyst-shell{width:calc(100% - 16px)}}

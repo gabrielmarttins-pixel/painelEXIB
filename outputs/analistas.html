@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel dos Analistas - TV Globo DF</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="analyst-page">
+  <header class="topbar">
+    <div class="brand" aria-label="tvglobo DF">
+      <img class="brand-icon" src="assets/PLIMPLIM.png" alt="">
+      <span>tvglobo <b>DF</b></span>
+    </div>
+    <div class="top-actions">
+      <span class="save-status" id="saveStatus">Carregando painel...</span>
+      <span class="sync-meta" id="lastUpdateStatus">Última atualização: carregando...</span>
+      <button class="button secondary" id="refreshButton" type="button">Atualizar dados</button>
+      <a class="button primary" href="index.html">Página do coordenador</a>
+    </div>
+  </header>
+
+  <main class="preview-shell analyst-shell">
+    <section class="preview-hero analyst-hero">
+      <div>
+        <p class="eyebrow">Painel dos analistas</p>
+        <h1>Relatório diário de <span>Exibição</span></h1>
+        <p class="date" id="reportDateDisplay">Carregando data...</p>
+        <p class="hero-copy">Clique nos cards de jornais, estratégia de grade e status dos programas locais para editar.</p>
+      </div>
+    </section>
+
+    <section class="preview-section" id="highlightsSection">
+      <div class="preview-section-title"><h2>Destaques</h2></div>
+      <div class="preview-cards" id="highlightsView"></div>
+    </section>
+
+    <section class="preview-section" id="newsSection">
+      <div class="preview-section-title"><h2>Previsão dos jornais</h2><p class="analyst-hint">Clique em um card para editar jornal, início, produção, blocos e observações.</p></div>
+      <div class="preview-cards" id="newsView"></div>
+    </section>
+
+    <section class="preview-section strategy-section" id="strategySection">
+      <div class="preview-section-title"><h2>Estratégia de grade</h2><p class="analyst-hint">Clique em um programa para marcar Em rede, Local ou ajustar observação.</p></div>
+      <div class="preview-cards" id="strategyView"></div>
+    </section>
+
+    <section class="preview-section" id="gamesSection">
+      <div class="preview-section-title"><h2>Próximos jogos</h2></div>
+      <div class="preview-cards" id="gamesView"></div>
+    </section>
+
+    <section class="preview-section" id="programsSection">
+      <div class="preview-section-title"><h2>Programas locais</h2><p class="analyst-hint">Clique em um card para alterar apenas o status.</p></div>
+      <div class="preview-cards" id="programsView"></div>
+    </section>
+
+    <section class="preview-section" id="notesSection">
+      <div class="preview-section-title"><h2>Informações diversas</h2></div>
+      <div class="preview-cards" id="notesView"></div>
+    </section>
+
+    <section class="preview-section links-section" id="linksSection">
+      <div class="preview-section-title"><h2>Links úteis</h2></div>
+      <div class="preview-cards" id="linksView"></div>
+    </section>
+
+    <footer><span>Exibição - TV Globo DF</span><span id="footerDate"></span></footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="defaults.js"></script>
+  <script src="storage.js"></script>
+  <script src="analistas.js"></script>
+</body>
+</html>
