@@ -585,11 +585,11 @@ function showPreview() {
         <p>${escapeHtml(formatReportDate(data.reportDate))} &nbsp;|&nbsp; ${escapeHtml(data.weekday)}</p>
       </section>
       ${section('01', 'Destaques', highlightsHtml)}
-      ${section('02', 'Previso dos jornais', newsHtml)}
-      ${section('03', 'Estratgia de grade', strategyHtml, 'strategy-section')}
-      ${section('04', 'Prximos jogos', gamesHtml)}
-      ${section('05', 'Programas locais', programsHtml)}
-      ${section('06', 'Informaes diversas', notesHtml)}
+      ${section('02', 'Informaes diversas', notesHtml)}
+      ${section('03', 'Previso dos jornais', newsHtml)}
+      ${section('04', 'Estratgia de grade', strategyHtml, 'strategy-section')}
+      ${section('05', 'Prximos jogos', gamesHtml)}
+      ${section('06', 'Programas locais', programsHtml)}
       ${section('07', 'Links teis', linksHtml, 'links-section')}
       ${!highlightsHtml && !newsHtml && !strategyHtml && !gamesHtml && !programsHtml && !notesHtml && !linksHtml ? '<div class="preview-empty">Nenhuma informação preenchida.</div>' : ''}
       <div class="preview-export"><button class="button primary" id="exportCsvButton" type="button">Exportar relatório</button></div>
@@ -639,8 +639,8 @@ async function exportImageReport() {
     };
 
     const sectionsToDraw = [
-      ['Destaques', cards.highlights], ['Previso dos jornais', cards.news], ['Estratgia de grade', cards.strategy],
-      ['Prximos jogos', cards.games], ['Programas locais', cards.programs], ['Informaes diversas', cards.notes]
+      ['Destaques', cards.highlights], ['Informaes diversas', cards.notes], ['Previso dos jornais', cards.news],
+      ['Estratgia de grade', cards.strategy], ['Prximos jogos', cards.games], ['Programas locais', cards.programs]
     ].filter(([, items]) => items.length);
 
     const WIDTH = 1200;
@@ -1005,8 +1005,8 @@ function generateHtmlReport() {
       <div class="orbit"><i></i></div>
     </div>
     ${section('01', 'Destaques', highlightsHtml)}
-    ${section('02', 'Previso dos jornais', newsHtml)}
-    ${section('03', 'Informaes diversas', notesHtml)}
+    ${section('02', 'Informaes diversas', notesHtml)}
+    ${section('03', 'Previso dos jornais', newsHtml)}
     ${!highlightsHtml && !newsHtml && !notesHtml ? '<div class="empty">Nenhuma informação preenchida para este relatório.</div>' : ''}
     <footer><span>Exibio - TV Globo DF</span><span>${escapeHtml(formatReportDate(data.reportDate))}</span></footer>
   </main>
@@ -1224,13 +1224,13 @@ async function generatePdf() {
     if (!data.highlights.length) drawCard('Sem destaques', 'Nenhum destaque estratgico foi informado.');
     data.highlights.forEach(item => drawCard(item.title, item.details, `Categoria: ${cleanText(item.category)}   |   Prioridade: ${cleanText(item.priority)}`));
 
-    sectionTitle('02', 'Previso dos jornais');
-    if (!data.news.length) drawCard('Sem previso', 'Nenhum jornal foi informado para esta data.');
-    data.news.forEach(item => drawCard(item.name, cleanText(item.notes, 'Sem observaes.'), `${cleanText(item.start)}  |  Durao: ${cleanText(item.duration)}`, '#2860ff'));
-
-    sectionTitle('03', 'Informaes diversas');
+    sectionTitle('02', 'Informaes diversas');
     if (!data.notes.length) drawCard('Sem informações', 'Nenhuma informação adicional foi registrada.', '', '#8200ff');
     data.notes.forEach(item => drawCard(item.subject, item.text, `Categoria: ${cleanText(item.category)}`, '#8200ff'));
+
+    sectionTitle('03', 'Previso dos jornais');
+    if (!data.news.length) drawCard('Sem previso', 'Nenhum jornal foi informado para esta data.');
+    data.news.forEach(item => drawCard(item.name, cleanText(item.notes, 'Sem observaes.'), `${cleanText(item.start)}  |  Durao: ${cleanText(item.duration)}`, '#2860ff'));
 
     canvases.forEach((pageCanvas, index) => {
       const pageContext = pageCanvas.getContext('2d');
