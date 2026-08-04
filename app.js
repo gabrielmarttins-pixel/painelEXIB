@@ -15,7 +15,6 @@ const {
   createSupabaseClient,
   fetchRemoteReport,
   formatLastUpdate,
-  getCurrentUserName,
   getReportSignature,
   saveRemoteReport: saveRemoteReportToStorage
 } = window.GloboStorage;
@@ -260,7 +259,7 @@ async function saveRemoteReport(data = getData()) {
     }
   }
 
-  const { payload, row, error } = await saveRemoteReportToStorage(supabaseClient, data, latestPayload || currentRemotePayload, getCurrentUserName());
+  const { payload, row, error } = await saveRemoteReportToStorage(supabaseClient, data, latestPayload || currentRemotePayload);
   if (error) {
     console.error(error);
     saveStatus.textContent = 'Salvo neste navegador; falha ao sincronizar online';

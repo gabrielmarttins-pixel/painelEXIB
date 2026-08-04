@@ -12,7 +12,6 @@ const {
   createSupabaseClient,
   fetchRemoteReport,
   formatLastUpdate,
-  getCurrentUserName,
   getReportSignature,
   saveRemoteReport
 } = window.GloboStorage;
@@ -409,7 +408,7 @@ async function saveOnline() {
 
   const payloadBase = latestPayload || currentRemotePayload || reportData;
   const merged = mergeAnalystChanges(payloadBase, reportData);
-  const { payload, row, error } = await saveRemoteReport(supabaseClient, merged, payloadBase, getCurrentUserName());
+  const { payload, row, error } = await saveRemoteReport(supabaseClient, merged, payloadBase);
   if (error) {
     console.error(error);
     hasPendingSync = true;

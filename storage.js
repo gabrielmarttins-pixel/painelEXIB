@@ -4,7 +4,6 @@ const {
   SUPABASE_KEY,
   SUPABASE_TABLE,
   SUPABASE_URL,
-  USER_NAME_KEY,
   sections
 } = window.GloboConfig;
 
@@ -15,14 +14,6 @@ function createSupabaseClient() {
 
 function getReportId(reportDate) {
   return `relatorio-${reportDate || new Date().toISOString().slice(0, 10)}`;
-}
-
-function getCurrentUserName() {
-  let name = localStorage.getItem(USER_NAME_KEY);
-  if (name) return name;
-  name = window.prompt('Informe seu nome para registrar as alterações no painel:', '')?.trim() || 'Usuário não identificado';
-  localStorage.setItem(USER_NAME_KEY, name);
-  return name;
 }
 
 function cleanReportData(data = {}) {
@@ -43,10 +34,10 @@ function getReportSignature(data) {
 function formatLastUpdate(meta) {
   if (!meta?.updatedAt) return 'Última atualização: ainda não sincronizado';
   const date = new Date(meta.updatedAt);
-  return `Última atualização: ${meta.updatedBy || 'usuário'} em ${date.toLocaleString('pt-BR')}`;
+  return `Última atualização: ${date.toLocaleString('pt-BR')}`;
 }
 
-function buildPayload(data, previousPayload, userName) {
+function buildPayload(data, previousPayload) {
   const clean = cleanReportData(data);
   const previousHistory = Array.isArray(previousPayload?._history) ? previousPayload._history : [];
   const previousMeta = previousPayload?._meta;
@@ -58,7 +49,7 @@ function buildPayload(data, previousPayload, userName) {
     ...clean,
     _meta: {
       updatedAt: new Date().toISOString(),
-      updatedBy: userName,
+      updatedBy: 'Sistema',
       reportId: getReportId(clean.reportDate)
     },
     _history: history
@@ -80,9 +71,9 @@ async function fetchRemoteReport(supabaseClient, reportDate) {
   }
 }
 
-async function saveRemoteReport(supabaseClient, data, previousPayload, userName) {
+async function saveRemoteReport(supabaseClient, data, previousPayload) {
   if (!supabaseClient) return { payload: null, row: null, error: null };
-  const payload = buildPayload(data, previousPayload, userName);
+  const payload = buildPayload(data, previousPayload);
   try {
     const { data: row, error } = await supabaseClient
       .from(SUPABASE_TABLE)
@@ -99,7 +90,6 @@ async function saveRemoteReport(supabaseClient, data, previousPayload, userName)
 window.GloboStorage = {
   createSupabaseClient,
   getReportId,
-  getCurrentUserName,
   cleanReportData,
   getReportSignature,
   formatLastUpdate,

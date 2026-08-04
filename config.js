@@ -7,7 +7,6 @@ const SUPABASE_URL = 'https://kveoxuqzywebqmtgtaho.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2ZW94dXF6eXdlYnFtdGd0YWhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMTc1OTAsImV4cCI6MjA5Nzc5MzU5MH0.pmyZERMf6iwrwlEEXYrqKHngyqRyR1aXk1Jxtl1AUM0';
 const SUPABASE_TABLE = 'relatorios_exibicao';
 
-const USER_NAME_KEY = 'globo-df-exibicao-user-name';
 const SYNC_INTERVAL_MS = 120000;
 const HISTORY_LIMIT = 25;
 
@@ -72,7 +71,6 @@ window.GloboConfig = {
   SUPABASE_URL,
   SUPABASE_KEY,
   SUPABASE_TABLE,
-  USER_NAME_KEY,
   SYNC_INTERVAL_MS,
   HISTORY_LIMIT,
   sections,
