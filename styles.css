@@ -271,7 +271,16 @@ button:disabled{cursor:wait;opacity:.7}
 @media(max-width:850px){.sync-meta{display:none}}
 
 .top-actions a.button{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
-.analyst-shell{width:min(1120px,calc(100% - 32px))}
+.analyst-shell{width:min(1120px,calc(100% - 32px));display:flex;flex-direction:column}
+.analyst-shell .analyst-hero{order:0}
+.analyst-shell #highlightsSection{order:1}
+.analyst-shell #notesSection{order:2}
+.analyst-shell #newsSection{order:3}
+.analyst-shell #strategySection{order:4}
+.analyst-shell #gamesSection{order:5}
+.analyst-shell #programsSection{order:6}
+.analyst-shell #linksSection{order:7}
+.analyst-shell footer{order:8}
 .analyst-hero{display:block}
 .analyst-hero .eyebrow{margin-bottom:12px}
 .analyst-hero .hero-copy{font-size:15px;margin-top:18px}
