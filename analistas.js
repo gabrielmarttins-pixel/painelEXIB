@@ -282,11 +282,11 @@ function render() {
   document.querySelector('#reportDateDisplay').textContent = `${formatReportDate(reportData.reportDate)} | ${reportData.weekday || ''}`;
   document.querySelector('#footerDate').textContent = formatReportDate(reportData.reportDate);
   renderHighlights();
+  renderNotes();
   renderNews();
   renderStrategy();
   renderGames();
   renderPrograms();
-  renderNotes();
   renderLinks();
   bindEditableCards();
 }
