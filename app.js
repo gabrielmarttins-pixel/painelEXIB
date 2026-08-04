@@ -224,7 +224,7 @@ function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 
 function scheduleRemoteSave(data = getData()) {
   if (!supabaseClient) return;
   clearTimeout(remoteSaveTimer);
-  remoteSaveTimer = setTimeout(() => saveRemoteReport(data), 700);
+  remoteSaveTimer = setTimeout(() => saveRemoteReport(data), SYNC_INTERVAL_MS);
 }
 
 async function saveRemoteReport(data = getData()) {
@@ -243,8 +243,8 @@ async function saveRemoteReport(data = getData()) {
   const localSignature = getReportSignature(data);
   const hasConflict = latestPayload && latestSignature !== lastRemoteSignature && latestSignature !== localSignature;
   if (hasConflict) {
-    saveStatus.textContent = 'H alteraes novas online';
-    const shouldUpdate = confirm('H alteraes novas salvas por outro usurio. Atualizar antes de salvar?');
+    saveStatus.textContent = 'Há alterações novas online';
+    const shouldUpdate = confirm('Há alterações novas salvas por outro usuário. Atualizar antes de salvar?');
     if (shouldUpdate) {
       isLoading = true;
       currentRemotePayload = latestPayload;
@@ -270,7 +270,7 @@ async function saveRemoteReport(data = getData()) {
   currentRemotePayload = payload;
   lastRemoteSignature = getReportSignature(payload);
   if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload?._meta);
-  saveStatus.textContent = row ? 'Salvo e sincronizado' : 'Salvo localmente; Supabase no confirmou';
+  saveStatus.textContent = row ? 'Salvo e sincronizado' : 'Salvo localmente; Supabase não confirmou';
 }
 async function loadRemoteReport(silent = false) {
   if (!supabaseClient) return null;
@@ -572,8 +572,8 @@ function showPreview() {
       ${section('05', 'Programas locais', programsHtml)}
       ${section('06', 'Informaes diversas', notesHtml)}
       ${section('07', 'Links teis', linksHtml, 'links-section')}
-      ${!highlightsHtml && !newsHtml && !strategyHtml && !gamesHtml && !programsHtml && !notesHtml && !linksHtml ? '<div class="preview-empty">Nenhuma informao preenchida.</div>' : ''}
-      <div class="preview-export"><button class="button primary" id="exportCsvButton" type="button">Exportar relatrio</button></div>
+      ${!highlightsHtml && !newsHtml && !strategyHtml && !gamesHtml && !programsHtml && !notesHtml && !linksHtml ? '<div class="preview-empty">Nenhuma informação preenchida.</div>' : ''}
+      <div class="preview-export"><button class="button primary" id="exportCsvButton" type="button">Exportar relatório</button></div>
       <footer><span>Exibio - TV Globo DF</span><span>${escapeHtml(formatReportDate(data.reportDate))}</span></footer>
     </main>`;
 
@@ -772,7 +772,7 @@ async function exportImageReport() {
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   } catch (error) {
     console.error(error);
-    alert('No foi possvel gerar a imagem. Recarregue a pgina e tente novamente.');
+    alert('Não foi possível gerar a imagem. Recarregue a página e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -865,7 +865,7 @@ async function exportImageReportLegacy() {
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   } catch (error) {
     console.error(error);
-    alert('No foi possvel gerar a imagem. Recarregue a pgina e tente novamente.');
+    alert('Não foi possível gerar a imagem. Recarregue a página e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -988,7 +988,7 @@ function generateHtmlReport() {
     ${section('01', 'Destaques', highlightsHtml)}
     ${section('02', 'Previso dos jornais', newsHtml)}
     ${section('03', 'Informaes diversas', notesHtml)}
-    ${!highlightsHtml && !newsHtml && !notesHtml ? '<div class="empty">Nenhuma informao preenchida para este relatrio.</div>' : ''}
+    ${!highlightsHtml && !newsHtml && !notesHtml ? '<div class="empty">Nenhuma informação preenchida para este relatório.</div>' : ''}
     <footer><span>Exibio - TV Globo DF</span><span>${escapeHtml(formatReportDate(data.reportDate))}</span></footer>
   </main>
 </body>
@@ -1006,7 +1006,7 @@ function generateHtmlReport() {
     saveStatus.textContent = 'Relatrio HTML gerado';
   } catch (error) {
     console.error(error);
-    alert('No foi possvel gerar o relatrio HTML. Recarregue a pgina e tente novamente.');
+    alert('Não foi possível gerar o relatório HTML. Recarregue a página e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -1210,7 +1210,7 @@ async function generatePdf() {
     data.news.forEach(item => drawCard(item.name, cleanText(item.notes, 'Sem observaes.'), `${cleanText(item.start)}  |  Durao: ${cleanText(item.duration)}`, '#2860ff'));
 
     sectionTitle('03', 'Informaes diversas');
-    if (!data.notes.length) drawCard('Sem informaes', 'Nenhuma informao adicional foi registrada.', '', '#8200ff');
+    if (!data.notes.length) drawCard('Sem informações', 'Nenhuma informação adicional foi registrada.', '', '#8200ff');
     data.notes.forEach(item => drawCard(item.subject, item.text, `Categoria: ${cleanText(item.category)}`, '#8200ff'));
 
     canvases.forEach((pageCanvas, index) => {
@@ -1248,7 +1248,7 @@ async function generatePdf() {
     saveStatus.textContent = 'PDF gerado com sucesso';
   } catch (error) {
     console.error(error);
-    alert('No foi possvel gerar o PDF. Recarregue a pgina e tente novamente.');
+    alert('Não foi possível gerar o PDF. Recarregue a página e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -1291,7 +1291,7 @@ async function load() {
     remoteData = await loadRemoteReport();
   } catch (error) {
     console.error(error);
-    saveStatus.textContent = 'No foi possvel carregar dados online; usando dados locais';
+    saveStatus.textContent = 'Não foi possível carregar dados online; usando dados locais';
   }
   const localData = loadLocalReport();
   const data = hasReportContent(remoteData) ? remoteData : localData || remoteData;
@@ -1324,7 +1324,7 @@ async function syncFromRemote(force = false) {
   const { payload, error } = await fetchRemoteReport(supabaseClient, dateInput.value);
   if (error) {
     console.error(error);
-    saveStatus.textContent = 'No foi possvel atualizar online agora';
+    saveStatus.textContent = 'Não foi possível atualizar online agora';
     if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: sem conexão com Supabase';
     return;
   }
@@ -1338,7 +1338,7 @@ async function syncFromRemote(force = false) {
   const remoteSignature = getReportSignature(remoteData);
   const currentSignature = getReportSignature(getData());
   if (remoteSignature === currentSignature || remoteSignature === lastRemoteSignature) {
-    if (force) saveStatus.textContent = 'Dados j esto atualizados';
+    if (force) saveStatus.textContent = 'Dados já estão atualizados';
     if (payload?._meta && lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload._meta);
     return;
   }
@@ -1362,7 +1362,7 @@ document.querySelector('#printButton')?.addEventListener('click', showPreview);
 load().catch(error => {
   console.error(error);
   setReportDate(getTodayKey());
-  saveStatus.textContent = 'Falha ao iniciar; recarregue a pgina';
+  saveStatus.textContent = 'Falha ao iniciar; recarregue a página';
   if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: indisponível';
 });
 setInterval(updateDayInfo, 60000);

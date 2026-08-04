@@ -429,9 +429,9 @@ async function saveOnline() {
 function scheduleSave() {
   saveLocal();
   hasPendingSync = true;
-  saveStatus.textContent = supabaseClient ? 'Salvo localmente; salvando online...' : 'Salvo neste navegador';
+  saveStatus.textContent = supabaseClient ? 'Salvo localmente; sincronização online agendada' : 'Salvo neste navegador';
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveOnline, 800);
+  saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
 }
 
 async function loadReport(force = false) {
