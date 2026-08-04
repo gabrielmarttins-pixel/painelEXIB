@@ -71,13 +71,8 @@ function getCountryFlag(team) {
   const normalized = normalizeKey(team);
   const code = countryCodes[normalized];
   if (!code) return '';
-  if (code.startsWith('GB-')) {
-    const flags = { 'GB-ENG': '🏴', 'GB-SCT': '🏴', 'GB-WLS': '🏴', 'GB-NIR': '🇬🇧' };
-    return flags[code] || '';
-  }
-  return code.replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt(0)));
+  return `https://flagcdn.com/w320/${code.toLowerCase()}.png`;
 }
-
 function getTeamName(item, fieldName) {
   return item[fieldName] === 'Outro' ? cleanText(item[`${fieldName}Custom`], 'Time a definir') : cleanText(item[fieldName], 'Time a definir');
 }
@@ -86,7 +81,7 @@ function getTeamVisual(team) {
   const crest = teamCrests[team];
   const flag = getCountryFlag(team);
   if (crest) return `<img class="crest" src="${escapeHtml(crest)}" alt="">`;
-  if (flag) return `<span class="crest flag-crest">${escapeHtml(flag)}</span>`;
+  if (flag) return `<img class="crest flag" src="${escapeHtml(flag)}" alt="">`;
   return '';
 }
 

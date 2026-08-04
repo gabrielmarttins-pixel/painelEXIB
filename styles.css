@@ -282,5 +282,4 @@ button:disabled{cursor:wait;opacity:.7}
 .analyst-editor .analyst-checks{margin:12px 0}
 .analyst-editor-actions{display:flex;justify-content:flex-end;margin-top:12px}
 .analyst-empty{grid-column:1/-1;margin:0}
-.flag-crest{display:grid;place-items:center;font-size:80px;line-height:1}
 @media(max-width:680px){.analyst-editor-grid{grid-template-columns:1fr}.analyst-shell{width:calc(100% - 16px)}}
