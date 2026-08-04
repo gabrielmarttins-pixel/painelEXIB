@@ -356,6 +356,7 @@ function bindEditableCards() {
   document.querySelectorAll('.analyst-editable').forEach(card => {
     card.addEventListener('click', () => openEditor(card.dataset.edit, Number(card.dataset.index), card));
     card.addEventListener('keydown', event => {
+      if (event.target !== card) return;
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
         openEditor(card.dataset.edit, Number(card.dataset.index), card);
