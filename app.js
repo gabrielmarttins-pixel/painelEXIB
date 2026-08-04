@@ -226,6 +226,26 @@ function scheduleRemoteSave(data = getData()) {
   remoteSaveTimer = setTimeout(() => saveRemoteReport(data), SYNC_INTERVAL_MS);
 }
 
+async function publishUpdates() {
+  const button = document.querySelector('#publishButton');
+  const data = getData();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  clearTimeout(remoteSaveTimer);
+
+  if (!supabaseClient) {
+    saveStatus.textContent = 'Modo local: publique no GitHub para usar a sincronização online';
+    return;
+  }
+
+  if (button) button.disabled = true;
+  saveStatus.textContent = 'Enviando atualizações...';
+  try {
+    await saveRemoteReport(data);
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
 async function saveRemoteReport(data = getData()) {
   if (!supabaseClient) return;
   clearTimeout(saveTimer);
@@ -1356,6 +1376,7 @@ async function syncFromRemote(force = false) {
 
 document.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', () => addItem(button.dataset.add)));
 document.querySelector('#refreshButton').addEventListener('click', () => syncFromRemote(true));
+document.querySelector('#publishButton')?.addEventListener('click', publishUpdates);
 document.querySelector('#printButton')?.addEventListener('click', showPreview);
 
 load().catch(error => {
