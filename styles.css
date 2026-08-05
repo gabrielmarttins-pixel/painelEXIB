@@ -204,6 +204,7 @@ button:disabled{cursor:wait;opacity:.7}
 .strategy-section .preview-card h3{font-size:16px;margin:0}
 .strategy-section .preview-card p{font-size:13px;line-height:1.35;margin:0}
 .strategy-program{display:flex;align-items:center;gap:11px;min-width:0}
+.strategy-title-stack{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0}
 .strategy-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;background:linear-gradient(135deg,#00a7ff,#8200ff);box-shadow:0 0 0 5px #eef6ff}
 .strategy-info{display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0}
 .strategy-observation{flex:1;min-width:160px;padding:9px 11px;border-radius:10px;background:#eef6ff;border:1px solid #dbe9ff;color:#17233f!important;font-weight:700}
@@ -212,6 +213,9 @@ button:disabled{cursor:wait;opacity:.7}
 .strategy-preview-card .analyst-editor{grid-column:1/-1}
 .strategy-section .strategy-badges{margin-top:0;gap:5px;flex:0 0 auto}
 .strategy-section .strategy-badge{padding:5px 8px;font-size:9px;white-space:nowrap}
+.analyst-shell .strategy-section .strategy-program{align-items:flex-start}
+.analyst-shell .strategy-section .strategy-info{justify-content:flex-end}
+.analyst-shell .strategy-section .strategy-empty{margin-top:0}
 .program-ids{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:7px;min-width:0}
 .program-ids-editor{min-width:0}
 .field-label{display:block;color:#555861;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.055em}

@@ -252,10 +252,12 @@ function renderStrategy() {
       <article class="preview-card strategy-preview-card analyst-editable" data-edit="strategy" data-index="${index}" tabindex="0">
         <div class="strategy-program">
           <span class="strategy-dot"></span>
-          <h3>${escapeHtml(item.name || 'Programa')}</h3>
+          <div class="strategy-title-stack">
+            <h3>${escapeHtml(item.name || 'Programa')}</h3>
+            ${badges ? `<div class="strategy-badges">${badges}</div>` : '<p class="strategy-empty">Sem marcação.</p>'}
+          </div>
         </div>
         <div class="strategy-info">
-          ${badges ? `<div class="strategy-badges">${badges}</div>` : '<p class="strategy-empty">Sem marcação.</p>'}
           ${item.observation ? `<p class="strategy-observation">${escapeHtml(item.observation)}</p>` : ''}
         </div>
         <span class="edit-chip">Clique para editar</span>
