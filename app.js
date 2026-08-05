@@ -669,7 +669,7 @@ function showPreview() {
 
   preview.innerHTML = `
     <header class="topbar preview-topbar">
-      <div class="brand" aria-label="tvglobo DF"><img class="brand-icon" src="assets/PLIMPLIM.png" alt=""><span>tvglobo <b>DF</b></span></div>
+      <div class="brand" aria-label="Painel de Exibição DF"><img class="brand-icon" src="assets/plim-plim.png" alt=""><span>PAINEL DE EXIBIÇÃO <b>DF</b></span></div>
       <button class="button primary" id="editButton" type="button">Editar</button>
     </header>
     <main class="preview-shell">
@@ -1038,7 +1038,8 @@ function generateHtmlReport() {
     const baseUrl = new URL('.', location.href).href;
     const regularFont = new URL('assets/GlobotipoCorporativa-Regular.ttf', baseUrl).href;
     const boldFont = new URL('assets/GlobotipoCorporativa-Bold.ttf', baseUrl).href;
-    const logoUrl = new URL('assets/PLIMPLIM.png', baseUrl).href;
+    const logoUrl = new URL('assets/plim-plim.png', baseUrl).href;
+    const illustrationUrl = new URL('assets/ilustracoes-12.png', baseUrl).href;
 
     const card = (title, text, meta, accent = 'blue') => `
       <article class="card ${accent}">
@@ -1082,20 +1083,18 @@ function generateHtmlReport() {
     @font-face{font-family:Globotipo;src:url('${regularFont}') format('truetype');font-weight:400;font-display:swap}
     @font-face{font-family:Globotipo;src:url('${boldFont}') format('truetype');font-weight:700;font-display:swap}
     :root{--blue:#087bff;--violet:#6b20ff;--ink:#101116;--muted:#686b73;--line:#dedfe3;--panel:#f4f4f5;--gradient:linear-gradient(110deg,#00a7ff,#2860ff 48%,#8200ff)}
-    *{box-sizing:border-box}body{margin:0;background:#ececef;color:var(--ink);font-family:Globotipo,Arial,sans-serif}.topbar{height:76px;background:#fff;border-bottom:1px solid #e7e7ea;display:flex;align-items:center;justify-content:space-between;padding:0 max(28px,calc((100vw - 1080px)/2));position:sticky;top:0;z-index:2}.brand{display:flex;align-items:center;gap:10px;color:var(--blue);font-size:25px;font-weight:700}.brand img{width:36px;height:36px;object-fit:contain;filter:invert(39%) sepia(96%) saturate(3874%) hue-rotate(205deg) brightness(101%) contrast(107%)}.brand b{color:var(--ink);font-size:15px}.print{border:0;border-radius:999px;padding:11px 18px;color:#fff;background:var(--gradient);font:700 14px Globotipo;cursor:pointer}.page{width:min(1080px,calc(100% - 32px));margin:28px auto 55px}.hero{background:#fff;border-radius:26px;padding:48px 52px;display:grid;grid-template-columns:1fr 210px;align-items:center;overflow:hidden}.eyebrow{color:var(--blue);font-size:13px;font-weight:700;letter-spacing:.13em;margin:0 0 16px}.hero h1{font-size:58px;line-height:.95;letter-spacing:-.04em;margin:0}.hero h1 span{background:var(--gradient);background-clip:text;-webkit-background-clip:text;color:transparent}.date{color:var(--muted);font-size:17px;margin:22px 0 0}.orbit{position:relative;width:180px;height:180px;border-radius:50%;background:conic-gradient(#00a8ff,#285bff,#8100ff,#f0007d,#ff3915,#ffbd00,#00a8ff);display:grid;place-items:center}.orbit:before{content:"";width:108px;height:108px;border-radius:50%;background:#fff}.orbit:after{content:"";position:absolute;width:54px;height:38px;border-radius:50%;background:var(--gradient)}section{background:#fff;border-radius:22px;margin-top:18px;padding:32px 36px}.section-title{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:20px}.section-title span{color:var(--blue);font-size:12px;font-weight:700}.section-title h2{font-size:28px;margin:7px 0 0}.cards{display:grid;gap:12px}.card{position:relative;background:var(--panel);border-radius:15px;padding:22px 24px 20px 28px;overflow:hidden}.card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--blue)}.card.violet:before{background:var(--violet)}.card h3{font-size:19px;margin:0}.card p{color:var(--muted);font-size:15px;line-height:1.45;margin:10px 0 0}.meta{color:var(--blue);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.045em;margin-top:14px}.violet .meta{color:var(--violet)}footer{display:flex;justify-content:space-between;color:#757780;font-size:12px;padding:22px 6px}.empty{background:#fff;border-radius:22px;margin-top:18px;padding:34px;color:var(--muted);text-align:center}@media(max-width:680px){.hero{grid-template-columns:1fr;padding:35px 28px}.hero h1{font-size:44px}.orbit{display:none}section{padding:26px 22px}}@page{size:A4;margin:12mm}@media print{body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}.topbar{position:static;height:58px;padding:0}.print{display:none}.page{width:100%;margin:0}.hero{border:1px solid var(--line);padding:30px 34px;border-radius:16px}.hero h1{font-size:42px}.orbit{width:125px;height:125px}.orbit:before{width:76px;height:76px}section{break-inside:auto;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-top:10px}.card{break-inside:avoid}.section-title h2{font-size:21px}footer{padding-bottom:0}}
-    .orbit{position:relative;width:190px;height:135px;border-radius:32px;background:conic-gradient(from 220deg,#00a8ff,#285bff,#8100ff,#f0007d,#ff3915,#ffbd00,#00a8ff)}.orbit:before{content:"";position:absolute;inset:10px;width:auto;height:auto;border-radius:23px;background:#fff}.orbit i{position:absolute;z-index:1;left:50%;top:50%;width:136px;height:81px;border-radius:22px;background:var(--gradient);transform:translate(-50%,-50%)}.orbit i:after{content:"";position:absolute;left:50%;top:50%;width:55px;height:34px;border-radius:50%;background:#fff;transform:translate(-50%,-50%)}.orbit:after{content:"";position:absolute;left:50%;top:-28px;width:78px;height:36px;transform:translateX(-50%);background:linear-gradient(58deg,transparent 47%,#2860ff 48% 51%,transparent 52%),linear-gradient(-58deg,transparent 47%,#8200ff 48% 51%,transparent 52%)}
-    @media print{.orbit{width:135px;height:94px;border-radius:22px}.orbit:before{inset:7px;border-radius:15px}.orbit i{width:96px;height:57px;border-radius:15px}.orbit i:after{width:39px;height:24px}.orbit:after{top:-20px;width:52px;height:26px}}
+    *{box-sizing:border-box}body{margin:0;background:#ececef;color:var(--ink);font-family:Globotipo,Arial,sans-serif}.topbar{height:76px;background:#fff;border-bottom:1px solid #e7e7ea;display:flex;align-items:center;justify-content:space-between;padding:0 max(28px,calc((100vw - 1080px)/2));position:sticky;top:0;z-index:2}.brand{display:flex;align-items:center;gap:12px;color:var(--ink);font-size:20px;font-weight:700;letter-spacing:-.025em;text-transform:uppercase}.brand img{width:42px;height:42px;object-fit:contain}.brand b{color:var(--blue);font-size:15px}.print{border:0;border-radius:999px;padding:11px 18px;color:#fff;background:var(--gradient);font:700 14px Globotipo;cursor:pointer}.page{width:min(1080px,calc(100% - 32px));margin:28px auto 55px}.hero{background:#fff;border-radius:26px;padding:48px 52px;display:grid;grid-template-columns:1fr 300px;align-items:center;overflow:hidden}.eyebrow{color:var(--blue);font-size:13px;font-weight:700;letter-spacing:.13em;margin:0 0 16px}.hero h1{font-size:58px;line-height:.95;letter-spacing:-.04em;margin:0}.hero h1 span{background:var(--gradient);background-clip:text;-webkit-background-clip:text;color:transparent}.date{color:var(--muted);font-size:17px;margin:22px 0 0}.orbit{height:170px;background:url('${illustrationUrl}') center/contain no-repeat;opacity:.38}section{background:#fff;border-radius:22px;margin-top:18px;padding:32px 36px}.section-title{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:20px}.section-title span{color:var(--blue);font-size:12px;font-weight:700}.section-title h2{font-size:28px;margin:7px 0 0}.cards{display:grid;gap:12px}.card{position:relative;background:var(--panel);border-radius:15px;padding:22px 24px 20px 28px;overflow:hidden}.card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--blue)}.card.violet:before{background:var(--violet)}.card h3{font-size:19px;margin:0}.card p{color:var(--muted);font-size:15px;line-height:1.45;margin:10px 0 0}.meta{color:var(--blue);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.045em;margin-top:14px}.violet .meta{color:var(--violet)}footer{display:flex;justify-content:space-between;color:#757780;font-size:12px;padding:22px 6px}.empty{background:#fff;border-radius:22px;margin-top:18px;padding:34px;color:var(--muted);text-align:center}@media(max-width:680px){.hero{grid-template-columns:1fr;padding:35px 28px}.hero h1{font-size:44px}.orbit{display:none}section{padding:26px 22px}}@page{size:A4;margin:12mm}@media print{body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}.topbar{position:static;height:58px;padding:0}.print{display:none}.page{width:100%;margin:0}.hero{border:1px solid var(--line);padding:30px 34px;border-radius:16px}.hero h1{font-size:42px}.orbit{height:110px}section{break-inside:auto;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-top:10px}.card{break-inside:avoid}.section-title h2{font-size:21px}footer{padding-bottom:0}}
   </style>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><img src="${logoUrl}" alt=""><span>tvglobo <b>DF</b></span></div>
+    <div class="brand"><img src="${logoUrl}" alt=""><span>PAINEL DE EXIBIÇÃO <b>DF</b></span></div>
     <button class="print" onclick="window.print()">Imprimir</button>
   </header>
   <main class="page">
     <div class="hero">
       <div><h1>Relatrio dirio de <span>Exibio</span></h1><p class="date">${escapeHtml(formatReportDate(data.reportDate))} &nbsp;|&nbsp; ${escapeHtml(data.weekday)}</p></div>
-      <div class="orbit"><i></i></div>
+      <div class="orbit" aria-hidden="true"></div>
     </div>
     ${section('01', 'Destaques', highlightsHtml)}
     ${section('02', 'Informaes diversas', notesHtml)}
@@ -1158,25 +1157,17 @@ async function generatePdf() {
 
     function drawColoredLogo(context, x, top, size) {
       const source = document.querySelector('.brand-icon');
-      const logoCanvas = document.createElement('canvas');
-      logoCanvas.width = size;
-      logoCanvas.height = size;
-      const logoContext = logoCanvas.getContext('2d');
-      logoContext.drawImage(source, 0, 0, size, size);
-      logoContext.globalCompositeOperation = 'source-in';
-      logoContext.fillStyle = '#087bff';
-      logoContext.fillRect(0, 0, size, size);
-      context.drawImage(logoCanvas, x, top, size, size);
+      context.drawImage(source, x, top, size, size);
     }
 
     function drawHeader(context) {
       drawColoredLogo(context, MARGIN, 54, 52);
-      context.fillStyle = '#087bff';
-      context.font = font(38, 700);
-      context.fillText('tvglobo', MARGIN + 65, 93);
       context.fillStyle = '#101116';
-      context.font = font(22, 700);
-      context.fillText('DF', MARGIN + 205, 92);
+      context.font = font(27, 700);
+      context.fillText('PAINEL DE EXIBIÇÃO', MARGIN + 65, 88);
+      context.fillStyle = '#087bff';
+      context.font = font(19, 700);
+      context.fillText('DF', MARGIN + 345, 88);
       context.fillStyle = '#686b73';
       context.font = font(16, 700);
       context.textAlign = 'right';
