@@ -93,6 +93,20 @@ function getTeamName(item, fieldName) {
   return item[fieldName] === 'Outro' ? cleanText(item[`${fieldName}Custom`], 'Time a definir') : cleanText(item[fieldName], 'Time a definir');
 }
 
+function getChampionshipClass(championship) {
+  const normalized = normalizeKey(championship);
+  if (normalized.includes('brasileirao') && normalized.endsWith('f')) return 'game-brasileirao-f';
+  if (normalized.includes('brasileirao')) return 'game-brasileirao-m';
+  if (normalized.includes('copa do brasil') && normalized.endsWith('f')) return 'game-copa-brasil-f';
+  if (normalized.includes('copa do brasil')) return 'game-copa-brasil-m';
+  if (normalized.includes('libertadores') && normalized.endsWith('f')) return 'game-libertadores-f';
+  if (normalized.includes('libertadores')) return 'game-libertadores-m';
+  if (normalized.includes('amistoso') && normalized.endsWith('f')) return 'game-amistoso-f';
+  if (normalized.includes('amistoso')) return 'game-amistoso-m';
+  if (normalized.includes('copa do mundo')) return 'game-world-cup';
+  return 'game-default';
+}
+
 function getTeamVisual(team) {
   const crest = teamCrests[team];
   const flag = getCountryFlag(team);
@@ -253,8 +267,8 @@ function renderGames() {
     const team2 = getTeamName(item, 'team2');
     return `
       <div class="game-preview-item">
-        ${(item.date || item.time) ? `<div class="game-schedule">${item.date ? `<span>${escapeHtml(formatGameDate(item.date))}</span>` : ''}${item.time ? `<strong class="game-time">${escapeHtml(item.time)}</strong>` : ''}</div>` : ''}
-        <article class="preview-card game">
+        ${item.date ? `<div class="game-schedule"><span>${escapeHtml(formatGameDate(item.date))}</span></div>` : ''}
+        <article class="preview-card game ${getChampionshipClass(item.championship)}">
           <div class="club-crests" aria-hidden="true">
             ${getTeamVisual(team1)}
             ${getTeamVisual(team2)}
@@ -262,6 +276,7 @@ function renderGames() {
           <div class="game-card-content">
             <h3>${escapeHtml(team1)} x ${escapeHtml(team2)}</h3>
             ${item.championship ? `<p>${escapeHtml(item.championship)}</p>` : ''}
+            ${item.time ? `<div class="game-card-meta"><strong class="game-time">${escapeHtml(item.time)}</strong></div>` : ''}
             ${item.signal ? `<div class="game-preview-footer"><span class="signal-badge ${item.signal === 'SP' ? 'signal-sp' : 'signal-rede'}">${escapeHtml(item.signal)}</span></div>` : ''}
           </div>
         </article>

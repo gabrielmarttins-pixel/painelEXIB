@@ -33,6 +33,13 @@ const supabaseClient = createSupabaseClient();
 
 function makeId() { return `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
 
+function normalizeKey(value) {
+  return String(value || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR')
+    .trim();
+}
+
 function normalizeProduction(value) {
   const text = String(value || '').trim();
   if (/^\d{2}:\d{2}:\d{2}$/.test(text)) return text;
@@ -76,6 +83,20 @@ function updateCustomTeamFields(item) {
 
 function getGameTeam(item, fieldName) {
   return item[fieldName] === 'Outro' ? cleanText(item[`${fieldName}Custom`], 'Time a definir') : cleanText(item[fieldName], 'Time a definir');
+}
+
+function getChampionshipClass(championship) {
+  const normalized = normalizeKey(championship);
+  if (normalized.includes('brasileirao') && normalized.endsWith('f')) return 'game-brasileirao-f';
+  if (normalized.includes('brasileirao')) return 'game-brasileirao-m';
+  if (normalized.includes('copa do brasil') && normalized.endsWith('f')) return 'game-copa-brasil-f';
+  if (normalized.includes('copa do brasil')) return 'game-copa-brasil-m';
+  if (normalized.includes('libertadores') && normalized.endsWith('f')) return 'game-libertadores-f';
+  if (normalized.includes('libertadores')) return 'game-libertadores-m';
+  if (normalized.includes('amistoso') && normalized.endsWith('f')) return 'game-amistoso-f';
+  if (normalized.includes('amistoso')) return 'game-amistoso-m';
+  if (normalized.includes('copa do mundo')) return 'game-world-cup';
+  return 'game-default';
 }
 
 function getTeamCrest(team) {
@@ -603,8 +624,8 @@ function showPreview() {
     const flag2 = crest2 ? '' : getCountryFlag(getGameTeam(item, 'team2'));
     return `
       <div class="game-preview-item">
-        ${(item.date || item.time) ? `<div class="game-schedule">${item.date ? `<span>${escapeHtml(formatGameDate(item.date))}</span>` : ''}${item.time ? `<strong class="game-time">${escapeHtml(item.time)}</strong>` : ''}</div>` : ''}
-        <article class="preview-card game">
+        ${item.date ? `<div class="game-schedule"><span>${escapeHtml(formatGameDate(item.date))}</span></div>` : ''}
+        <article class="preview-card game ${getChampionshipClass(item.championship)}">
           <div class="club-crests" aria-hidden="true">
             ${crest1 ? `<img class="crest crest-left" src="${escapeHtml(crest1)}" alt="">` : flag1 ? `<img class="crest flag crest-left" src="${escapeHtml(flag1)}" alt="">` : ''}
             ${crest2 ? `<img class="crest crest-right" src="${escapeHtml(crest2)}" alt="">` : flag2 ? `<img class="crest flag crest-right" src="${escapeHtml(flag2)}" alt="">` : ''}
@@ -612,6 +633,7 @@ function showPreview() {
           <div class="game-card-content">
             <h3>${escapeHtml(getGameTeam(item, 'team1'))} x ${escapeHtml(getGameTeam(item, 'team2'))}</h3>
             ${item.championship ? `<p>${escapeHtml(item.championship)}</p>` : ''}
+            ${item.time ? `<div class="game-card-meta"><strong class="game-time">${escapeHtml(item.time)}</strong></div>` : ''}
             ${item.signal ? `<div class="game-preview-footer"><span class="signal-badge ${item.signal === 'SP' ? 'signal-sp' : 'signal-rede'}">${escapeHtml(item.signal)}</span></div>` : ''}
           </div>
         </article>

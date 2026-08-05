@@ -75,6 +75,15 @@ button:disabled{cursor:wait;opacity:.7}
 .game-teams{display:grid;grid-template-columns:1fr 42px 1fr;align-items:start;gap:12px;margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
 .team-picker{min-width:0}.team-picker .custom-team{margin-top:8px}.versus{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--gradient);color:#fff;font-size:13px;font-weight:700;margin-top:25px}
 .preview-card.game:before{background:linear-gradient(180deg,#00a86b,#00c97b 52%,#9bdc00)}
+.preview-card.game.game-brasileirao-m:before{background:linear-gradient(180deg,#00a7ff,#2860ff 52%,#003dd9)}
+.preview-card.game.game-copa-brasil-m:before{background:linear-gradient(180deg,#00a86b,#00c97b 52%,#9bdc00)}
+.preview-card.game.game-libertadores-m:before{background:linear-gradient(180deg,#ff1744,#eb005c 52%,#a60028)}
+.preview-card.game.game-amistoso-m:before{background:linear-gradient(180deg,#00c8ff,#087bff 52%,#751cff)}
+.preview-card.game.game-brasileirao-f:before{background:linear-gradient(180deg,#ff4fa3,#db007b 52%,#a600ff)}
+.preview-card.game.game-copa-brasil-f:before{background:linear-gradient(180deg,#c56bff,#751cff 52%,#4c00b8)}
+.preview-card.game.game-libertadores-f:before{background:linear-gradient(180deg,#ffbd00,#ffdf42 52%,#ff8a00)}
+.preview-card.game.game-amistoso-f:before{background:linear-gradient(180deg,#ff78c7,#c56bff 52%,#751cff)}
+.preview-card.game.game-world-cup:before{background:linear-gradient(180deg,#00a7ff,#2860ff 45%,#ff1744)}
 .preview-card.game{min-height:190px;isolation:isolate}
 .preview-card.game:before{z-index:4}
 .preview-card.game:after{content:"";position:absolute;z-index:1;inset:0;background:linear-gradient(90deg,rgba(244,244,245,.38),rgba(244,244,245,.92) 38%,rgba(244,244,245,.92) 62%,rgba(244,244,245,.38));pointer-events:none}
@@ -85,6 +94,7 @@ button:disabled{cursor:wait;opacity:.7}
 .game-card-content{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;min-height:145px}
 .game-card-content h3,.game-card-content p{text-align:center;text-wrap:balance}
 .preview-card.game .preview-meta{color:#008f5a;margin-top:0}
+.game-card-meta{display:flex;align-items:center;justify-content:center;margin-top:10px}
 .game-preview-item{min-width:0;display:flex;flex-direction:column;gap:8px}
 .game-preview-item .preview-card{flex:1}
 .game-schedule{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 6px;color:#555861;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.045em}
@@ -281,7 +291,7 @@ button:disabled{cursor:wait;opacity:.7}
 .club-crests .flag{width:34%;height:60%;object-fit:cover;border-radius:10px;filter:drop-shadow(0 6px 12px #00000022)}
 .game-schedule{padding:0 4px;font-size:11px}
 .game-schedule strong{font-size:12px}
-.game-schedule .game-time{display:inline-flex;align-items:center;justify-content:center;padding:7px 12px;border-radius:999px;background:linear-gradient(110deg,#00a86b,#00c97b);color:#fff!important;font-size:17px!important;box-shadow:0 7px 16px #00a86b24}
+.game-card-meta .game-time{display:inline-flex;align-items:center;justify-content:center;padding:7px 14px;border-radius:999px;background:linear-gradient(110deg,#00a86b,#00c97b);color:#fff!important;font-size:17px!important;line-height:1;box-shadow:0 7px 16px #00a86b24}
 .game-preview-footer{margin-top:8px}
 .preview-card.game .signal-badge{min-width:48px;padding:5px 8px;border-radius:6px;font-size:9px}
 @media(max-width:520px){.preview-card.game{min-height:115px}.game-card-content{min-height:80px}}
