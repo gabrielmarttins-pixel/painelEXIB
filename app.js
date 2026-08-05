@@ -316,12 +316,12 @@ async function publishUpdates() {
   clearTimeout(remoteSaveTimer);
 
   if (!supabaseClient) {
-    saveStatus.textContent = 'Modo local: publique no GitHub para usar a sincronizaÃ§Ã£o online';
+    saveStatus.textContent = 'Modo local: publique no GitHub para usar a sincronização online';
     return;
   }
 
   if (button) button.disabled = true;
-  saveStatus.textContent = 'Enviando atualizaÃ§Ãµes...';
+  saveStatus.textContent = 'Enviando atualizações...';
   try {
     await saveRemoteReport(data);
   } finally {
@@ -336,8 +336,8 @@ async function saveRemoteReport(data = getData()) {
   const { payload: latestPayload, error: fetchError } = await fetchRemoteReport(supabaseClient, data.reportDate);
   if (fetchError) {
     console.error(fetchError);
-    saveStatus.textContent = 'Salvo neste navegador; online indisponÃ­vel';
-    if (lastUpdateStatus) lastUpdateStatus.textContent = 'Ãšltima atualizaÃ§Ã£o: sem conexÃ£o com Supabase';
+    saveStatus.textContent = 'Salvo neste navegador; online indisponível';
+    if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: sem conexão com Supabase';
     return;
   }
 
@@ -345,8 +345,8 @@ async function saveRemoteReport(data = getData()) {
   const localSignature = getReportSignature(data);
   const hasConflict = latestPayload && latestSignature !== lastRemoteSignature && latestSignature !== localSignature;
   if (hasConflict) {
-    saveStatus.textContent = 'HÃ¡ alteraÃ§Ãµes novas online';
-    const shouldUpdate = confirm('HÃ¡ alteraÃ§Ãµes novas salvas por outro usuÃ¡rio. Atualizar antes de salvar?');
+    saveStatus.textContent = 'Há alterações novas online';
+    const shouldUpdate = confirm('Há alterações novas salvas por outro usuário. Atualizar antes de salvar?');
     if (shouldUpdate) {
       isLoading = true;
       currentRemotePayload = latestPayload;
@@ -366,13 +366,13 @@ async function saveRemoteReport(data = getData()) {
   if (error) {
     console.error(error);
     saveStatus.textContent = 'Salvo neste navegador; falha ao sincronizar online';
-    if (lastUpdateStatus) lastUpdateStatus.textContent = 'Ãšltima atualizaÃ§Ã£o: sem conexÃ£o com Supabase';
+    if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: sem conexão com Supabase';
     return;
   }
   currentRemotePayload = payload;
   lastRemoteSignature = getReportSignature(payload);
   if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload?._meta);
-  saveStatus.textContent = row ? 'Salvo e sincronizado' : 'Salvo localmente; Supabase nÃ£o confirmou';
+  saveStatus.textContent = row ? 'Salvo e sincronizado' : 'Salvo localmente; Supabase não confirmou';
 }
 async function loadRemoteReport(silent = false) {
   if (!supabaseClient) return null;
@@ -588,7 +588,7 @@ function showPreview() {
     return `
       <article class="preview-card highlight-preview-card ${accent}">
         ${item.category ? `<span class="highlight-category-badge ${getCategoryClass(item.category)}">${escapeHtml(item.category)}</span>` : ''}
-        <h3>${escapeHtml(item.title || 'Destaque estratgico')}</h3>
+        <h3>${escapeHtml(item.title || 'Destaque estratégico')}</h3>
         ${item.details ? `<p>${escapeHtml(item.details).replaceAll('\n', '<br>')}</p>` : ''}
         ${item.priority ? `<div class="preview-meta">Prioridade: ${escapeHtml(item.priority)}</div>` : ''}
       </article>`;
@@ -601,7 +601,7 @@ function showPreview() {
         ${presenter ? `<img class="news-presenter" src="${escapeHtml(presenter)}" alt="" aria-hidden="true">` : ''}
         <div class="news-card-content">
           <h3>${escapeHtml(item.name || 'Jornal')}</h3>
-          <div class="info-pills">${metric('InÃ­cio', item.start)}${metric('ProduÃ§Ã£o', item.production)}${metric('Blocos', item.blocks)}</div>
+          <div class="info-pills">${metric('Início', item.start)}${metric('Produção', item.production)}${metric('Blocos', item.blocks)}</div>
           ${item.notes ? `<p>${escapeHtml(item.notes)}</p>` : ''}
         </div>
       </article>`;
@@ -643,22 +643,22 @@ function showPreview() {
   const programsHtml = programs.map(item => `
     <article class="preview-card program-preview-card">
       <div class="program-title-row">
-        <span class="status-badge ${getStatusClass(item.status)}">${escapeHtml(item.status || 'Em preparao')}</span>
+        <span class="status-badge ${getStatusClass(item.status)}">${escapeHtml(item.status || 'Em preparação')}</span>
         <h3>${escapeHtml(item.name || 'Programa local')}</h3>
         ${item.exhibitionDate ? `<span class="program-date-badge">${escapeHtml(formatReportDate(item.exhibitionDate))}</span>` : ''}
       </div>
       <div class="program-preview-footer">
         <div class="program-ids">${getProgramIdBadges(item).map(id => `<span class="program-category">ID: ${escapeHtml(id)}</span>`).join('')}</div>
         <div class="preview-meta">${[
-          item.exhibitionDate && `ExibiÃ§Ã£o: ${formatReportDate(item.exhibitionDate)}`,
-          item.start && `Incio: ${item.start}`,
-          item.duration && `Durao: ${item.duration}`
+          item.exhibitionDate && `Exibição: ${formatReportDate(item.exhibitionDate)}`,
+          item.start && `Início: ${item.start}`,
+          item.duration && `Duração: ${item.duration}`
         ].slice(1).filter(Boolean).map(escapeHtml).join(' &nbsp;|&nbsp; ')}</div>
       </div>
     </article>`).join('');
 
   const notesHtml = notes.map(item => card(
-    item.subject || 'Informao',
+    item.subject || 'Informação',
     item.text,
     '',
     'violet'
@@ -675,18 +675,18 @@ function showPreview() {
     <main class="preview-shell">
       ${linksHtml ? `<section class="preview-section links-section links-top"><div class="preview-cards">${linksHtml}</div></section>` : ''}
       <section class="preview-hero">
-        <h1>Relatrio dirio de <span>Exibio</span></h1>
+        <h1>Relatório diário de <span>Exibição</span></h1>
         <p>${escapeHtml(formatReportDate(data.reportDate))} &nbsp;|&nbsp; ${escapeHtml(data.weekday)}</p>
       </section>
       ${section('01', 'Destaques', highlightsHtml)}
-      ${section('02', 'Informaes diversas', notesHtml)}
-      ${section('03', 'Previso dos jornais', newsHtml)}
-      ${section('04', 'Estratgia de grade', strategyHtml, 'strategy-section')}
-      ${section('05', 'Prximos jogos', gamesHtml)}
+      ${section('02', 'Informações diversas', notesHtml)}
+      ${section('03', 'Previsão dos jornais', newsHtml)}
+      ${section('04', 'Estratégia de grade', strategyHtml, 'strategy-section')}
+      ${section('05', 'Próximos jogos', gamesHtml)}
       ${section('06', 'Programas locais', programsHtml)}
-      ${!highlightsHtml && !newsHtml && !strategyHtml && !gamesHtml && !programsHtml && !notesHtml && !linksHtml ? '<div class="preview-empty">Nenhuma informaÃ§Ã£o preenchida.</div>' : ''}
-      <div class="preview-export"><button class="button primary" id="exportCsvButton" type="button">Exportar relatÃ³rio</button></div>
-      <footer><span>Exibio - TV Globo DF</span><span>${escapeHtml(formatReportDate(data.reportDate))}</span></footer>
+      ${!highlightsHtml && !newsHtml && !strategyHtml && !gamesHtml && !programsHtml && !notesHtml && !linksHtml ? '<div class="preview-empty">Nenhuma informação preenchida.</div>' : ''}
+      <div class="preview-export"><button class="button primary" id="exportCsvButton" type="button">Exportar relatório</button></div>
+      <footer><span>Exibição - TV Globo DF</span><span>${escapeHtml(formatReportDate(data.reportDate))}</span></footer>
     </main>`;
 
   document.querySelector('body > .topbar').hidden = true;
@@ -718,22 +718,22 @@ async function exportImageReport() {
         .sort((a, b) => Number(Boolean(b.urgent)) - Number(Boolean(a.urgent)))
         .map(item => ({ title: item.title || 'Destaque', body: item.details, meta: [item.category, item.priority].filter(Boolean).join(' | '), theme: item.urgent ? 'urgent' : item.priority === 'Alta' ? 'high' : item.priority === 'Baixa' ? 'low' : 'medium', full: Boolean(item.urgent) })),
       news: data.news.filter(item => hasMeaningfulFields(item, ['name', 'start', 'production', 'blocks', 'notes']))
-        .map(item => ({ title: item.name || 'Jornal', body: item.notes, meta: [item.start && `Incio ${item.start}`, item.production && `Produo ${item.production}`, item.blocks && `${item.blocks} blocos`].filter(Boolean).join(' | '), theme: 'blue' })),
+        .map(item => ({ title: item.name || 'Jornal', body: item.notes, meta: [item.start && `Início ${item.start}`, item.production && `Produção ${item.production}`, item.blocks && `${item.blocks} blocos`].filter(Boolean).join(' | '), theme: 'blue' })),
       strategy: data.strategy.filter(item => item.network || item.local || String(item.observation || '').trim())
         .map(item => ({ title: item.name || 'Programa', body: item.observation, meta: [item.network && 'Em rede', item.local && 'Local'].filter(Boolean).join(' + '), theme: 'blue' })),
       games: data.games.filter(item => hasMeaningfulFields(item, ['date', 'time', 'championship', 'team1', 'team1Custom', 'team2', 'team2Custom']))
         .map(item => ({ title: `${getGameTeam(item, 'team1')} x ${getGameTeam(item, 'team2')}`, body: item.championship, meta: [item.date && formatGameDate(item.date), item.time, item.signal].filter(Boolean).join(' | '), theme: 'green' })),
       programs: data.programs.filter(item => hasMeaningfulFields(item, ['name', 'exhibitionDate', 'start', 'duration', 'ids']))
-        .map(item => ({ title: item.name || 'Programa local', body: '', meta: [item.exhibitionDate && `ExibiÃ§Ã£o ${formatReportDate(item.exhibitionDate)}`, item.start && `Incio ${item.start}`, item.duration, getProgramIdBadges(item).map(id => `ID ${id}`).join(' + '), item.status].filter(Boolean).join(' | '), theme: item.status === 'Ao Vivo' ? 'high' : item.status === 'Capturado' ? 'green' : item.status === 'Enviado' ? 'orange' : 'gray' })),
+        .map(item => ({ title: item.name || 'Programa local', body: '', meta: [item.exhibitionDate && `Exibição ${formatReportDate(item.exhibitionDate)}`, item.start && `Início ${item.start}`, item.duration, getProgramIdBadges(item).map(id => `ID ${id}`).join(' + '), item.status].filter(Boolean).join(' | '), theme: item.status === 'Ao Vivo' ? 'high' : item.status === 'Capturado' ? 'green' : item.status === 'Enviado' ? 'orange' : 'gray' })),
       notes: data.notes.filter(item => hasMeaningfulFields(item, ['subject', 'text']))
-        .map(item => ({ title: item.subject || 'Informao', body: item.text, meta: '', theme: 'violet' })),
+        .map(item => ({ title: item.subject || 'Informação', body: item.text, meta: '', theme: 'violet' })),
       links: data.links.filter(item => normalizeUrl(item.url))
         .map(item => ({ title: item.label || item.url, body: normalizeUrl(item.url), meta: '', theme: 'blue' }))
     };
 
     const sectionsToDraw = [
-      ['Destaques', cards.highlights], ['Informaes diversas', cards.notes], ['Previso dos jornais', cards.news],
-      ['Estratgia de grade', cards.strategy], ['Prximos jogos', cards.games], ['Programas locais', cards.programs]
+      ['Destaques', cards.highlights], ['Informações diversas', cards.notes], ['Previsão dos jornais', cards.news],
+      ['Estratégia de grade', cards.strategy], ['Próximos jogos', cards.games], ['Programas locais', cards.programs]
     ].filter(([, items]) => items.length);
 
     const WIDTH = 1200;
@@ -841,11 +841,11 @@ async function exportImageReport() {
     ctx.fillStyle = '#686b73'; ctx.font = font(14, 400); ctx.textAlign = 'right';
     ctx.fillText(`${formatReportDate(data.reportDate)} | ${data.weekday}`, WIDTH - OUTER - 28, y + 30); ctx.textAlign = 'left';
     ctx.font = font(36, 700); ctx.fillStyle = '#101116';
-    const reportTitle = 'Relatrio dirio de ';
+    const reportTitle = 'Relatório diário de ';
     ctx.fillText(reportTitle, OUTER + 28, y + 82);
     const reportTitleWidth = ctx.measureText(reportTitle).width;
     ctx.fillStyle = gradientFor('blue', OUTER + 28 + reportTitleWidth, 210);
-    ctx.fillText('Exibio', OUTER + 28 + reportTitleWidth, y + 82);
+    ctx.fillText('Exibição', OUTER + 28 + reportTitleWidth, y + 82);
     y += heroHeight + 18;
 
     sectionLayouts.forEach(section => {
@@ -871,7 +871,7 @@ async function exportImageReport() {
       y += sectionHeight + sectionGap;
     });
 
-    ctx.fillStyle = '#686b73'; ctx.font = font(11); ctx.fillText('Exibio - TV Globo DF', OUTER, height - 24);
+    ctx.fillStyle = '#686b73'; ctx.font = font(11); ctx.fillText('Exibição - TV Globo DF', OUTER, height - 24);
     ctx.textAlign = 'right'; ctx.fillText(formatReportDate(data.reportDate), WIDTH - OUTER, height - 24); ctx.textAlign = 'left';
 
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
@@ -884,7 +884,7 @@ async function exportImageReport() {
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   } catch (error) {
     console.error(error);
-    alert('NÃ£o foi possÃ­vel gerar a imagem. Recarregue a pÃ¡gina e tente novamente.');
+    alert('Não foi possível gerar a imagem. Recarregue a página e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -977,7 +977,7 @@ async function exportImageReportLegacy() {
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   } catch (error) {
     console.error(error);
-    alert('NÃ£o foi possÃ­vel gerar a imagem. Recarregue a pÃ¡gina e tente novamente.');
+    alert('Não foi possível gerar a imagem. Recarregue a página e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -988,26 +988,26 @@ function exportCsvReport() {
   save();
   const data = getData();
   const rows = [['Bloco', 'Ordem', 'Item', 'Data', 'Horrio', 'Tempo', 'Classificao', 'Detalhes', 'Time 1', 'Time 2', 'Prioridade']];
-  rows.push(['Informaes do dia', '1', data.weekday, formatReportDate(data.reportDate), '', '', '', '', '', '', '']);
+  rows.push(['Informações do dia', '1', data.weekday, formatReportDate(data.reportDate), '', '', '', '', '', '', '']);
 
   data.highlights.filter(item => hasMeaningfulFields(item, ['title', 'details'])).forEach((item, index) => {
     rows.push(['Destaques', index + 1, item.title, '', '', '', item.category, item.details, '', '', item.priority]);
   });
   data.news.filter(item => hasMeaningfulFields(item, ['name', 'start', 'production', 'notes'])).forEach((item, index) => {
-    rows.push(['Previso dos jornais', index + 1, item.name, '', item.start, item.production, '', item.notes, '', '', '']);
+    rows.push(['Previsão dos jornais', index + 1, item.name, '', item.start, item.production, '', item.notes, '', '', '']);
   });
   data.strategy.filter(item => item.network || item.local || String(item.observation || '').trim()).forEach((item, index) => {
     const selections = [item.network && 'Em rede', item.local && 'Local'].filter(Boolean).join(' + ');
-    rows.push(['Estratgia de grade', index + 1, item.name, '', '', '', selections, item.observation, '', '', '']);
+    rows.push(['Estratégia de grade', index + 1, item.name, '', '', '', selections, item.observation, '', '', '']);
   });
   data.games.filter(item => hasMeaningfulFields(item, ['date', 'time', 'championship', 'team1', 'team1Custom', 'team2', 'team2Custom'])).forEach((item, index) => {
-    rows.push(['Prximos jogos', index + 1, item.championship, item.date ? formatGameDate(item.date) : '', item.time, '', item.signal, '', getGameTeam(item, 'team1'), getGameTeam(item, 'team2'), '']);
+    rows.push(['Próximos jogos', index + 1, item.championship, item.date ? formatGameDate(item.date) : '', item.time, '', item.signal, '', getGameTeam(item, 'team1'), getGameTeam(item, 'team2'), '']);
   });
   data.programs.filter(item => hasMeaningfulFields(item, ['name', 'exhibitionDate', 'start', 'duration', 'ids'])).forEach((item, index) => {
     rows.push(['Programas locais', index + 1, item.name, item.exhibitionDate ? formatReportDate(item.exhibitionDate) : '', item.start, item.duration, item.status, getProgramIdBadges(item).map(id => `ID: ${id}`).join(' | '), '', '', '']);
   });
   data.notes.filter(item => hasMeaningfulFields(item, ['subject', 'text'])).forEach((item, index) => {
-    rows.push(['Informaes diversas', index + 1, item.subject, '', '', '', item.category, item.text, '', '', '']);
+    rows.push(['Informações diversas', index + 1, item.subject, '', '', '', item.category, item.text, '', '', '']);
   });
 
   const csvCell = value => `"${String(value ?? '').replaceAll('"', '""').replaceAll(/\r?\n/g, ' ')}"`;
@@ -1055,7 +1055,7 @@ function generateHtmlReport() {
       </section>` : '';
 
     const highlightsHtml = highlights.map(item => card(
-      item.title || 'Destaque estratgico',
+      item.title || 'Destaque estratégico',
       item.details,
       [item.category && `Categoria: ${item.category}`, item.priority && `Prioridade: ${item.priority}`].filter(Boolean).join('  |  ')
     )).join('');
@@ -1063,11 +1063,11 @@ function generateHtmlReport() {
     const newsHtml = news.map(item => card(
       item.name || 'Jornal',
       item.notes,
-      [item.start && `Incio: ${item.start}`, item.duration && `Durao: ${item.duration}`].filter(Boolean).join('  |  ')
+      [item.start && `Início: ${item.start}`, item.duration && `Duração: ${item.duration}`].filter(Boolean).join('  |  ')
     )).join('');
 
     const notesHtml = notes.map(item => card(
-      item.subject || 'Informao',
+      item.subject || 'Informação',
       item.text,
       item.category ? `Categoria: ${item.category}` : '',
       'violet'
@@ -1078,7 +1078,7 @@ function generateHtmlReport() {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Relatrio de Exibio - ${escapeHtml(data.reportDate || 'TV Globo DF')}</title>
+  <title>Relatório de Exibição - ${escapeHtml(data.reportDate || 'TV Globo DF')}</title>
   <link rel="icon" type="image/png" href="${logoUrl}">
   <style>
     @font-face{font-family:Globotipo;src:url('${regularFont}') format('truetype');font-weight:400;font-display:swap}
@@ -1094,14 +1094,14 @@ function generateHtmlReport() {
   </header>
   <main class="page">
     <div class="hero">
-      <div><h1>Relatrio dirio de <span>Exibio</span></h1><p class="date">${escapeHtml(formatReportDate(data.reportDate))} &nbsp;|&nbsp; ${escapeHtml(data.weekday)}</p></div>
+      <div><h1>Relatório diário de <span>Exibição</span></h1><p class="date">${escapeHtml(formatReportDate(data.reportDate))} &nbsp;|&nbsp; ${escapeHtml(data.weekday)}</p></div>
       <div class="orbit" aria-hidden="true"></div>
     </div>
     ${section('01', 'Destaques', highlightsHtml)}
-    ${section('02', 'Informaes diversas', notesHtml)}
-    ${section('03', 'Previso dos jornais', newsHtml)}
-    ${!highlightsHtml && !newsHtml && !notesHtml ? '<div class="empty">Nenhuma informaÃ§Ã£o preenchida para este relatÃ³rio.</div>' : ''}
-    <footer><span>Exibio - TV Globo DF</span><span>${escapeHtml(formatReportDate(data.reportDate))}</span></footer>
+    ${section('02', 'Informações diversas', notesHtml)}
+    ${section('03', 'Previsão dos jornais', newsHtml)}
+    ${!highlightsHtml && !newsHtml && !notesHtml ? '<div class="empty">Nenhuma informação preenchida para este relatório.</div>' : ''}
+    <footer><span>Exibição - TV Globo DF</span><span>${escapeHtml(formatReportDate(data.reportDate))}</span></footer>
   </main>
 </body>
 </html>`;
@@ -1115,10 +1115,10 @@ function generateHtmlReport() {
     link.click();
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
-    saveStatus.textContent = 'Relatrio HTML gerado';
+    saveStatus.textContent = 'Relatório HTML gerado';
   } catch (error) {
     console.error(error);
-    alert('NÃ£o foi possÃ­vel gerar o relatÃ³rio HTML. Recarregue a pÃ¡gina e tente novamente.');
+    alert('Não foi possível gerar o relatório HTML. Recarregue a página e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -1226,7 +1226,7 @@ async function generatePdf() {
       ctx.fill();
       ctx.fillStyle = '#101116';
       ctx.font = font(57, 700);
-      const titlePrefix = 'Relatrio dirio de ';
+      const titlePrefix = 'Relatório diário de ';
       ctx.fillText(titlePrefix, MARGIN + 38, y + 104);
       const titlePrefixWidth = ctx.measureText(titlePrefix).width;
       const gradient = ctx.createLinearGradient(MARGIN + 38, 0, MARGIN + 470, 0);
@@ -1234,7 +1234,7 @@ async function generatePdf() {
       gradient.addColorStop(0.52, '#2860ff');
       gradient.addColorStop(1, '#8200ff');
       ctx.fillStyle = gradient;
-      ctx.fillText('Exibio', MARGIN + 38 + titlePrefixWidth, y + 104);
+      ctx.fillText('Exibição', MARGIN + 38 + titlePrefixWidth, y + 104);
       ctx.fillStyle = '#686b73';
       ctx.font = font(25, 400);
       ctx.fillText(`${formatReportDate(data.reportDate)}  |  ${cleanText(data.weekday)}`, MARGIN + 38, y + 244);
@@ -1303,16 +1303,16 @@ async function generatePdf() {
     newPage();
     drawHero();
     sectionTitle('01', 'Destaques');
-    if (!data.highlights.length) drawCard('Sem destaques', 'Nenhum destaque estratgico foi informado.');
+    if (!data.highlights.length) drawCard('Sem destaques', 'Nenhum destaque estratégico foi informado.');
     data.highlights.forEach(item => drawCard(item.title, item.details, `Categoria: ${cleanText(item.category)}   |   Prioridade: ${cleanText(item.priority)}`));
 
-    sectionTitle('02', 'Informaes diversas');
-    if (!data.notes.length) drawCard('Sem informaÃ§Ãµes', 'Nenhuma informaÃ§Ã£o adicional foi registrada.', '', '#8200ff');
+    sectionTitle('02', 'Informações diversas');
+    if (!data.notes.length) drawCard('Sem informações', 'Nenhuma informação adicional foi registrada.', '', '#8200ff');
     data.notes.forEach(item => drawCard(item.subject, item.text, `Categoria: ${cleanText(item.category)}`, '#8200ff'));
 
-    sectionTitle('03', 'Previso dos jornais');
-    if (!data.news.length) drawCard('Sem previso', 'Nenhum jornal foi informado para esta data.');
-    data.news.forEach(item => drawCard(item.name, cleanText(item.notes, 'Sem observaes.'), `${cleanText(item.start)}  |  Durao: ${cleanText(item.duration)}`, '#2860ff'));
+    sectionTitle('03', 'Previsão dos jornais');
+    if (!data.news.length) drawCard('Sem previsão', 'Nenhum jornal foi informado para esta data.');
+    data.news.forEach(item => drawCard(item.name, cleanText(item.notes, 'Sem observações.'), `${cleanText(item.start)}  |  Duração: ${cleanText(item.duration)}`, '#2860ff'));
 
     canvases.forEach((pageCanvas, index) => {
       const pageContext = pageCanvas.getContext('2d');
@@ -1324,7 +1324,7 @@ async function generatePdf() {
       pageContext.stroke();
       pageContext.fillStyle = '#686b73';
       pageContext.font = font(16, 400);
-      pageContext.fillText('Exibio - TV Globo DF', MARGIN, PAGE_H - 43);
+      pageContext.fillText('Exibição - TV Globo DF', MARGIN, PAGE_H - 43);
       pageContext.textAlign = 'right';
       pageContext.fillText(`${index + 1} / ${canvases.length}`, PAGE_W - MARGIN, PAGE_H - 43);
       pageContext.textAlign = 'left';
@@ -1349,7 +1349,7 @@ async function generatePdf() {
     saveStatus.textContent = 'PDF gerado com sucesso';
   } catch (error) {
     console.error(error);
-    alert('NÃ£o foi possÃ­vel gerar o PDF. Recarregue a pÃ¡gina e tente novamente.');
+    alert('Não foi possível gerar o PDF. Recarregue a página e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -1425,14 +1425,14 @@ async function copyPreviousDay() {
   }
   previousData = previousData || loadLocalReport(previousDate);
   if (!hasReportContent(previousData)) {
-    saveStatus.textContent = 'Nenhuma informaÃ§Ã£o encontrada no dia anterior';
+    saveStatus.textContent = 'Nenhuma informação encontrada no dia anterior';
     return;
   }
   renderReportData({ ...previousData, reportDate: currentDate, weekday: weekdayInput.value });
   setReportDate(currentDate);
   applyDateDefaults();
   save();
-  saveStatus.textContent = 'InformaÃ§Ãµes do dia anterior copiadas';
+  saveStatus.textContent = 'Informações do dia anterior copiadas';
 }
 
 async function load() {
@@ -1444,7 +1444,7 @@ async function load() {
     remoteData = await loadRemoteReport();
   } catch (error) {
     console.error(error);
-    saveStatus.textContent = 'NÃ£o foi possÃ­vel carregar dados online; usando dados locais';
+    saveStatus.textContent = 'Não foi possível carregar dados online; usando dados locais';
   }
   const localData = loadLocalReport(getTodayKey());
   const data = hasReportContent(remoteData) ? remoteData : localData || remoteData;
@@ -1456,8 +1456,8 @@ async function load() {
   updateFooter();
   if (!currentRemotePayload && lastUpdateStatus) {
     lastUpdateStatus.textContent = supabaseClient
-      ? 'Ãšltima atualizaÃ§Ã£o: ainda nÃ£o sincronizado'
-      : 'Ãšltima atualizaÃ§Ã£o: modo local';
+      ? 'Última atualização: ainda não sincronizado'
+      : 'Última atualização: modo local';
   }
   localStorage.removeItem(DATE_STORAGE_KEY);
   localStorage.removeItem(LEGACY_STORAGE_KEY);
@@ -1466,8 +1466,8 @@ async function load() {
 async function syncFromRemote(force = false) {
   if (!supabaseClient) {
     if (force) {
-      saveStatus.textContent = 'Modo local: sincronizaÃ§Ã£o disponÃ­vel no site publicado';
-      if (lastUpdateStatus) lastUpdateStatus.textContent = 'Ãšltima atualizaÃ§Ã£o: modo local';
+      saveStatus.textContent = 'Modo local: sincronização disponível no site publicado';
+      if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: modo local';
     }
     return;
   }
@@ -1477,8 +1477,8 @@ async function syncFromRemote(force = false) {
   const { payload, error } = await fetchRemoteReport(supabaseClient, dateInput.value);
   if (error) {
     console.error(error);
-    saveStatus.textContent = 'NÃ£o foi possÃ­vel atualizar online agora';
-    if (lastUpdateStatus) lastUpdateStatus.textContent = 'Ãšltima atualizaÃ§Ã£o: sem conexÃ£o com Supabase';
+    saveStatus.textContent = 'Não foi possível atualizar online agora';
+    if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: sem conexão com Supabase';
     return;
   }
 
@@ -1491,7 +1491,7 @@ async function syncFromRemote(force = false) {
   const remoteSignature = getReportSignature(remoteData);
   const currentSignature = getReportSignature(getData());
   if (remoteSignature === currentSignature || remoteSignature === lastRemoteSignature) {
-    if (force) saveStatus.textContent = 'Dados jÃ¡ estÃ£o atualizados';
+    if (force) saveStatus.textContent = 'Dados já estão atualizados';
     if (payload?._meta && lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload._meta);
     return;
   }
@@ -1519,8 +1519,8 @@ document.querySelector('#printButton')?.addEventListener('click', showPreview);
 load().catch(error => {
   console.error(error);
   setReportDate(getTodayKey());
-  saveStatus.textContent = 'Falha ao iniciar; recarregue a pÃ¡gina';
-  if (lastUpdateStatus) lastUpdateStatus.textContent = 'Ãšltima atualizaÃ§Ã£o: indisponÃ­vel';
+  saveStatus.textContent = 'Falha ao iniciar; recarregue a página';
+  if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: indisponível';
 });
 setInterval(updateDayInfo, 60000);
 setInterval(syncFromRemote, SYNC_INTERVAL_MS);

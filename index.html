@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
@@ -22,34 +22,25 @@
   </header>
 
   <main class="page-shell">
-    <section class="hero">
+    <section class="hero coordinator-hero">
       <div>
-        <h1>Painel diário de <span>Exibição</span></h1>
-        <p class="hero-copy">Informações essenciais para alinhar o dia, antecipar movimentos e garantir uma exibição consistente.</p>
-      </div>
-    </section>
-
-    <section class="date-panel section-card">
-      <div class="section-heading compact">
-        <div><span class="section-number">01</span><h2>Informações do dia</h2></div>
-      </div>
-      <div class="date-grid">
+        <p class="eyebrow">PAINEL DO COORDENADOR</p>
+        <h1>Relat&oacute;rio di&aacute;rio</h1>
         <input id="reportDate" type="hidden">
         <input id="weekday" type="hidden">
-        <div class="day-info"><span>Data</span><strong id="reportDateDisplay"></strong></div>
-        <div class="day-info"><span>Dia da semana</span><strong id="weekdayDisplay"></strong></div>
-      </div>
-      <div class="day-actions">
-        <button class="day-button" data-day-offset="-1" type="button">Dia anterior</button>
-        <button class="day-button active" data-day-offset="0" type="button">Dia atual</button>
-        <button class="day-button" data-day-offset="1" type="button">Dia seguinte</button>
-        <button class="day-button copy" id="copyPreviousDayButton" type="button">Copiar informações do dia anterior</button>
+        <p class="date hero-date"><span id="reportDateDisplay"></span> | <span id="weekdayDisplay"></span></p>
+        <div class="day-actions hero-day-actions">
+          <button class="day-button" data-day-offset="-1" type="button">Dia anterior</button>
+          <button class="day-button active" data-day-offset="0" type="button">Dia atual</button>
+          <button class="day-button" data-day-offset="1" type="button">Dia seguinte</button>
+          <button class="day-button copy" id="copyPreviousDayButton" type="button">Copiar informa&ccedil;&otilde;es do dia anterior</button>
+        </div>
+        <p class="hero-copy">Preencha e publique as informa&ccedil;&otilde;es que orientam a programa&ccedil;&atilde;o do dia.</p>
       </div>
     </section>
-
     <section class="section-card strategic">
       <div class="section-heading">
-        <div><span class="section-number">02</span><h2>Destaques</h2><p>Prioridades, pontos de atenção e decisões que orientam a exibição.</p></div>
+        <div><span class="section-number">01</span><h2>Destaques</h2><p>Prioridades, pontos de atenção e decisões que orientam a exibição.</p></div>
         <button class="add-button" data-add="highlights" type="button">+ Adicionar destaque</button>
       </div>
       <div class="items-grid highlights-grid" id="highlights"></div>
@@ -57,7 +48,7 @@
 
     <section class="section-card">
       <div class="section-heading">
-        <div><span class="section-number">06</span><h2>Informações diversas</h2><p>Registre avisos operacionais, pendências, contatos e outros recados.</p></div>
+        <div><span class="section-number">02</span><h2>Informações diversas</h2><p>Registre avisos operacionais, pendências, contatos e outros recados.</p></div>
         <button class="add-button" data-add="notes" type="button">+ Adicionar informação</button>
       </div>
       <div class="items-grid notes-grid" id="notes"></div>
@@ -73,7 +64,7 @@
 
     <section class="section-card">
       <div class="section-heading">
-        <div><h2>Estratégia de grade</h2><p>Defina exibição em rede, local e observações para cada programa.</p></div>
+        <div><span class="section-number">04</span><h2>Estratégia de grade</h2><p>Defina exibição em rede, local e observações para cada programa.</p></div>
         <button class="add-button" data-add="strategy" type="button">+ Adicionar programa</button>
       </div>
       <div class="strategy-list" id="strategy"></div>
@@ -81,7 +72,7 @@
 
     <section class="section-card">
       <div class="section-heading">
-        <div><span class="section-number">04</span><h2>Próximos jogos</h2><p>Organize as próximas partidas que serão transmitidas.</p></div>
+        <div><span class="section-number">05</span><h2>Próximos jogos</h2><p>Organize as próximas partidas que serão transmitidas.</p></div>
         <button class="add-button" data-add="games" type="button">+ Adicionar jogo</button>
       </div>
       <div class="games-list" id="games"></div>
@@ -89,7 +80,7 @@
 
     <section class="section-card">
       <div class="section-heading">
-        <div><span class="section-number">05</span><h2>Programas locais</h2><p>Acompanhe preparação, envio, captura e exibição dos programas.</p></div>
+        <div><span class="section-number">06</span><h2>Programas locais</h2><p>Acompanhe preparação, envio, captura e exibição dos programas.</p></div>
         <button class="add-button" data-add="programs" type="button">+ Adicionar programa</button>
       </div>
       <div class="programs-list" id="programs"></div>
@@ -119,7 +110,7 @@
   <template id="highlightTemplate">
     <article class="item-card highlight-card">
       <div class="item-actions"><button data-move="up" type="button" aria-label="Mover para cima">↑</button><button data-move="down" type="button" aria-label="Mover para baixo">↓</button><button class="remove" type="button" aria-label="Remover item">x</button></div>
-      <label>Titulo<input data-field="title" type="text" placeholder="Titulo do destaque"></label>
+      <label>Título<input data-field="title" type="text" placeholder="Título do destaque"></label>
       <label>Detalhamento<textarea data-field="details" rows="4" placeholder="Contexto, impacto e encaminhamento..."></textarea></label>
       <div class="split"><label>Categoria<select data-field="category"><option>Mídia técnica</option><option>Grade</option><option>Ação comercial</option><option>Rotina</option></select></label><label>Prioridade<select data-field="priority"><option>Alta</option><option selected>Média</option><option>Baixa</option></select></label></div>
       <label class="urgent-option"><input data-field="urgent" type="checkbox"><span>Urgente</span></label>
@@ -208,4 +199,6 @@
   <script src="app.js"></script>
 </body>
 </html>
+
+
 
