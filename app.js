@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
 const {
   DATE_STORAGE_KEY,
   LEGACY_STORAGE_KEY,
@@ -316,12 +316,12 @@ async function publishUpdates() {
   clearTimeout(remoteSaveTimer);
 
   if (!supabaseClient) {
-    saveStatus.textContent = 'Modo local: publique no GitHub para usar a sincronização online';
+    saveStatus.textContent = 'Modo local: publique no GitHub para usar a sincronizaÃ§Ã£o online';
     return;
   }
 
   if (button) button.disabled = true;
-  saveStatus.textContent = 'Enviando atualizações...';
+  saveStatus.textContent = 'Enviando atualizaÃ§Ãµes...';
   try {
     await saveRemoteReport(data);
   } finally {
@@ -336,8 +336,8 @@ async function saveRemoteReport(data = getData()) {
   const { payload: latestPayload, error: fetchError } = await fetchRemoteReport(supabaseClient, data.reportDate);
   if (fetchError) {
     console.error(fetchError);
-    saveStatus.textContent = 'Salvo neste navegador; online indisponível';
-    if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: sem conexão com Supabase';
+    saveStatus.textContent = 'Salvo neste navegador; online indisponÃ­vel';
+    if (lastUpdateStatus) lastUpdateStatus.textContent = 'Ãšltima atualizaÃ§Ã£o: sem conexÃ£o com Supabase';
     return;
   }
 
@@ -345,8 +345,8 @@ async function saveRemoteReport(data = getData()) {
   const localSignature = getReportSignature(data);
   const hasConflict = latestPayload && latestSignature !== lastRemoteSignature && latestSignature !== localSignature;
   if (hasConflict) {
-    saveStatus.textContent = 'Há alterações novas online';
-    const shouldUpdate = confirm('Há alterações novas salvas por outro usuário. Atualizar antes de salvar?');
+    saveStatus.textContent = 'HÃ¡ alteraÃ§Ãµes novas online';
+    const shouldUpdate = confirm('HÃ¡ alteraÃ§Ãµes novas salvas por outro usuÃ¡rio. Atualizar antes de salvar?');
     if (shouldUpdate) {
       isLoading = true;
       currentRemotePayload = latestPayload;
@@ -366,13 +366,13 @@ async function saveRemoteReport(data = getData()) {
   if (error) {
     console.error(error);
     saveStatus.textContent = 'Salvo neste navegador; falha ao sincronizar online';
-    if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: sem conexão com Supabase';
+    if (lastUpdateStatus) lastUpdateStatus.textContent = 'Ãšltima atualizaÃ§Ã£o: sem conexÃ£o com Supabase';
     return;
   }
   currentRemotePayload = payload;
   lastRemoteSignature = getReportSignature(payload);
   if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload?._meta);
-  saveStatus.textContent = row ? 'Salvo e sincronizado' : 'Salvo localmente; Supabase não confirmou';
+  saveStatus.textContent = row ? 'Salvo e sincronizado' : 'Salvo localmente; Supabase nÃ£o confirmou';
 }
 async function loadRemoteReport(silent = false) {
   if (!supabaseClient) return null;
@@ -601,7 +601,7 @@ function showPreview() {
         ${presenter ? `<img class="news-presenter" src="${escapeHtml(presenter)}" alt="" aria-hidden="true">` : ''}
         <div class="news-card-content">
           <h3>${escapeHtml(item.name || 'Jornal')}</h3>
-          <div class="info-pills">${metric('Início', item.start)}${metric('Produção', item.production)}${metric('Blocos', item.blocks)}</div>
+          <div class="info-pills">${metric('InÃ­cio', item.start)}${metric('ProduÃ§Ã£o', item.production)}${metric('Blocos', item.blocks)}</div>
           ${item.notes ? `<p>${escapeHtml(item.notes)}</p>` : ''}
         </div>
       </article>`;
@@ -650,7 +650,7 @@ function showPreview() {
       <div class="program-preview-footer">
         <div class="program-ids">${getProgramIdBadges(item).map(id => `<span class="program-category">ID: ${escapeHtml(id)}</span>`).join('')}</div>
         <div class="preview-meta">${[
-          item.exhibitionDate && `Exibição: ${formatReportDate(item.exhibitionDate)}`,
+          item.exhibitionDate && `ExibiÃ§Ã£o: ${formatReportDate(item.exhibitionDate)}`,
           item.start && `Incio: ${item.start}`,
           item.duration && `Durao: ${item.duration}`
         ].slice(1).filter(Boolean).map(escapeHtml).join(' &nbsp;|&nbsp; ')}</div>
@@ -669,7 +669,7 @@ function showPreview() {
 
   preview.innerHTML = `
     <header class="topbar preview-topbar">
-      <div class="brand" aria-label="Painel de Exibição DF"><img class="brand-icon" src="assets/plim-plim.png" alt=""><span>PAINEL DE EXIBIÇÃO <b>DF</b></span></div>
+      <div class="brand" aria-label="Painel de Exibi&ccedil;&atilde;o DF"><img class="brand-icon" src="assets/plim-plim.png" alt=""><span>PAINEL DE EXIBI&Ccedil;&Atilde;O <b>DF</b></span></div>
       <button class="button primary" id="editButton" type="button">Editar</button>
     </header>
     <main class="preview-shell">
@@ -684,8 +684,8 @@ function showPreview() {
       ${section('04', 'Estratgia de grade', strategyHtml, 'strategy-section')}
       ${section('05', 'Prximos jogos', gamesHtml)}
       ${section('06', 'Programas locais', programsHtml)}
-      ${!highlightsHtml && !newsHtml && !strategyHtml && !gamesHtml && !programsHtml && !notesHtml && !linksHtml ? '<div class="preview-empty">Nenhuma informação preenchida.</div>' : ''}
-      <div class="preview-export"><button class="button primary" id="exportCsvButton" type="button">Exportar relatório</button></div>
+      ${!highlightsHtml && !newsHtml && !strategyHtml && !gamesHtml && !programsHtml && !notesHtml && !linksHtml ? '<div class="preview-empty">Nenhuma informaÃ§Ã£o preenchida.</div>' : ''}
+      <div class="preview-export"><button class="button primary" id="exportCsvButton" type="button">Exportar relatÃ³rio</button></div>
       <footer><span>Exibio - TV Globo DF</span><span>${escapeHtml(formatReportDate(data.reportDate))}</span></footer>
     </main>`;
 
@@ -724,7 +724,7 @@ async function exportImageReport() {
       games: data.games.filter(item => hasMeaningfulFields(item, ['date', 'time', 'championship', 'team1', 'team1Custom', 'team2', 'team2Custom']))
         .map(item => ({ title: `${getGameTeam(item, 'team1')} x ${getGameTeam(item, 'team2')}`, body: item.championship, meta: [item.date && formatGameDate(item.date), item.time, item.signal].filter(Boolean).join(' | '), theme: 'green' })),
       programs: data.programs.filter(item => hasMeaningfulFields(item, ['name', 'exhibitionDate', 'start', 'duration', 'ids']))
-        .map(item => ({ title: item.name || 'Programa local', body: '', meta: [item.exhibitionDate && `Exibição ${formatReportDate(item.exhibitionDate)}`, item.start && `Incio ${item.start}`, item.duration, getProgramIdBadges(item).map(id => `ID ${id}`).join(' + '), item.status].filter(Boolean).join(' | '), theme: item.status === 'Ao Vivo' ? 'high' : item.status === 'Capturado' ? 'green' : item.status === 'Enviado' ? 'orange' : 'gray' })),
+        .map(item => ({ title: item.name || 'Programa local', body: '', meta: [item.exhibitionDate && `ExibiÃ§Ã£o ${formatReportDate(item.exhibitionDate)}`, item.start && `Incio ${item.start}`, item.duration, getProgramIdBadges(item).map(id => `ID ${id}`).join(' + '), item.status].filter(Boolean).join(' | '), theme: item.status === 'Ao Vivo' ? 'high' : item.status === 'Capturado' ? 'green' : item.status === 'Enviado' ? 'orange' : 'gray' })),
       notes: data.notes.filter(item => hasMeaningfulFields(item, ['subject', 'text']))
         .map(item => ({ title: item.subject || 'Informao', body: item.text, meta: '', theme: 'violet' })),
       links: data.links.filter(item => normalizeUrl(item.url))
@@ -884,7 +884,7 @@ async function exportImageReport() {
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   } catch (error) {
     console.error(error);
-    alert('Não foi possível gerar a imagem. Recarregue a página e tente novamente.');
+    alert('NÃ£o foi possÃ­vel gerar a imagem. Recarregue a pÃ¡gina e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -977,7 +977,7 @@ async function exportImageReportLegacy() {
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   } catch (error) {
     console.error(error);
-    alert('Não foi possível gerar a imagem. Recarregue a página e tente novamente.');
+    alert('NÃ£o foi possÃ­vel gerar a imagem. Recarregue a pÃ¡gina e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -1079,16 +1079,17 @@ function generateHtmlReport() {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Relatrio de Exibio - ${escapeHtml(data.reportDate || 'TV Globo DF')}</title>
+  <link rel="icon" type="image/png" href="${logoUrl}">
   <style>
     @font-face{font-family:Globotipo;src:url('${regularFont}') format('truetype');font-weight:400;font-display:swap}
     @font-face{font-family:Globotipo;src:url('${boldFont}') format('truetype');font-weight:700;font-display:swap}
     :root{--blue:#087bff;--violet:#6b20ff;--ink:#101116;--muted:#686b73;--line:#dedfe3;--panel:#f4f4f5;--gradient:linear-gradient(110deg,#00a7ff,#2860ff 48%,#8200ff)}
-    *{box-sizing:border-box}body{margin:0;background:#ececef;color:var(--ink);font-family:Globotipo,Arial,sans-serif}.topbar{height:76px;background:#fff;border-bottom:1px solid #e7e7ea;display:flex;align-items:center;justify-content:space-between;padding:0 max(28px,calc((100vw - 1080px)/2));position:sticky;top:0;z-index:2}.brand{display:flex;align-items:center;gap:12px;color:var(--ink);font-size:20px;font-weight:700;letter-spacing:-.025em;text-transform:uppercase}.brand img{width:58px;height:42px;object-fit:contain;object-position:center}.brand b{color:var(--blue);font-size:15px}.print{border:0;border-radius:999px;padding:11px 18px;color:#fff;background:var(--gradient);font:700 14px Globotipo;cursor:pointer}.page{width:min(1080px,calc(100% - 32px));margin:28px auto 55px}.hero{background:#fff;border-radius:26px;padding:48px 52px;display:grid;grid-template-columns:1fr 300px;align-items:center;overflow:hidden}.eyebrow{color:var(--blue);font-size:13px;font-weight:700;letter-spacing:.13em;margin:0 0 16px}.hero h1{font-size:58px;line-height:.95;letter-spacing:-.04em;margin:0}.hero h1 span{background:var(--gradient);background-clip:text;-webkit-background-clip:text;color:transparent}.date{color:var(--muted);font-size:17px;margin:22px 0 0}.orbit{height:170px;background:url('${illustrationUrl}') center/contain no-repeat;opacity:.5}section{background:#fff;border-radius:22px;margin-top:18px;padding:32px 36px}.section-title{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:20px}.section-title span{color:var(--blue);font-size:12px;font-weight:700}.section-title h2{font-size:28px;margin:7px 0 0}.cards{display:grid;gap:12px}.card{position:relative;background:var(--panel);border-radius:15px;padding:22px 24px 20px 28px;overflow:hidden}.card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--blue)}.card.violet:before{background:var(--violet)}.card h3{font-size:19px;margin:0}.card p{color:var(--muted);font-size:15px;line-height:1.45;margin:10px 0 0}.meta{color:var(--blue);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.045em;margin-top:14px}.violet .meta{color:var(--violet)}footer{display:flex;justify-content:space-between;color:#757780;font-size:12px;padding:22px 6px}.empty{background:#fff;border-radius:22px;margin-top:18px;padding:34px;color:var(--muted);text-align:center}@media(max-width:680px){.hero{grid-template-columns:1fr;padding:35px 28px}.hero h1{font-size:44px}.orbit{display:none}section{padding:26px 22px}}@page{size:A4;margin:12mm}@media print{body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}.topbar{position:static;height:58px;padding:0}.print{display:none}.page{width:100%;margin:0}.hero{border:1px solid var(--line);padding:30px 34px;border-radius:16px}.hero h1{font-size:42px}.orbit{height:110px}section{break-inside:auto;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-top:10px}.card{break-inside:avoid}.section-title h2{font-size:21px}footer{padding-bottom:0}}
+    *{box-sizing:border-box}body{margin:0;background:#ececef;color:var(--ink);font-family:Globotipo,Arial,sans-serif}.topbar{height:76px;background:#fff;border-bottom:1px solid #e7e7ea;display:flex;align-items:center;justify-content:space-between;padding:0 max(28px,calc((100vw - 1080px)/2));position:sticky;top:0;z-index:2}.brand{display:flex;align-items:center;gap:12px;color:var(--ink);font-size:20px;font-weight:700;letter-spacing:-.025em;text-transform:uppercase}.brand img{width:58px;height:42px;object-fit:contain;object-position:center}.brand b{color:var(--blue);font-size:inherit}.print{border:0;border-radius:999px;padding:11px 18px;color:#fff;background:var(--gradient);font:700 14px Globotipo;cursor:pointer}.page{width:min(1080px,calc(100% - 32px));margin:28px auto 55px}.hero{background:#fff;border-radius:26px;padding:48px 52px;display:grid;grid-template-columns:1fr 300px;align-items:center;overflow:hidden}.eyebrow{color:var(--blue);font-size:13px;font-weight:700;letter-spacing:.13em;margin:0 0 16px}.hero h1{font-size:58px;line-height:.95;letter-spacing:-.04em;margin:0}.hero h1 span{background:var(--gradient);background-clip:text;-webkit-background-clip:text;color:transparent}.date{color:var(--muted);font-size:17px;margin:22px 0 0}.orbit{height:170px;background:url('${illustrationUrl}') center/contain no-repeat;opacity:.5}section{background:#fff;border-radius:22px;margin-top:18px;padding:32px 36px}.section-title{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:20px}.section-title span{color:var(--blue);font-size:12px;font-weight:700}.section-title h2{font-size:28px;margin:7px 0 0}.cards{display:grid;gap:12px}.card{position:relative;background:var(--panel);border-radius:15px;padding:22px 24px 20px 28px;overflow:hidden}.card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--blue)}.card.violet:before{background:var(--violet)}.card h3{font-size:19px;margin:0}.card p{color:var(--muted);font-size:15px;line-height:1.45;margin:10px 0 0}.meta{color:var(--blue);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.045em;margin-top:14px}.violet .meta{color:var(--violet)}footer{display:flex;justify-content:space-between;color:#757780;font-size:12px;padding:22px 6px}.empty{background:#fff;border-radius:22px;margin-top:18px;padding:34px;color:var(--muted);text-align:center}@media(max-width:680px){.hero{grid-template-columns:1fr;padding:35px 28px}.hero h1{font-size:44px}.orbit{display:none}section{padding:26px 22px}}@page{size:A4;margin:12mm}@media print{body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}.topbar{position:static;height:58px;padding:0}.print{display:none}.page{width:100%;margin:0}.hero{border:1px solid var(--line);padding:30px 34px;border-radius:16px}.hero h1{font-size:42px}.orbit{height:110px}section{break-inside:auto;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-top:10px}.card{break-inside:avoid}.section-title h2{font-size:21px}footer{padding-bottom:0}}
   </style>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><img src="${logoUrl}" alt=""><span>PAINEL DE EXIBIÇÃO <b>DF</b></span></div>
+    <div class="brand"><img src="${logoUrl}" alt=""><span>PAINEL DE EXIBI&Ccedil;&Atilde;O <b>DF</b></span></div>
     <button class="print" onclick="window.print()">Imprimir</button>
   </header>
   <main class="page">
@@ -1099,7 +1100,7 @@ function generateHtmlReport() {
     ${section('01', 'Destaques', highlightsHtml)}
     ${section('02', 'Informaes diversas', notesHtml)}
     ${section('03', 'Previso dos jornais', newsHtml)}
-    ${!highlightsHtml && !newsHtml && !notesHtml ? '<div class="empty">Nenhuma informação preenchida para este relatório.</div>' : ''}
+    ${!highlightsHtml && !newsHtml && !notesHtml ? '<div class="empty">Nenhuma informaÃ§Ã£o preenchida para este relatÃ³rio.</div>' : ''}
     <footer><span>Exibio - TV Globo DF</span><span>${escapeHtml(formatReportDate(data.reportDate))}</span></footer>
   </main>
 </body>
@@ -1117,7 +1118,7 @@ function generateHtmlReport() {
     saveStatus.textContent = 'Relatrio HTML gerado';
   } catch (error) {
     console.error(error);
-    alert('Não foi possível gerar o relatório HTML. Recarregue a página e tente novamente.');
+    alert('NÃ£o foi possÃ­vel gerar o relatÃ³rio HTML. Recarregue a pÃ¡gina e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -1164,10 +1165,10 @@ async function generatePdf() {
       drawColoredLogo(context, MARGIN, 54, 52);
       context.fillStyle = '#101116';
       context.font = font(27, 700);
-      context.fillText('PAINEL DE EXIBIÇÃO', MARGIN + 65, 88);
+      const headerTitle = 'PAINEL DE EXIBI\u00c7\u00c3O ';
+      context.fillText(headerTitle, MARGIN + 65, 88);
       context.fillStyle = '#087bff';
-      context.font = font(19, 700);
-      context.fillText('DF', MARGIN + 345, 88);
+      context.fillText('DF', MARGIN + 65 + context.measureText(headerTitle).width, 88);
       context.fillStyle = '#686b73';
       context.font = font(16, 700);
       context.textAlign = 'right';
@@ -1309,7 +1310,7 @@ async function generatePdf() {
     data.highlights.forEach(item => drawCard(item.title, item.details, `Categoria: ${cleanText(item.category)}   |   Prioridade: ${cleanText(item.priority)}`));
 
     sectionTitle('02', 'Informaes diversas');
-    if (!data.notes.length) drawCard('Sem informações', 'Nenhuma informação adicional foi registrada.', '', '#8200ff');
+    if (!data.notes.length) drawCard('Sem informaÃ§Ãµes', 'Nenhuma informaÃ§Ã£o adicional foi registrada.', '', '#8200ff');
     data.notes.forEach(item => drawCard(item.subject, item.text, `Categoria: ${cleanText(item.category)}`, '#8200ff'));
 
     sectionTitle('03', 'Previso dos jornais');
@@ -1351,7 +1352,7 @@ async function generatePdf() {
     saveStatus.textContent = 'PDF gerado com sucesso';
   } catch (error) {
     console.error(error);
-    alert('Não foi possível gerar o PDF. Recarregue a página e tente novamente.');
+    alert('NÃ£o foi possÃ­vel gerar o PDF. Recarregue a pÃ¡gina e tente novamente.');
   } finally {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -1427,14 +1428,14 @@ async function copyPreviousDay() {
   }
   previousData = previousData || loadLocalReport(previousDate);
   if (!hasReportContent(previousData)) {
-    saveStatus.textContent = 'Nenhuma informação encontrada no dia anterior';
+    saveStatus.textContent = 'Nenhuma informaÃ§Ã£o encontrada no dia anterior';
     return;
   }
   renderReportData({ ...previousData, reportDate: currentDate, weekday: weekdayInput.value });
   setReportDate(currentDate);
   applyDateDefaults();
   save();
-  saveStatus.textContent = 'Informações do dia anterior copiadas';
+  saveStatus.textContent = 'InformaÃ§Ãµes do dia anterior copiadas';
 }
 
 async function load() {
@@ -1446,7 +1447,7 @@ async function load() {
     remoteData = await loadRemoteReport();
   } catch (error) {
     console.error(error);
-    saveStatus.textContent = 'Não foi possível carregar dados online; usando dados locais';
+    saveStatus.textContent = 'NÃ£o foi possÃ­vel carregar dados online; usando dados locais';
   }
   const localData = loadLocalReport(getTodayKey());
   const data = hasReportContent(remoteData) ? remoteData : localData || remoteData;
@@ -1458,8 +1459,8 @@ async function load() {
   updateFooter();
   if (!currentRemotePayload && lastUpdateStatus) {
     lastUpdateStatus.textContent = supabaseClient
-      ? 'Última atualização: ainda não sincronizado'
-      : 'Última atualização: modo local';
+      ? 'Ãšltima atualizaÃ§Ã£o: ainda nÃ£o sincronizado'
+      : 'Ãšltima atualizaÃ§Ã£o: modo local';
   }
   localStorage.removeItem(DATE_STORAGE_KEY);
   localStorage.removeItem(LEGACY_STORAGE_KEY);
@@ -1468,8 +1469,8 @@ async function load() {
 async function syncFromRemote(force = false) {
   if (!supabaseClient) {
     if (force) {
-      saveStatus.textContent = 'Modo local: sincronização disponível no site publicado';
-      if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: modo local';
+      saveStatus.textContent = 'Modo local: sincronizaÃ§Ã£o disponÃ­vel no site publicado';
+      if (lastUpdateStatus) lastUpdateStatus.textContent = 'Ãšltima atualizaÃ§Ã£o: modo local';
     }
     return;
   }
@@ -1479,8 +1480,8 @@ async function syncFromRemote(force = false) {
   const { payload, error } = await fetchRemoteReport(supabaseClient, dateInput.value);
   if (error) {
     console.error(error);
-    saveStatus.textContent = 'Não foi possível atualizar online agora';
-    if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: sem conexão com Supabase';
+    saveStatus.textContent = 'NÃ£o foi possÃ­vel atualizar online agora';
+    if (lastUpdateStatus) lastUpdateStatus.textContent = 'Ãšltima atualizaÃ§Ã£o: sem conexÃ£o com Supabase';
     return;
   }
 
@@ -1493,7 +1494,7 @@ async function syncFromRemote(force = false) {
   const remoteSignature = getReportSignature(remoteData);
   const currentSignature = getReportSignature(getData());
   if (remoteSignature === currentSignature || remoteSignature === lastRemoteSignature) {
-    if (force) saveStatus.textContent = 'Dados já estão atualizados';
+    if (force) saveStatus.textContent = 'Dados jÃ¡ estÃ£o atualizados';
     if (payload?._meta && lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload._meta);
     return;
   }
@@ -1521,10 +1522,11 @@ document.querySelector('#printButton')?.addEventListener('click', showPreview);
 load().catch(error => {
   console.error(error);
   setReportDate(getTodayKey());
-  saveStatus.textContent = 'Falha ao iniciar; recarregue a página';
-  if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: indisponível';
+  saveStatus.textContent = 'Falha ao iniciar; recarregue a pÃ¡gina';
+  if (lastUpdateStatus) lastUpdateStatus.textContent = 'Ãšltima atualizaÃ§Ã£o: indisponÃ­vel';
 });
 setInterval(updateDayInfo, 60000);
 setInterval(syncFromRemote, SYNC_INTERVAL_MS);
 })();
+
 
