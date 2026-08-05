@@ -292,6 +292,7 @@ function renderPrograms() {
       <div class="program-title-row">
         <span class="status-badge ${getStatusClass(item.status)}">${escapeHtml(item.status || 'Em preparação')}</span>
         <h3>${escapeHtml(item.name || 'Programa local')}</h3>
+        ${item.exhibitionDate ? `<span class="program-date-badge">${escapeHtml(formatReportDate(item.exhibitionDate))}</span>` : ''}
       </div>
       <div class="program-preview-footer">
         <div class="program-ids">${getProgramIdBadges(item).map(id => `<span class="program-category">ID: ${escapeHtml(id)}</span>`).join('')}</div>
@@ -299,7 +300,7 @@ function renderPrograms() {
           item.exhibitionDate && `Exibição: ${formatReportDate(item.exhibitionDate)}`,
           item.start && `Início: ${item.start}`,
           item.duration && `Duração: ${item.duration}`
-        ].filter(Boolean).map(escapeHtml).join(' &nbsp;|&nbsp; ')}</div>
+        ].slice(1).filter(Boolean).map(escapeHtml).join(' &nbsp;|&nbsp; ')}</div>
       </div>
       <span class="edit-chip">Clique para alterar status</span>
     </article>

@@ -645,6 +645,7 @@ function showPreview() {
       <div class="program-title-row">
         <span class="status-badge ${getStatusClass(item.status)}">${escapeHtml(item.status || 'Em preparao')}</span>
         <h3>${escapeHtml(item.name || 'Programa local')}</h3>
+        ${item.exhibitionDate ? `<span class="program-date-badge">${escapeHtml(formatReportDate(item.exhibitionDate))}</span>` : ''}
       </div>
       <div class="program-preview-footer">
         <div class="program-ids">${getProgramIdBadges(item).map(id => `<span class="program-category">ID: ${escapeHtml(id)}</span>`).join('')}</div>
@@ -652,7 +653,7 @@ function showPreview() {
           item.exhibitionDate && `Exibição: ${formatReportDate(item.exhibitionDate)}`,
           item.start && `Incio: ${item.start}`,
           item.duration && `Durao: ${item.duration}`
-        ].filter(Boolean).map(escapeHtml).join(' &nbsp;|&nbsp; ')}</div>
+        ].slice(1).filter(Boolean).map(escapeHtml).join(' &nbsp;|&nbsp; ')}</div>
       </div>
     </article>`).join('');
 
@@ -672,6 +673,7 @@ function showPreview() {
       <button class="button primary" id="editButton" type="button">Editar</button>
     </header>
     <main class="preview-shell">
+      ${linksHtml ? `<section class="preview-section links-section links-top"><div class="preview-cards">${linksHtml}</div></section>` : ''}
       <section class="preview-hero">
         <h1>Relatrio dirio de <span>Exibio</span></h1>
         <p>${escapeHtml(formatReportDate(data.reportDate))} &nbsp;|&nbsp; ${escapeHtml(data.weekday)}</p>
@@ -682,7 +684,6 @@ function showPreview() {
       ${section('04', 'Estratgia de grade', strategyHtml, 'strategy-section')}
       ${section('05', 'Prximos jogos', gamesHtml)}
       ${section('06', 'Programas locais', programsHtml)}
-      ${section('07', 'Links teis', linksHtml, 'links-section')}
       ${!highlightsHtml && !newsHtml && !strategyHtml && !gamesHtml && !programsHtml && !notesHtml && !linksHtml ? '<div class="preview-empty">Nenhuma informação preenchida.</div>' : ''}
       <div class="preview-export"><button class="button primary" id="exportCsvButton" type="button">Exportar relatório</button></div>
       <footer><span>Exibio - TV Globo DF</span><span>${escapeHtml(formatReportDate(data.reportDate))}</span></footer>
