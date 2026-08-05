@@ -25,6 +25,12 @@
         <p class="eyebrow">Painel dos programadores</p>
         <h1>Relatório diário de <span>Exibição</span></h1>
         <p class="date" id="reportDateDisplay">Carregando data...</p>
+        <div class="day-actions analyst-day-actions">
+          <button class="day-button" data-day-offset="-1" type="button">Dia anterior</button>
+          <button class="day-button active" data-day-offset="0" type="button">Dia atual</button>
+          <button class="day-button" data-day-offset="1" type="button">Dia seguinte</button>
+          <button class="day-button copy" id="copyPreviousDayButton" type="button">Copiar informações do dia anterior</button>
+        </div>
         <p class="hero-copy">Clique nos cards de jornais, estratégia de grade e status dos programas locais para editar.</p>
       </div>
     </section>

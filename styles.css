@@ -293,6 +293,7 @@ button:disabled{cursor:wait;opacity:.7}
 .analyst-hero{display:block}
 .analyst-hero .eyebrow{margin-bottom:12px}
 .analyst-hero .hero-copy{font-size:15px;margin-top:18px}
+.analyst-day-actions{margin-top:18px}
 .analyst-hint{color:var(--muted);font-size:13px;margin:8px 0 0}
 .analyst-editable{cursor:pointer;outline:none;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
 .analyst-editable:hover,.analyst-editable:focus{transform:translateY(-2px);box-shadow:0 12px 25px #1d2b4a18;border-color:#dbe7ff}

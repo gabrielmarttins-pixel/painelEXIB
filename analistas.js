@@ -24,6 +24,7 @@ let currentRemotePayload = null;
 let saveTimer;
 let activeEditor = null;
 let hasPendingSync = false;
+let shouldSaveFullReport = false;
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -32,6 +33,22 @@ function makeId() {
 function todayKey() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+function getOffsetDateKey(offset = 0, baseDate = todayKey()) {
+  const [year, month, day] = baseDate.split('-').map(Number);
+  const date = new Date(year, month - 1, day + offset);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function getDateStorageKey(reportDate = reportData.reportDate || todayKey()) {
+  return `${STORAGE_KEY}-${reportDate}`;
+}
+
+function updateDayButtons() {
+  document.querySelectorAll('[data-day-offset]').forEach(button => {
+    button.classList.toggle('active', getOffsetDateKey(Number(button.dataset.dayOffset)) === reportData.reportDate);
+  });
 }
 
 function escapeHtml(value) {
@@ -286,6 +303,7 @@ function renderLinks() {
 function render() {
   document.querySelector('#reportDateDisplay').textContent = `${formatReportDate(reportData.reportDate)} | ${reportData.weekday || ''}`;
   document.querySelector('#footerDate').textContent = formatReportDate(reportData.reportDate);
+  updateDayButtons();
   renderHighlights();
   renderNotes();
   renderNews();
@@ -370,9 +388,13 @@ function bindEditableCards() {
   });
 }
 
-function loadLocalReport() {
+function loadLocalReport(reportDate = reportData.reportDate || todayKey()) {
   try {
-    return cleanReportData(JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || {});
+    const dateData = JSON.parse(localStorage.getItem(getDateStorageKey(reportDate)) || 'null');
+    if (dateData) return cleanReportData(dateData);
+    const globalData = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    if (globalData?.reportDate === reportDate) return cleanReportData(globalData);
+    return cleanReportData({});
   } catch {
     return cleanReportData({});
   }
@@ -380,6 +402,7 @@ function loadLocalReport() {
 
 function saveLocal() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(reportData));
+  localStorage.setItem(getDateStorageKey(reportData.reportDate), JSON.stringify(reportData));
 }
 
 function mergeAnalystChanges(base, edited) {
@@ -400,6 +423,8 @@ async function saveOnline() {
   if (!supabaseClient) {
     saveStatus.textContent = 'Salvo neste navegador';
     if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: modo local';
+    hasPendingSync = false;
+    shouldSaveFullReport = false;
     return;
   }
 
@@ -413,7 +438,7 @@ async function saveOnline() {
   }
 
   const payloadBase = latestPayload || currentRemotePayload || reportData;
-  const merged = mergeAnalystChanges(payloadBase, reportData);
+  const merged = shouldSaveFullReport ? reportData : mergeAnalystChanges(payloadBase, reportData);
   const { payload, row, error } = await saveRemoteReport(supabaseClient, merged, payloadBase);
   if (error) {
     console.error(error);
@@ -424,6 +449,7 @@ async function saveOnline() {
   }
 
   hasPendingSync = false;
+  shouldSaveFullReport = false;
   currentRemotePayload = payload;
   reportData = applyDefaults(cleanReportData(payload || merged));
   saveLocal();
@@ -439,7 +465,7 @@ function scheduleSave() {
   saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
 }
 
-async function loadReport(force = false) {
+async function loadReport(force = false, reportDate = reportData.reportDate || todayKey()) {
   if (activeEditor && !force) return;
   if (force && hasPendingSync) {
     await saveOnline();
@@ -447,10 +473,10 @@ async function loadReport(force = false) {
   }
 
   saveStatus.textContent = supabaseClient ? 'Carregando dados online...' : 'Carregando dados locais...';
-  const localData = loadLocalReport();
+  const localData = loadLocalReport(reportDate);
   let remoteData = null;
   if (supabaseClient) {
-    const { payload, error } = await fetchRemoteReport(supabaseClient, localData.reportDate || todayKey());
+    const { payload, error } = await fetchRemoteReport(supabaseClient, reportDate);
     if (!error && payload) {
       currentRemotePayload = payload;
       remoteData = cleanReportData(payload);
@@ -459,14 +485,54 @@ async function loadReport(force = false) {
       saveStatus.textContent = 'Não foi possível atualizar online agora';
     }
   }
-  reportData = applyDefaults(remoteData || localData || { reportDate: todayKey() });
+  const baseData = hasContent(localData, ['reportDate']) || Object.keys(localData).some(key => Array.isArray(localData[key]) && localData[key].length)
+    ? localData
+    : { reportDate };
+  reportData = applyDefaults(remoteData || baseData);
   saveLocal();
   render();
   if (!currentRemotePayload && lastUpdateStatus) lastUpdateStatus.textContent = supabaseClient ? 'Última atualização: ainda não sincronizado' : 'Última atualização: modo local';
   saveStatus.textContent = force ? 'Dados atualizados' : 'Painel carregado';
 }
 
-document.querySelector('#refreshButton').addEventListener('click', () => loadReport(true));
+async function selectReportDate(reportDate) {
+  closeEditor();
+  if (hasPendingSync) {
+    await saveOnline();
+    if (hasPendingSync) return;
+  } else {
+    saveLocal();
+  }
+  await loadReport(false, reportDate);
+}
+
+async function copyPreviousDay() {
+  closeEditor();
+  const currentDate = reportData.reportDate || todayKey();
+  const previousDate = getOffsetDateKey(-1, currentDate);
+  let previousData = null;
+  if (supabaseClient) {
+    const { payload, error } = await fetchRemoteReport(supabaseClient, previousDate);
+    if (!error && payload) previousData = cleanReportData(payload);
+  }
+  previousData = previousData || loadLocalReport(previousDate);
+  if (!previousData || !Object.keys(previousData).some(key => Array.isArray(previousData[key]) && previousData[key].length)) {
+    saveStatus.textContent = 'Nenhuma informação encontrada no dia anterior';
+    return;
+  }
+  reportData = applyDefaults({ ...previousData, reportDate: currentDate, weekday: weekdayFor(currentDate) });
+  shouldSaveFullReport = true;
+  hasPendingSync = true;
+  saveLocal();
+  render();
+  saveStatus.textContent = supabaseClient ? 'Informações copiadas; sincronização online agendada' : 'Informações copiadas neste navegador';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
+}
+
+document.querySelectorAll('[data-day-offset]').forEach(button => button.addEventListener('click', () => selectReportDate(getOffsetDateKey(Number(button.dataset.dayOffset)))));
+document.querySelector('#copyPreviousDayButton')?.addEventListener('click', copyPreviousDay);
+document.querySelector('#refreshButton').addEventListener('click', () => loadReport(true, reportData.reportDate || todayKey()));
 loadReport().catch(error => {
   console.error(error);
   reportData = applyDefaults({ reportDate: todayKey() });
@@ -477,6 +543,6 @@ loadReport().catch(error => {
 setInterval(() => {
   if (activeEditor) return;
   if (hasPendingSync) saveOnline();
-  else loadReport(false);
+  else loadReport(false, reportData.reportDate || todayKey());
 }, SYNC_INTERVAL_MS);
 })();
