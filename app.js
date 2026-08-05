@@ -126,6 +126,15 @@ function getNewsClass(name) {
   return 'news-default';
 }
 
+function getStrategyClass(name) {
+  const normalized = normalizeKey(name);
+  if ((normalized.includes('especial') && !normalized.includes('sess')) || normalized.includes('temperatura')) return 'strategy-afternoon-start';
+  if (normalized.includes('sess') || normalized.includes('vale a pena')) return 'strategy-afternoon';
+  if (normalized.includes('novela ii') || normalized.includes('domingao')) return 'strategy-night';
+  if (normalized.includes('caldeir') || normalized.includes('familia') || normalized.includes('novela i')) return 'strategy-sunset';
+  return 'strategy-default';
+}
+
 function metric(label, value) {
   return value ? `<span class="info-pill"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></span>` : '';
 }
@@ -608,7 +617,7 @@ function showPreview() {
   }).join('');
 
   const strategyHtml = strategy.map(item => `
-    <article class="preview-card strategy-preview-card">
+    <article class="preview-card strategy-preview-card ${getStrategyClass(item.name)}">
       <div class="strategy-program">
         <span class="strategy-dot"></span>
         <h3>${escapeHtml(item.name || 'Programa')}</h3>

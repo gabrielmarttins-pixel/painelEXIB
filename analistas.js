@@ -129,6 +129,15 @@ function getNewsClass(name) {
   return 'news-default';
 }
 
+function getStrategyClass(name) {
+  const normalized = normalizeKey(name);
+  if ((normalized.includes('especial') && !normalized.includes('sess')) || normalized.includes('temperatura')) return 'strategy-afternoon-start';
+  if (normalized.includes('sess') || normalized.includes('vale a pena')) return 'strategy-afternoon';
+  if (normalized.includes('novela ii') || normalized.includes('domingao')) return 'strategy-night';
+  if (normalized.includes('caldeir') || normalized.includes('familia') || normalized.includes('novela i')) return 'strategy-sunset';
+  return 'strategy-default';
+}
+
 function metric(label, value) {
   return value ? `<span class="info-pill"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></span>` : '';
 }
@@ -249,7 +258,7 @@ function renderStrategy() {
   document.querySelector('#strategyView').innerHTML = items.length ? items.map((item, index) => {
     const badges = [item.network && '<span class="strategy-badge network">Em rede</span>', item.local && '<span class="strategy-badge local">Local</span>'].filter(Boolean).join('');
     return `
-      <article class="preview-card strategy-preview-card analyst-editable" data-edit="strategy" data-index="${index}" tabindex="0">
+      <article class="preview-card strategy-preview-card ${getStrategyClass(item.name)} analyst-editable" data-edit="strategy" data-index="${index}" tabindex="0">
         <div class="strategy-program">
           <span class="strategy-dot"></span>
           <div class="strategy-title-stack">
