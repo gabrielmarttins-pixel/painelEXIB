@@ -564,8 +564,9 @@ function escapeHtml(value) {
 }
 
 function formatWhatsappText(value) {
-  return escapeHtml(value)
-    .replace(/\*\*([^*\n](?:[^*]|\*(?!\*))*)\*\*/g, '<strong>$1</strong>')
+  const escaped = escapeHtml(value).replace(/\r\n?/g, '\n');
+  return escaped
+    .replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>')
     .replaceAll('\n', '<br>');
 }
 

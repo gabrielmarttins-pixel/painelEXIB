@@ -60,6 +60,13 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
+function formatWhatsappText(value) {
+  const escaped = escapeHtml(value).replace(/\r\n?/g, '\n');
+  return escaped
+    .replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>')
+    .replaceAll('\n', '<br>');
+}
+
 function cleanText(value, fallback = 'Não informado') {
   const text = String(value || '').trim();
   return text || fallback;
@@ -229,7 +236,7 @@ function renderHighlights() {
     <article class="preview-card highlight-preview-card ${priorityClass(item.priority, item.urgent)}">
       ${item.category ? `<span class="highlight-category-badge ${getCategoryClass(item.category)}">${escapeHtml(item.category)}</span>` : ''}
       <h3>${escapeHtml(item.title || 'Destaque')}</h3>
-      ${item.details ? `<p>${escapeHtml(item.details)}</p>` : ''}
+      ${item.details ? `<p>${formatWhatsappText(item.details)}</p>` : ''}
       ${item.priority ? `<div class="preview-meta">Prioridade: ${escapeHtml(item.priority)}</div>` : ''}
     </article>
   `).join('');
