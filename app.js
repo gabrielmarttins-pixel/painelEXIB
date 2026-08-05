@@ -609,11 +609,16 @@ function showPreview() {
 
   const strategyHtml = strategy.map(item => `
     <article class="preview-card strategy-preview-card">
-      <h3>${escapeHtml(item.name || 'Programa')}</h3>
-      ${item.observation ? `<p class="strategy-observation">${escapeHtml(item.observation)}</p>` : ''}
-      <div class="strategy-badges">
-        ${item.network ? '<span class="strategy-badge network">Em rede</span>' : ''}
-        ${item.local ? '<span class="strategy-badge local">Local</span>' : ''}
+      <div class="strategy-program">
+        <span class="strategy-dot"></span>
+        <h3>${escapeHtml(item.name || 'Programa')}</h3>
+      </div>
+      <div class="strategy-info">
+        <div class="strategy-badges">
+          ${item.network ? '<span class="strategy-badge network">Em rede</span>' : ''}
+          ${item.local ? '<span class="strategy-badge local">Local</span>' : ''}
+        </div>
+        ${item.observation ? `<p class="strategy-observation">${escapeHtml(item.observation)}</p>` : ''}
       </div>
     </article>`).join('');
 

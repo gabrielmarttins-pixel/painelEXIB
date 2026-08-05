@@ -250,9 +250,14 @@ function renderStrategy() {
     const badges = [item.network && '<span class="strategy-badge network">Em rede</span>', item.local && '<span class="strategy-badge local">Local</span>'].filter(Boolean).join('');
     return `
       <article class="preview-card strategy-preview-card analyst-editable" data-edit="strategy" data-index="${index}" tabindex="0">
-        <h3>${escapeHtml(item.name || 'Programa')}</h3>
-        ${badges ? `<div class="strategy-badges">${badges}</div>` : '<p>Sem marcação.</p>'}
-        ${item.observation ? `<p class="strategy-observation">${escapeHtml(item.observation)}</p>` : ''}
+        <div class="strategy-program">
+          <span class="strategy-dot"></span>
+          <h3>${escapeHtml(item.name || 'Programa')}</h3>
+        </div>
+        <div class="strategy-info">
+          ${badges ? `<div class="strategy-badges">${badges}</div>` : '<p class="strategy-empty">Sem marcação.</p>'}
+          ${item.observation ? `<p class="strategy-observation">${escapeHtml(item.observation)}</p>` : ''}
+        </div>
         <span class="edit-chip">Clique para editar</span>
       </article>
     `;
