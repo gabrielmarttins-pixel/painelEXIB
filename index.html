@@ -16,7 +16,7 @@
       <span class="save-status" id="saveStatus">Salvo automaticamente</span>
       <span class="sync-meta" id="lastUpdateStatus">Última atualização: carregando...</span>
       <button class="button secondary" id="refreshButton" type="button">Atualizar dados</button>
-      <a class="button primary" href="analistas.html">Página dos analistas</a>
+      <a class="button primary" href="analistas.html">Visão Programadores</a>
     </div>
   </header>
 
@@ -37,6 +37,12 @@
         <input id="weekday" type="hidden">
         <div class="day-info"><span>Data</span><strong id="reportDateDisplay"></strong></div>
         <div class="day-info"><span>Dia da semana</span><strong id="weekdayDisplay"></strong></div>
+      </div>
+      <div class="day-actions">
+        <button class="day-button" data-day-offset="-1" type="button">Dia anterior</button>
+        <button class="day-button active" data-day-offset="0" type="button">Dia atual</button>
+        <button class="day-button" data-day-offset="1" type="button">Dia seguinte</button>
+        <button class="day-button copy" id="copyPreviousDayButton" type="button">Copiar informações do dia anterior</button>
       </div>
     </section>
 
@@ -165,7 +171,14 @@
       <label>Programa<input data-field="name" type="text" placeholder="Nome do programa"></label>
       <label>Início<input data-field="start" type="time"></label>
       <label>Duração<input data-field="duration" type="text" placeholder="Ex.: 30 min"></label>
-      <label>ID's<input data-field="ids" type="text" placeholder="Informe os ID's"></label>
+      <div class="program-ids-editor">
+        <span class="field-label">ID's</span>
+        <div class="program-id-list" data-program-ids>
+          <input class="program-id-input" type="text" placeholder="ID 1">
+          <input class="program-id-input" type="text" placeholder="ID 2">
+        </div>
+        <button class="mini-button add-program-id" type="button">+ Adicionar ID</button>
+      </div>
       <label>Status<select data-field="status"><option>Em preparação</option><option>Enviado</option><option>Capturado</option><option>Ao Vivo</option></select></label>
     </article>
   </template>

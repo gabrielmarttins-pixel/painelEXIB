@@ -84,6 +84,11 @@ function getTeamVisual(team) {
   return '';
 }
 
+function getProgramIdBadges(item) {
+  const ids = Array.isArray(item.idsList) ? item.idsList : String(item.ids || '').split(/[,\n;|]+/);
+  return ids.map(id => String(id || '').trim()).filter(Boolean);
+}
+
 function getNewsPresenter(name) {
   return newsPresenters[name] || '';
 }
@@ -248,7 +253,7 @@ function renderPrograms() {
         <h3>${escapeHtml(item.name || 'Programa local')}</h3>
       </div>
       <div class="program-preview-footer">
-        <div class="program-ids">${item.ids ? `<span class="program-category">ID's: ${escapeHtml(item.ids)}</span>` : ''}</div>
+        <div class="program-ids">${getProgramIdBadges(item).map(id => `<span class="program-category">ID: ${escapeHtml(id)}</span>`).join('')}</div>
         <div class="preview-meta">${[
           item.start && `Início: ${item.start}`,
           item.duration && `Duração: ${item.duration}`

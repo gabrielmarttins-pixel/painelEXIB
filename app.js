@@ -126,6 +126,48 @@ function normalizeUrl(value) {
   }
 }
 
+function normalizeProgramIds(value) {
+  const source = Array.isArray(value?.idsList) ? value.idsList : String(value?.ids || '').split(/[,\n;|]+/);
+  const ids = source.map(id => String(id || '').trim()).filter(Boolean);
+  return ids.length ? ids : ['', ''];
+}
+
+function addProgramIdInput(item, value = '') {
+  const list = item.querySelector('[data-program-ids]');
+  if (!list) return;
+  const input = document.createElement('input');
+  input.className = 'program-id-input';
+  input.type = 'text';
+  input.placeholder = `ID ${list.querySelectorAll('.program-id-input').length + 1}`;
+  input.value = value;
+  input.addEventListener('input', scheduleSave);
+  list.append(input);
+}
+
+function setupProgramIds(item, values = {}) {
+  const list = item.querySelector('[data-program-ids]');
+  const button = item.querySelector('.add-program-id');
+  if (!list) return;
+  list.replaceChildren();
+  normalizeProgramIds(values).forEach(id => addProgramIdInput(item, id));
+  while (list.querySelectorAll('.program-id-input').length < 2) addProgramIdInput(item);
+  button?.addEventListener('click', () => {
+    addProgramIdInput(item);
+    scheduleSave();
+  });
+}
+
+function getProgramIds(item) {
+  return [...item.querySelectorAll('.program-id-input')]
+    .map(input => input.value.trim())
+    .filter(Boolean);
+}
+
+function getProgramIdBadges(item) {
+  const ids = Array.isArray(item.idsList) ? item.idsList : String(item.ids || '').split(/[,\n;|]+/);
+  return ids.map(id => String(id || '').trim()).filter(Boolean);
+}
+
 function addItem(section, values = {}, shouldSave = true) {
   if (section === 'news' && values.production == null && values.duration != null) {
     values = { ...values, production: normalizeProduction(values.duration) };
@@ -146,6 +188,7 @@ function addItem(section, values = {}, shouldSave = true) {
     else field.value = values[field.dataset.field];
   });
   if (section === 'highlights') updateHighlightPriority(item);
+  if (section === 'programs') setupProgramIds(item, values);
   if (section === 'games') {
     updateCustomTeamFields(item);
     item.querySelectorAll('[data-field="team1"], [data-field="team2"]').forEach(select => {
@@ -187,6 +230,10 @@ function collectItems(section) {
     item.querySelectorAll('[data-field]').forEach(field => {
       value[field.dataset.field] = field.type === 'checkbox' ? field.checked : field.value;
     });
+    if (section === 'programs') {
+      value.idsList = getProgramIds(item);
+      value.ids = value.idsList.join(', ');
+    }
     return value;
   });
 }
@@ -211,6 +258,7 @@ function isFormFieldActive() {
 function save() {
   const data = getData();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  localStorage.setItem(getDateStorageKey(data.reportDate), JSON.stringify(data));
   saveStatus.textContent = supabaseClient ? 'Salvo localmente; salvando online...' : 'Salvo neste navegador';
   clearTimeout(saveTimer);
   if (!supabaseClient) saveTimer = setTimeout(() => saveStatus.textContent = 'Salvo automaticamente', 1200);
@@ -230,6 +278,7 @@ async function publishUpdates() {
   const button = document.querySelector('#publishButton');
   const data = getData();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  localStorage.setItem(getDateStorageKey(data.reportDate), JSON.stringify(data));
   clearTimeout(remoteSaveTimer);
 
   if (!supabaseClient) {
@@ -318,21 +367,32 @@ function getTodayKey() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
+function getOffsetDateKey(offset = 0, baseDate = getTodayKey()) {
+  const [year, month, day] = baseDate.split('-').map(Number);
+  const date = new Date(year, month - 1, day + offset);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function getDateStorageKey(reportDate = dateInput.value) {
+  return `${STORAGE_KEY}-${reportDate || getTodayKey()}`;
+}
+
+function updateDayButtons() {
+  document.querySelectorAll('[data-day-offset]').forEach(button => {
+    button.classList.toggle('active', getOffsetDateKey(Number(button.dataset.dayOffset)) === dateInput.value);
+  });
+}
+
 function setReportDate(value = getTodayKey()) {
   dateInput.value = value;
   setWeekday();
   reportDateDisplay.textContent = formatReportDate(dateInput.value);
   weekdayDisplay.textContent = weekdayInput.value;
+  updateDayButtons();
 }
 
 function updateDayInfo() {
-  const todayKey = getTodayKey();
-  const dateChanged = dateInput.value && dateInput.value !== todayKey;
-  setReportDate(todayKey);
-  if (dateChanged) {
-    applyDateDefaults();
-    save();
-  }
+  setReportDate(dateInput.value || getTodayKey());
 }
 
 function updateFooter() {
@@ -413,7 +473,7 @@ function mergeDateReports(dateStore) {
     news: ['name', 'start', 'production', 'duration', 'blocks', 'notes'],
     strategy: ['name', 'network', 'local', 'observation'],
     games: ['date', 'time', 'signal', 'championship', 'team1', 'team1Custom', 'team2', 'team2Custom'],
-    programs: ['name', 'start', 'duration', 'ids', 'category', 'status'],
+    programs: ['name', 'start', 'duration', 'ids', 'idsList', 'category', 'status'],
     notes: ['subject', 'text'],
     links: ['label', 'url']
   };
@@ -556,7 +616,7 @@ function showPreview() {
         <h3>${escapeHtml(item.name || 'Programa local')}</h3>
       </div>
       <div class="program-preview-footer">
-        <div class="program-ids">${item.ids ? `<span class="program-category">ID's: ${escapeHtml(item.ids)}</span>` : ''}</div>
+        <div class="program-ids">${getProgramIdBadges(item).map(id => `<span class="program-category">ID: ${escapeHtml(id)}</span>`).join('')}</div>
         <div class="preview-meta">${[
           item.start && `Incio: ${item.start}`,
           item.duration && `Durao: ${item.duration}`
@@ -631,7 +691,7 @@ async function exportImageReport() {
       games: data.games.filter(item => hasMeaningfulFields(item, ['date', 'time', 'championship', 'team1', 'team1Custom', 'team2', 'team2Custom']))
         .map(item => ({ title: `${getGameTeam(item, 'team1')} x ${getGameTeam(item, 'team2')}`, body: item.championship, meta: [item.date && formatGameDate(item.date), item.time, item.signal].filter(Boolean).join(' | '), theme: 'green' })),
       programs: data.programs.filter(item => hasMeaningfulFields(item, ['name', 'start', 'duration', 'ids']))
-        .map(item => ({ title: item.name || 'Programa local', body: '', meta: [item.start && `Incio ${item.start}`, item.duration, item.ids && `ID's ${item.ids}`, item.status].filter(Boolean).join(' | '), theme: item.status === 'Ao Vivo' ? 'high' : item.status === 'Capturado' ? 'green' : item.status === 'Enviado' ? 'orange' : 'gray' })),
+        .map(item => ({ title: item.name || 'Programa local', body: '', meta: [item.start && `Incio ${item.start}`, item.duration, getProgramIdBadges(item).map(id => `ID ${id}`).join(' + '), item.status].filter(Boolean).join(' | '), theme: item.status === 'Ao Vivo' ? 'high' : item.status === 'Capturado' ? 'green' : item.status === 'Enviado' ? 'orange' : 'gray' })),
       notes: data.notes.filter(item => hasMeaningfulFields(item, ['subject', 'text']))
         .map(item => ({ title: item.subject || 'Informao', body: item.text, meta: '', theme: 'violet' })),
       links: data.links.filter(item => normalizeUrl(item.url))
@@ -911,7 +971,7 @@ function exportCsvReport() {
     rows.push(['Prximos jogos', index + 1, item.championship, item.date ? formatGameDate(item.date) : '', item.time, '', item.signal, '', getGameTeam(item, 'team1'), getGameTeam(item, 'team2'), '']);
   });
   data.programs.filter(item => hasMeaningfulFields(item, ['name', 'start', 'duration', 'ids'])).forEach((item, index) => {
-    rows.push(['Programas locais', index + 1, item.name, '', item.start, item.duration, item.status, item.ids ? `ID's: ${item.ids}` : '', '', '', '']);
+    rows.push(['Programas locais', index + 1, item.name, '', item.start, item.duration, item.status, getProgramIdBadges(item).map(id => `ID: ${id}`).join(' | '), '', '', '']);
   });
   data.notes.filter(item => hasMeaningfulFields(item, ['subject', 'text'])).forEach((item, index) => {
     rows.push(['Informaes diversas', index + 1, item.subject, '', '', '', item.category, item.text, '', '', '']);
@@ -1274,9 +1334,12 @@ async function generatePdf() {
   }
 }
 
-function loadLocalReport() {
+function loadLocalReport(reportDate = dateInput.value || getTodayKey()) {
   let data;
+  try { data = JSON.parse(localStorage.getItem(getDateStorageKey(reportDate))); } catch { data = null; }
+  if (data) return data;
   try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { data = null; }
+  if (data?.reportDate && data.reportDate !== reportDate) data = null;
   if (!data) {
     let dateStore;
     try { dateStore = JSON.parse(localStorage.getItem(DATE_STORAGE_KEY)); } catch { dateStore = null; }
@@ -1301,6 +1364,55 @@ function renderReportData(data) {
   }
 }
 
+async function loadReportForDate(reportDate, { silent = false } = {}) {
+  isLoading = true;
+  setReportDate(reportDate);
+  saveStatus.textContent = supabaseClient ? 'Carregando dados online...' : 'Carregando dados locais...';
+  currentRemotePayload = null;
+  lastRemoteSignature = '';
+  let remoteData = null;
+  try {
+    remoteData = await loadRemoteReport(true);
+  } catch (error) {
+    console.error(error);
+  }
+  const localData = loadLocalReport(reportDate);
+  const data = hasReportContent(remoteData) ? remoteData : localData || { reportDate, weekday: weekdayInput.value };
+  renderReportData({ ...data, reportDate, weekday: data.weekday || weekdayInput.value });
+  setReportDate(reportDate);
+  applyDateDefaults();
+  isLoading = false;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
+  localStorage.setItem(getDateStorageKey(reportDate), JSON.stringify(getData()));
+  updateFooter();
+  if (!silent) saveStatus.textContent = 'Dados carregados';
+}
+
+async function selectReportDate(reportDate) {
+  if (dateInput.value) save();
+  await loadReportForDate(reportDate);
+}
+
+async function copyPreviousDay() {
+  const currentDate = dateInput.value || getTodayKey();
+  const previousDate = getOffsetDateKey(-1, currentDate);
+  let previousData = null;
+  if (supabaseClient) {
+    const { payload, error } = await fetchRemoteReport(supabaseClient, previousDate);
+    if (!error && payload) previousData = cleanReportData(payload);
+  }
+  previousData = previousData || loadLocalReport(previousDate);
+  if (!hasReportContent(previousData)) {
+    saveStatus.textContent = 'Nenhuma informação encontrada no dia anterior';
+    return;
+  }
+  renderReportData({ ...previousData, reportDate: currentDate, weekday: weekdayInput.value });
+  setReportDate(currentDate);
+  applyDateDefaults();
+  save();
+  saveStatus.textContent = 'Informações do dia anterior copiadas';
+}
+
 async function load() {
   isLoading = true;
   setReportDate(getTodayKey());
@@ -1312,7 +1424,7 @@ async function load() {
     console.error(error);
     saveStatus.textContent = 'Não foi possível carregar dados online; usando dados locais';
   }
-  const localData = loadLocalReport();
+  const localData = loadLocalReport(getTodayKey());
   const data = hasReportContent(remoteData) ? remoteData : localData || remoteData;
   renderReportData(data);
   setReportDate(data?.reportDate || getTodayKey());
@@ -1367,6 +1479,7 @@ async function syncFromRemote(force = false) {
   renderReportData(remoteData);
   applyDateDefaults();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
+  localStorage.setItem(getDateStorageKey(dateInput.value), JSON.stringify(getData()));
   updateFooter();
   isLoading = false;
   lastRemoteSignature = remoteSignature;
@@ -1375,6 +1488,8 @@ async function syncFromRemote(force = false) {
 }
 
 document.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', () => addItem(button.dataset.add)));
+document.querySelectorAll('[data-day-offset]').forEach(button => button.addEventListener('click', () => selectReportDate(getOffsetDateKey(Number(button.dataset.dayOffset)))));
+document.querySelector('#copyPreviousDayButton')?.addEventListener('click', copyPreviousDay);
 document.querySelector('#refreshButton').addEventListener('click', () => syncFromRemote(true));
 document.querySelector('#publishButton')?.addEventListener('click', publishUpdates);
 document.querySelector('#printButton')?.addEventListener('click', showPreview);
