@@ -19,7 +19,8 @@ function getReportId(reportDate) {
 function cleanReportData(data = {}) {
   const clean = {
     reportDate: data.reportDate || '',
-    weekday: data.weekday || ''
+    weekday: data.weekday || '',
+    serviceHandoffHtml: data.serviceHandoffHtml || ''
   };
   Object.keys(sections).forEach(section => {
     clean[section] = Array.isArray(data[section]) ? data[section] : [];

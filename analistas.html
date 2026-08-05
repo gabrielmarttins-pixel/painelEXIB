@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Painel dos Programadores - TV Globo DF</title>
   <link rel="icon" type="image/png" href="assets/plim-plim.png">
-  <link rel="stylesheet" href="styles.css?v=20260805-2">
+  <link rel="stylesheet" href="styles.css?v=20260805-3">
 </head>
 <body class="analyst-page">
   <header class="topbar">
@@ -38,6 +38,21 @@
         </div>
         <p class="hero-copy">Clique nos cards de jornais, estratégia de grade e status dos programas locais para editar.</p>
       </div>
+    </section>
+
+
+    <section class="preview-section handoff-section" id="serviceHandoffSection">
+      <div class="preview-section-title"><h2>Passagem de serviço</h2><p class="analyst-hint">Registre orientações para o próximo turno. Use a barra para destacar pontos importantes.</p></div>
+      <div class="handoff-toolbar" aria-label="Ferramentas de edição">
+        <button type="button" data-handoff-command="bold"><strong>B</strong></button>
+        <button type="button" data-handoff-command="italic"><em>I</em></button>
+        <button type="button" data-handoff-color="#101116" class="color black" aria-label="Texto preto"></button>
+        <button type="button" data-handoff-color="#087bff" class="color blue" aria-label="Texto azul"></button>
+        <button type="button" data-handoff-color="#00a86b" class="color green" aria-label="Texto verde"></button>
+        <button type="button" data-handoff-color="#ff5600" class="color orange" aria-label="Texto laranja"></button>
+        <button type="button" data-handoff-color="#e50046" class="color red" aria-label="Texto vermelho"></button>
+      </div>
+      <div class="handoff-editor" id="serviceHandoffEditor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Escreva a passagem de serviço..."></div>
     </section>
 
     <section class="preview-section" id="highlightsSection">
@@ -79,9 +94,9 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260805-2"></script>
-  <script src="defaults.js?v=20260805-2"></script>
-  <script src="storage.js?v=20260805-2"></script>
-  <script src="analistas.js?v=20260805-2"></script>
+  <script src="config.js?v=20260805-3"></script>
+  <script src="defaults.js?v=20260805-3"></script>
+  <script src="storage.js?v=20260805-3"></script>
+  <script src="analistas.js?v=20260805-3"></script>
 </body>
 </html>

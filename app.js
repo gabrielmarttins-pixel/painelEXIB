@@ -285,12 +285,14 @@ function getData() {
   return {
     reportDate: dateInput.value,
     weekday: weekdayInput.value,
+    serviceHandoffHtml: currentRemotePayload?.serviceHandoffHtml || '',
     highlights: collectItems('highlights'), news: collectItems('news'), strategy: collectItems('strategy'), games: collectItems('games'), programs: collectItems('programs'), notes: collectItems('notes'), links: collectItems('links')
   };
 }
 
 function hasReportContent(data) {
   if (!data) return false;
+  if (String(data.serviceHandoffHtml || '').trim()) return true;
   return Object.keys(sections).some(section => Array.isArray(data[section]) && data[section].length);
 }
 
@@ -371,6 +373,7 @@ async function saveRemoteReport(data = getData()) {
     }
   }
 
+  data.serviceHandoffHtml = latestPayload?.serviceHandoffHtml || data.serviceHandoffHtml || '';
   const { payload, row, error } = await saveRemoteReportToStorage(supabaseClient, data, latestPayload || currentRemotePayload);
   if (error) {
     console.error(error);

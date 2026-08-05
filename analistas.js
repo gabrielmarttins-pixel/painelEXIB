@@ -67,6 +67,58 @@ function formatWhatsappText(value) {
     .replaceAll('\n', '<br>');
 }
 
+function sanitizeInlineHtml(value) {
+  const source = document.createElement('div');
+  source.innerHTML = String(value || '');
+  const output = document.createElement('div');
+  const allowedColors = new Set(['#101116', '#087bff', '#00a86b', '#ff5600', '#e50046']);
+
+  function normalizeEditorColor(value) {
+    const color = String(value || '').trim().toLowerCase();
+    if (color.startsWith('#')) return color;
+    const rgb = color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    if (!rgb) return '';
+    return `#${rgb.slice(1).map(part => Number(part).toString(16).padStart(2, '0')).join('')}`;
+  }
+
+  function appendClean(node, parent) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      parent.append(document.createTextNode(node.textContent || ''));
+      return;
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+    const tag = node.tagName.toLowerCase();
+    if (tag === 'br') {
+      parent.append(document.createElement('br'));
+      return;
+    }
+    if (tag === 'b' || tag === 'strong' || tag === 'i' || tag === 'em') {
+      const el = document.createElement(tag === 'b' ? 'strong' : tag === 'i' ? 'em' : tag);
+      node.childNodes.forEach(child => appendClean(child, el));
+      parent.append(el);
+      return;
+    }
+    if (tag === 'span' || tag === 'font') {
+      const hex = normalizeEditorColor(node.style?.color || node.getAttribute('color'));
+      const el = allowedColors.has(hex) ? document.createElement('span') : parent;
+      if (el !== parent) el.style.color = hex;
+      node.childNodes.forEach(child => appendClean(child, el));
+      if (el !== parent) parent.append(el);
+      return;
+    }
+    if (tag === 'div' || tag === 'p') {
+      if (parent.childNodes.length) parent.append(document.createElement('br'));
+      node.childNodes.forEach(child => appendClean(child, parent));
+      return;
+    }
+    node.childNodes.forEach(child => appendClean(child, parent));
+  }
+
+  source.childNodes.forEach(child => appendClean(child, output));
+  return output.innerHTML.replace(/(<br>\s*)+$/g, '').trim();
+}
+
 function cleanText(value, fallback = 'Não informado') {
   const text = String(value || '').trim();
   return text || fallback;
@@ -229,6 +281,44 @@ function cardEmpty(text) {
   return `<div class="preview-empty analyst-empty">${escapeHtml(text)}</div>`;
 }
 
+function renderServiceHandoff() {
+  const editor = document.querySelector('#serviceHandoffEditor');
+  if (!editor) return;
+  if (document.activeElement !== editor) editor.innerHTML = sanitizeInlineHtml(reportData.serviceHandoffHtml || '');
+}
+
+function saveServiceHandoff() {
+  const editor = document.querySelector('#serviceHandoffEditor');
+  if (!editor) return;
+  reportData.serviceHandoffHtml = sanitizeInlineHtml(editor.innerHTML);
+  scheduleSave();
+}
+
+function bindServiceHandoffEditor() {
+  const editor = document.querySelector('#serviceHandoffEditor');
+  if (!editor || editor.dataset.bound === 'true') return;
+  editor.dataset.bound = 'true';
+  editor.addEventListener('input', saveServiceHandoff);
+  editor.addEventListener('blur', () => {
+    editor.innerHTML = sanitizeInlineHtml(editor.innerHTML);
+    saveServiceHandoff();
+  });
+
+  document.querySelectorAll('[data-handoff-command], [data-handoff-color]').forEach(button => {
+    button.addEventListener('mousedown', event => event.preventDefault());
+    button.addEventListener('click', () => {
+      editor.focus();
+      if (button.dataset.handoffCommand) document.execCommand(button.dataset.handoffCommand, false);
+      if (button.dataset.handoffColor) document.execCommand('foreColor', false, button.dataset.handoffColor);
+      saveServiceHandoff();
+    });
+  });
+}
+
+function isServiceHandoffActive() {
+  return document.activeElement === document.querySelector('#serviceHandoffEditor');
+}
+
 function renderHighlights() {
   const items = reportData.highlights.filter(item => hasContent(item, ['title', 'details'])).sort((a, b) => Number(Boolean(b.urgent)) - Number(Boolean(a.urgent)));
   setSectionVisibility('highlightsSection', items.length);
@@ -353,6 +443,7 @@ function render() {
   document.querySelector('#reportDateDisplay').textContent = `${formatReportDate(reportData.reportDate)} | ${reportData.weekday || ''}`;
   document.querySelector('#footerDate').textContent = formatReportDate(reportData.reportDate);
   updateDayButtons();
+  renderServiceHandoff();
   renderHighlights();
   renderNotes();
   renderNews();
@@ -360,6 +451,7 @@ function render() {
   renderGames();
   renderPrograms();
   renderLinks();
+  bindServiceHandoffEditor();
   bindEditableCards();
 }
 
@@ -460,6 +552,7 @@ function mergeAnalystChanges(base, edited) {
   const merged = cleanReportData(base || {});
   merged.reportDate = edited.reportDate;
   merged.weekday = edited.weekday;
+  merged.serviceHandoffHtml = edited.serviceHandoffHtml || '';
   merged.news = edited.news;
   merged.strategy = edited.strategy;
   const editedPrograms = new Map(edited.programs.map(item => [item.id || item.name, item]));
@@ -517,6 +610,7 @@ function scheduleSave() {
 }
 
 async function loadReport(force = false, reportDate = reportData.reportDate || todayKey()) {
+  if (isServiceHandoffActive() && !force) return;
   if (activeEditor && !force) return;
   if (force && hasPendingSync) {
     await saveOnline();
@@ -567,7 +661,7 @@ async function copyPreviousDay() {
     if (!error && payload) previousData = cleanReportData(payload);
   }
   previousData = previousData || loadLocalReport(previousDate);
-  if (!previousData || !Object.keys(previousData).some(key => Array.isArray(previousData[key]) && previousData[key].length)) {
+  if (!previousData || (!String(previousData.serviceHandoffHtml || '').trim() && !Object.keys(previousData).some(key => Array.isArray(previousData[key]) && previousData[key].length))) {
     saveStatus.textContent = 'Nenhuma informação encontrada no dia anterior';
     return;
   }
@@ -592,7 +686,7 @@ loadReport().catch(error => {
   if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: modo local';
 });
 setInterval(() => {
-  if (activeEditor) return;
+  if (activeEditor || isServiceHandoffActive()) return;
   if (hasPendingSync) saveOnline();
   else loadReport(false, reportData.reportDate || todayKey());
 }, SYNC_INTERVAL_MS);

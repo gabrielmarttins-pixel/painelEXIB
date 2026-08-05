@@ -223,6 +223,21 @@ button:disabled{cursor:wait;opacity:.7}
 .analyst-shell .strategy-section .strategy-program{align-items:flex-start}
 .analyst-shell .strategy-section .strategy-info{justify-content:flex-end}
 .analyst-shell .strategy-section .strategy-empty{margin-top:0}
+.handoff-section{order:2}
+.handoff-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.handoff-toolbar button{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid #dfe3ee;border-radius:10px;background:#fff;color:#101116;cursor:pointer;font:700 14px Globotipo,Arial,sans-serif;box-shadow:0 5px 12px #1d2b4a0a}
+.handoff-toolbar button:hover{border-color:#bcd5ff;box-shadow:0 8px 18px #087bff18}
+.handoff-toolbar .color{border:2px solid #fff;box-shadow:0 0 0 1px #dfe3ee,0 5px 12px #1d2b4a0a}
+.handoff-toolbar .color.black{background:#101116}
+.handoff-toolbar .color.blue{background:#087bff}
+.handoff-toolbar .color.green{background:#00a86b}
+.handoff-toolbar .color.orange{background:#ff5600}
+.handoff-toolbar .color.red{background:#e50046}
+.handoff-editor{min-height:132px;border:1px solid #d6d7dc;border-radius:16px;background:#f8f9fc;padding:17px 18px;color:#101116;font-size:16px;line-height:1.5;outline:none;white-space:pre-wrap}
+.handoff-editor:focus{border-color:#087bff;box-shadow:0 0 0 3px #0780ff18;background:#fff}
+.handoff-editor:empty:before{content:attr(data-placeholder);color:#8a8f9d}
+.handoff-editor strong{font-weight:700}
+.handoff-editor em{font-style:italic}
 .program-ids{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:7px;min-width:0}
 .program-ids-editor{min-width:0}
 .field-label{display:block;color:#555861;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.055em}
@@ -326,13 +341,14 @@ button:disabled{cursor:wait;opacity:.7}
 .analyst-shell{width:min(1120px,calc(100% - 32px));display:flex;flex-direction:column}
 .analyst-shell #linksSection{order:0}
 .analyst-shell .analyst-hero{order:1}
-.analyst-shell #highlightsSection{order:2}
-.analyst-shell #notesSection{order:3}
-.analyst-shell #newsSection{order:4}
-.analyst-shell #strategySection{order:5}
-.analyst-shell #gamesSection{order:6}
-.analyst-shell #programsSection{order:7}
-.analyst-shell footer{order:8}
+.analyst-shell .handoff-section{order:2}
+.analyst-shell #highlightsSection{order:3}
+.analyst-shell #notesSection{order:4}
+.analyst-shell #newsSection{order:5}
+.analyst-shell #strategySection{order:6}
+.analyst-shell #gamesSection{order:7}
+.analyst-shell #programsSection{order:8}
+.analyst-shell footer{order:9}
 .analyst-shell .links-top{padding:8px 0 4px;background:transparent}
 .analyst-shell .links-top .preview-cards{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
 .analyst-shell .links-top .useful-link{position:relative;isolation:isolate;overflow:hidden;min-height:38px;padding:9px 12px;border:1px solid transparent;border-radius:10px;background:#fff;color:#0057d9;font-size:13px;font-weight:800;line-height:1.15;box-shadow:inset 0 0 0 1px #dfe7f5,0 4px 10px #1d2b4a0b;transition:color .16s ease,transform .16s ease,box-shadow .16s ease}
