@@ -143,6 +143,14 @@ button:disabled{cursor:wait;opacity:.7}
 .game-card-content{min-height:120px}
 .news-preview-card{min-height:150px}
 .news-card-content{min-height:108px}
+.news-preview-card.news-bom-dia:before{background:linear-gradient(180deg,#ffbd00,#ffdf42)}
+.news-preview-card.news-df1:before{background:linear-gradient(180deg,#ff9d00,#ff5600)}
+.news-preview-card.news-ge:before{background:linear-gradient(180deg,#ff1744,#d50031)}
+.news-preview-card.news-df2:before{background:linear-gradient(180deg,#00a7ff,#2860ff)}
+.info-pills{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.info-pill{display:inline-flex;flex-direction:column;gap:2px;min-width:78px;padding:8px 10px;border-radius:10px;background:#fff;border:1px solid #dce7f6;box-shadow:0 6px 14px #1d2b4a0d}
+.info-pill small{color:#70737c;font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.info-pill strong{color:#0057d9;font-size:15px;line-height:1;font-weight:700}
 .preview-export{display:flex;justify-content:center;padding:22px 0 4px}
 .preview-export .button{min-width:190px}
 @media(max-width:680px){.hero{padding:32px 26px}.hero h1{font-size:46px}.section-card{padding:23px 18px}.preview-hero{padding:32px 26px}.preview-hero h1{font-size:42px}.preview-section{padding:21px 17px}}
@@ -183,6 +191,7 @@ button:disabled{cursor:wait;opacity:.7}
 .strategy-section .preview-card{padding:13px 16px 12px 20px}
 .strategy-section .preview-card h3{font-size:16px}
 .strategy-section .preview-card p{font-size:13px;line-height:1.35;margin-top:6px}
+.strategy-observation{padding:10px 12px;border-radius:10px;background:#eef6ff;border:1px solid #dbe9ff;color:#17233f!important;font-weight:700}
 .strategy-section .strategy-badges{margin-top:9px;gap:5px}
 .strategy-section .strategy-badge{padding:5px 8px;font-size:9px}
 .program-ids{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:7px;min-width:0}
@@ -193,7 +202,7 @@ button:disabled{cursor:wait;opacity:.7}
 .add-program-id{margin-top:9px;padding:8px 11px;font-size:12px}
 .program-badges{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:7px}
 .program-category{display:inline-flex;padding:8px 11px;border-radius:8px;background:#eee7ff;color:#6513d3;font-size:11px;font-weight:700}
-.program-row{grid-template-columns:1.35fr 110px 120px 120px 160px}
+.program-row{grid-template-columns:1.35fr 120px 105px 115px 150px 145px}
 .links-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .link-row{display:grid;grid-template-columns:1fr 1.5fr;gap:12px;border-left:5px solid #087bff}
 .links-section .preview-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
@@ -202,7 +211,7 @@ button:disabled{cursor:wait;opacity:.7}
 @media(max-width:850px){.news-row{grid-template-columns:1fr 1fr}.strategy-section .preview-cards,.links-section .preview-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.program-row{grid-template-columns:1fr 1fr}.links-list{grid-template-columns:1fr}}
 @media(max-width:680px){.strategy-section .preview-cards,.links-section .preview-cards{grid-template-columns:1fr}}
 @media(max-width:520px){.news-row,.program-row,.link-row{grid-template-columns:1fr}}
-@media print{.strategy-section .preview-cards,.links-section .preview-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.urgent-option{display:none}.program-row{grid-template-columns:1.2fr 70px 85px 80px 100px}}
+@media print{.strategy-section .preview-cards,.links-section .preview-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.urgent-option{display:none}.program-row{grid-template-columns:1.15fr 78px 68px 78px 95px 90px}}
 
 .export-holder{position:fixed;left:-20000px;top:0;width:1120px;z-index:-1}
 .export-report{background:#ececef;padding:20px}
@@ -272,6 +281,7 @@ button:disabled{cursor:wait;opacity:.7}
 .club-crests .flag{width:34%;height:60%;object-fit:cover;border-radius:10px;filter:drop-shadow(0 6px 12px #00000022)}
 .game-schedule{padding:0 4px;font-size:11px}
 .game-schedule strong{font-size:12px}
+.game-schedule .game-time{display:inline-flex;align-items:center;justify-content:center;padding:7px 12px;border-radius:999px;background:linear-gradient(110deg,#00a86b,#00c97b);color:#fff!important;font-size:17px!important;box-shadow:0 7px 16px #00a86b24}
 .game-preview-footer{margin-top:8px}
 .preview-card.game .signal-badge{min-width:48px;padding:5px 8px;border-radius:6px;font-size:9px}
 @media(max-width:520px){.preview-card.game{min-height:115px}.game-card-content{min-height:80px}}

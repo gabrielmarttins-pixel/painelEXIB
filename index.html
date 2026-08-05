@@ -128,7 +128,7 @@
   <template id="newsTemplate">
     <article class="news-row item-card">
       <div class="item-actions"><button data-move="up" type="button" aria-label="Mover para cima">↑</button><button data-move="down" type="button" aria-label="Mover para baixo">↓</button><button class="remove" type="button" aria-label="Remover item">x</button></div>
-      <label>Jornal<input data-field="name" type="text" placeholder="Nome do jornal"></label>
+      <label>Jornal<select data-field="name"><option value="">Selecione</option><option>BOM DIA DF</option><option>DF1</option><option>GLOBO ESPORTE</option><option>DF2</option></select></label>
       <label>Início<input data-field="start" type="time"></label>
       <label>Produção<input data-field="production" type="time" step="1" placeholder="00:00:00"></label>
       <label>Blocos<input data-field="blocks" type="number" min="0" step="1" placeholder="Ex.: 4"></label>
@@ -169,6 +169,7 @@
     <article class="program-row item-card">
       <div class="item-actions"><button data-move="up" type="button" aria-label="Mover para cima">↑</button><button data-move="down" type="button" aria-label="Mover para baixo">↓</button><button class="remove" type="button" aria-label="Remover item">x</button></div>
       <label>Programa<input data-field="name" type="text" placeholder="Nome do programa"></label>
+      <label>Data de exibição<input data-field="exhibitionDate" type="date"></label>
       <label>Início<input data-field="start" type="time"></label>
       <label>Duração<input data-field="duration" type="text" placeholder="Ex.: 30 min"></label>
       <div class="program-ids-editor">

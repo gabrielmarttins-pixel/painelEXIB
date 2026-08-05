@@ -106,6 +106,19 @@ function getProgramIdBadges(item) {
   return ids.map(id => String(id || '').trim()).filter(Boolean);
 }
 
+function getNewsClass(name) {
+  const normalized = String(name || '').trim().toLocaleUpperCase('pt-BR');
+  if (normalized === 'BOM DIA DF') return 'news-bom-dia';
+  if (normalized === 'DF1') return 'news-df1';
+  if (normalized === 'GLOBO ESPORTE') return 'news-ge';
+  if (normalized === 'DF2') return 'news-df2';
+  return 'news-default';
+}
+
+function metric(label, value) {
+  return value ? `<span class="info-pill"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></span>` : '';
+}
+
 function getNewsPresenter(name) {
   return newsPresenters[name] || '';
 }
@@ -204,15 +217,11 @@ function renderNews() {
   document.querySelector('#newsView').innerHTML = items.length ? items.map((item, index) => {
     const presenter = getNewsPresenter(item.name);
     return `
-      <article class="preview-card news-preview-card analyst-editable" data-edit="news" data-index="${index}" tabindex="0">
+      <article class="preview-card news-preview-card ${getNewsClass(item.name)} analyst-editable" data-edit="news" data-index="${index}" tabindex="0">
         ${presenter ? `<img class="news-presenter" src="${escapeHtml(presenter)}" alt="">` : ''}
         <div class="news-card-content">
           <h3>${escapeHtml(item.name || 'Jornal')}</h3>
-          <div class="preview-meta">${[
-            item.start && `Início: ${item.start}`,
-            item.production && `Produção: ${item.production}`,
-            item.blocks && `Blocos: ${item.blocks}`
-          ].filter(Boolean).map(escapeHtml).join(' &nbsp;|&nbsp; ')}</div>
+          <div class="info-pills">${metric('Início', item.start)}${metric('Produção', item.production)}${metric('Blocos', item.blocks)}</div>
           ${item.notes ? `<p>${escapeHtml(item.notes)}</p>` : ''}
         </div>
         <span class="edit-chip">Clique para editar</span>
@@ -229,7 +238,7 @@ function renderStrategy() {
       <article class="preview-card strategy-preview-card analyst-editable" data-edit="strategy" data-index="${index}" tabindex="0">
         <h3>${escapeHtml(item.name || 'Programa')}</h3>
         ${badges ? `<div class="strategy-badges">${badges}</div>` : '<p>Sem marcação.</p>'}
-        ${item.observation ? `<p>${escapeHtml(item.observation)}</p>` : ''}
+        ${item.observation ? `<p class="strategy-observation">${escapeHtml(item.observation)}</p>` : ''}
         <span class="edit-chip">Clique para editar</span>
       </article>
     `;
@@ -244,7 +253,7 @@ function renderGames() {
     const team2 = getTeamName(item, 'team2');
     return `
       <div class="game-preview-item">
-        ${(item.date || item.time) ? `<div class="game-schedule">${item.date ? `<span>${escapeHtml(formatGameDate(item.date))}</span>` : ''}${item.time ? `<strong>${escapeHtml(item.time)}</strong>` : ''}</div>` : ''}
+        ${(item.date || item.time) ? `<div class="game-schedule">${item.date ? `<span>${escapeHtml(formatGameDate(item.date))}</span>` : ''}${item.time ? `<strong class="game-time">${escapeHtml(item.time)}</strong>` : ''}</div>` : ''}
         <article class="preview-card game">
           <div class="club-crests" aria-hidden="true">
             ${getTeamVisual(team1)}
@@ -272,6 +281,7 @@ function renderPrograms() {
       <div class="program-preview-footer">
         <div class="program-ids">${getProgramIdBadges(item).map(id => `<span class="program-category">ID: ${escapeHtml(id)}</span>`).join('')}</div>
         <div class="preview-meta">${[
+          item.exhibitionDate && `Exibição: ${formatReportDate(item.exhibitionDate)}`,
           item.start && `Início: ${item.start}`,
           item.duration && `Duração: ${item.duration}`
         ].filter(Boolean).map(escapeHtml).join(' &nbsp;|&nbsp; ')}</div>
@@ -328,7 +338,9 @@ function openEditor(type, index, card) {
 
   if (type === 'news') {
     activeEditor.innerHTML = `
-      <label>Jornal<input data-field="name" type="text" value="${escapeHtml(item.name || '')}"></label>
+      <label>Jornal<select data-field="name">
+        ${['BOM DIA DF', 'DF1', 'GLOBO ESPORTE', 'DF2'].map(name => `<option ${item.name === name ? 'selected' : ''}>${name}</option>`).join('')}
+      </select></label>
       <div class="analyst-editor-grid">
         <label>Início<input data-field="start" type="time" value="${escapeHtml(item.start || '')}"></label>
         <label>Produção<input data-field="production" type="time" step="1" value="${escapeHtml(item.production || '')}"></label>

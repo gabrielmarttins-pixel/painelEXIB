@@ -96,6 +96,19 @@ function getNewsPresenter(name) {
   return newsPresenters[String(name || '').trim().toLocaleUpperCase('pt-BR')] || '';
 }
 
+function getNewsClass(name) {
+  const normalized = String(name || '').trim().toLocaleUpperCase('pt-BR');
+  if (normalized === 'BOM DIA DF') return 'news-bom-dia';
+  if (normalized === 'DF1') return 'news-df1';
+  if (normalized === 'GLOBO ESPORTE') return 'news-ge';
+  if (normalized === 'DF2') return 'news-df2';
+  return 'news-default';
+}
+
+function metric(label, value) {
+  return value ? `<span class="info-pill"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></span>` : '';
+}
+
 function getStatusClass(status) {
   if (status === 'Enviado') return 'status-sent';
   if (status === 'Capturado') return 'status-captured';
@@ -473,7 +486,7 @@ function mergeDateReports(dateStore) {
     news: ['name', 'start', 'production', 'duration', 'blocks', 'notes'],
     strategy: ['name', 'network', 'local', 'observation'],
     games: ['date', 'time', 'signal', 'championship', 'team1', 'team1Custom', 'team2', 'team2Custom'],
-    programs: ['name', 'start', 'duration', 'ids', 'idsList', 'category', 'status'],
+    programs: ['name', 'exhibitionDate', 'start', 'duration', 'ids', 'idsList', 'category', 'status'],
     notes: ['subject', 'text'],
     links: ['label', 'url']
   };
@@ -532,7 +545,7 @@ function showPreview() {
   const news = data.news.filter(item => hasMeaningfulFields(item, ['name', 'start', 'production', 'blocks', 'notes']));
   const strategy = data.strategy.filter(item => item.network || item.local || String(item.observation || '').trim());
   const games = data.games.filter(item => hasMeaningfulFields(item, ['date', 'time', 'championship', 'team1', 'team1Custom', 'team2', 'team2Custom']));
-  const programs = data.programs.filter(item => hasMeaningfulFields(item, ['name', 'start', 'duration', 'ids']));
+  const programs = data.programs.filter(item => hasMeaningfulFields(item, ['name', 'exhibitionDate', 'start', 'duration', 'ids']));
   const notes = data.notes.filter(item => hasMeaningfulFields(item, ['subject', 'text']));
   const links = data.links.filter(item => normalizeUrl(item.url));
 
@@ -563,16 +576,12 @@ function showPreview() {
   const newsHtml = news.map(item => {
     const presenter = getNewsPresenter(item.name);
     return `
-      <article class="preview-card news-preview-card">
+      <article class="preview-card news-preview-card ${getNewsClass(item.name)}">
         ${presenter ? `<img class="news-presenter" src="${escapeHtml(presenter)}" alt="" aria-hidden="true">` : ''}
         <div class="news-card-content">
           <h3>${escapeHtml(item.name || 'Jornal')}</h3>
+          <div class="info-pills">${metric('Início', item.start)}${metric('Produção', item.production)}${metric('Blocos', item.blocks)}</div>
           ${item.notes ? `<p>${escapeHtml(item.notes)}</p>` : ''}
-          <div class="preview-meta">${[
-            item.start && `Incio: ${item.start}`,
-            item.production && `Produo: ${item.production}`,
-            item.blocks && `Blocos: ${item.blocks}`
-          ].filter(Boolean).map(escapeHtml).join(' &nbsp;|&nbsp; ')}</div>
         </div>
       </article>`;
   }).join('');
@@ -580,7 +589,7 @@ function showPreview() {
   const strategyHtml = strategy.map(item => `
     <article class="preview-card strategy-preview-card">
       <h3>${escapeHtml(item.name || 'Programa')}</h3>
-      ${item.observation ? `<p>${escapeHtml(item.observation)}</p>` : ''}
+      ${item.observation ? `<p class="strategy-observation">${escapeHtml(item.observation)}</p>` : ''}
       <div class="strategy-badges">
         ${item.network ? '<span class="strategy-badge network">Em rede</span>' : ''}
         ${item.local ? '<span class="strategy-badge local">Local</span>' : ''}
@@ -594,7 +603,7 @@ function showPreview() {
     const flag2 = crest2 ? '' : getCountryFlag(getGameTeam(item, 'team2'));
     return `
       <div class="game-preview-item">
-        ${(item.date || item.time) ? `<div class="game-schedule">${item.date ? `<span>${escapeHtml(formatGameDate(item.date))}</span>` : ''}${item.time ? `<strong>${escapeHtml(item.time)}</strong>` : ''}</div>` : ''}
+        ${(item.date || item.time) ? `<div class="game-schedule">${item.date ? `<span>${escapeHtml(formatGameDate(item.date))}</span>` : ''}${item.time ? `<strong class="game-time">${escapeHtml(item.time)}</strong>` : ''}</div>` : ''}
         <article class="preview-card game">
           <div class="club-crests" aria-hidden="true">
             ${crest1 ? `<img class="crest crest-left" src="${escapeHtml(crest1)}" alt="">` : flag1 ? `<img class="crest flag crest-left" src="${escapeHtml(flag1)}" alt="">` : ''}
@@ -618,6 +627,7 @@ function showPreview() {
       <div class="program-preview-footer">
         <div class="program-ids">${getProgramIdBadges(item).map(id => `<span class="program-category">ID: ${escapeHtml(id)}</span>`).join('')}</div>
         <div class="preview-meta">${[
+          item.exhibitionDate && `Exibição: ${formatReportDate(item.exhibitionDate)}`,
           item.start && `Incio: ${item.start}`,
           item.duration && `Durao: ${item.duration}`
         ].filter(Boolean).map(escapeHtml).join(' &nbsp;|&nbsp; ')}</div>
@@ -690,8 +700,8 @@ async function exportImageReport() {
         .map(item => ({ title: item.name || 'Programa', body: item.observation, meta: [item.network && 'Em rede', item.local && 'Local'].filter(Boolean).join(' + '), theme: 'blue' })),
       games: data.games.filter(item => hasMeaningfulFields(item, ['date', 'time', 'championship', 'team1', 'team1Custom', 'team2', 'team2Custom']))
         .map(item => ({ title: `${getGameTeam(item, 'team1')} x ${getGameTeam(item, 'team2')}`, body: item.championship, meta: [item.date && formatGameDate(item.date), item.time, item.signal].filter(Boolean).join(' | '), theme: 'green' })),
-      programs: data.programs.filter(item => hasMeaningfulFields(item, ['name', 'start', 'duration', 'ids']))
-        .map(item => ({ title: item.name || 'Programa local', body: '', meta: [item.start && `Incio ${item.start}`, item.duration, getProgramIdBadges(item).map(id => `ID ${id}`).join(' + '), item.status].filter(Boolean).join(' | '), theme: item.status === 'Ao Vivo' ? 'high' : item.status === 'Capturado' ? 'green' : item.status === 'Enviado' ? 'orange' : 'gray' })),
+      programs: data.programs.filter(item => hasMeaningfulFields(item, ['name', 'exhibitionDate', 'start', 'duration', 'ids']))
+        .map(item => ({ title: item.name || 'Programa local', body: '', meta: [item.exhibitionDate && `Exibição ${formatReportDate(item.exhibitionDate)}`, item.start && `Incio ${item.start}`, item.duration, getProgramIdBadges(item).map(id => `ID ${id}`).join(' + '), item.status].filter(Boolean).join(' | '), theme: item.status === 'Ao Vivo' ? 'high' : item.status === 'Capturado' ? 'green' : item.status === 'Enviado' ? 'orange' : 'gray' })),
       notes: data.notes.filter(item => hasMeaningfulFields(item, ['subject', 'text']))
         .map(item => ({ title: item.subject || 'Informao', body: item.text, meta: '', theme: 'violet' })),
       links: data.links.filter(item => normalizeUrl(item.url))
@@ -970,8 +980,8 @@ function exportCsvReport() {
   data.games.filter(item => hasMeaningfulFields(item, ['date', 'time', 'championship', 'team1', 'team1Custom', 'team2', 'team2Custom'])).forEach((item, index) => {
     rows.push(['Prximos jogos', index + 1, item.championship, item.date ? formatGameDate(item.date) : '', item.time, '', item.signal, '', getGameTeam(item, 'team1'), getGameTeam(item, 'team2'), '']);
   });
-  data.programs.filter(item => hasMeaningfulFields(item, ['name', 'start', 'duration', 'ids'])).forEach((item, index) => {
-    rows.push(['Programas locais', index + 1, item.name, '', item.start, item.duration, item.status, getProgramIdBadges(item).map(id => `ID: ${id}`).join(' | '), '', '', '']);
+  data.programs.filter(item => hasMeaningfulFields(item, ['name', 'exhibitionDate', 'start', 'duration', 'ids'])).forEach((item, index) => {
+    rows.push(['Programas locais', index + 1, item.name, item.exhibitionDate ? formatReportDate(item.exhibitionDate) : '', item.start, item.duration, item.status, getProgramIdBadges(item).map(id => `ID: ${id}`).join(' | '), '', '', '']);
   });
   data.notes.filter(item => hasMeaningfulFields(item, ['subject', 'text'])).forEach((item, index) => {
     rows.push(['Informaes diversas', index + 1, item.subject, '', '', '', item.category, item.text, '', '', '']);
