@@ -563,6 +563,12 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
+function formatWhatsappText(value) {
+  return escapeHtml(value)
+    .replace(/\*\*([^*\n](?:[^*]|\*(?!\*))*)\*\*/g, '<strong>$1</strong>')
+    .replaceAll('\n', '<br>');
+}
+
 function hasMeaningfulFields(item, fields) {
   return fields.some(field => String(item[field] || '').trim());
 }
@@ -582,7 +588,7 @@ function showPreview() {
   const card = (title, text, meta, accent = '') => `
     <article class="preview-card ${accent}">
       <h3>${escapeHtml(title)}</h3>
-      ${text ? `<p>${escapeHtml(text).replaceAll('\n', '<br>')}</p>` : ''}
+      ${text ? `<p>${formatWhatsappText(text)}</p>` : ''}
       ${meta ? `<div class="preview-meta">${escapeHtml(meta)}</div>` : ''}
     </article>`;
 
@@ -598,7 +604,7 @@ function showPreview() {
       <article class="preview-card highlight-preview-card ${accent}">
         ${item.category ? `<span class="highlight-category-badge ${getCategoryClass(item.category)}">${escapeHtml(item.category)}</span>` : ''}
         <h3>${escapeHtml(item.title || 'Destaque estratégico')}</h3>
-        ${item.details ? `<p>${escapeHtml(item.details).replaceAll('\n', '<br>')}</p>` : ''}
+        ${item.details ? `<p>${formatWhatsappText(item.details)}</p>` : ''}
         ${item.priority ? `<div class="preview-meta">Prioridade: ${escapeHtml(item.priority)}</div>` : ''}
       </article>`;
   }).join('');
@@ -1058,7 +1064,7 @@ function generateHtmlReport() {
     const card = (title, text, meta, accent = 'blue') => `
       <article class="card ${accent}">
         <h3>${escapeHtml(title)}</h3>
-        ${text ? `<p>${escapeHtml(text).replaceAll('\n', '<br>')}</p>` : ''}
+        ${text ? `<p>${formatWhatsappText(text)}</p>` : ''}
         ${meta ? `<div class="meta">${escapeHtml(meta)}</div>` : ''}
       </article>`;
 
