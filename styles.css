@@ -313,6 +313,10 @@ button:disabled{cursor:wait;opacity:.7}
 .analyst-shell #gamesSection{order:6}
 .analyst-shell #programsSection{order:7}
 .analyst-shell footer{order:8}
+.analyst-shell .links-top{padding:8px 0 4px;background:transparent}
+.analyst-shell .links-top .preview-cards{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.analyst-shell .links-top .useful-link{min-height:38px;padding:9px 12px;border:1px solid #dfe7f5;border-radius:10px;background:#fff;color:#0057d9;font-size:13px;font-weight:800;line-height:1.15;box-shadow:0 4px 10px #1d2b4a0b;transition:background .16s ease,color .16s ease,transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.analyst-shell .links-top .useful-link:hover,.analyst-shell .links-top .useful-link:focus{background:linear-gradient(110deg,#00a7ff,#2860ff 52%,#8200ff);border-color:transparent;color:#fff;box-shadow:0 8px 18px #2860ff24;filter:none;transform:translateY(-1px);outline:none}
 .analyst-hero{display:block}
 .analyst-hero .eyebrow{margin-bottom:12px}
 .analyst-hero .hero-copy{font-size:15px;margin-top:18px}
