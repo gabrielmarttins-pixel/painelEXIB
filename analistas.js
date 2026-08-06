@@ -25,6 +25,7 @@ let saveTimer;
 let activeEditor = null;
 let hasPendingSync = false;
 let shouldSaveFullReport = false;
+let isServiceHandoffEditing = false;
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -283,8 +284,15 @@ function cardEmpty(text) {
 
 function renderServiceHandoff() {
   const editor = document.querySelector('#serviceHandoffEditor');
-  if (!editor) return;
-  if (document.activeElement !== editor) editor.innerHTML = sanitizeInlineHtml(reportData.serviceHandoffHtml || '');
+  const view = document.querySelector('#serviceHandoffView');
+  const card = document.querySelector('#serviceHandoffCard');
+  const panel = document.querySelector('#serviceHandoffEditorPanel');
+  if (!editor || !view || !card || !panel) return;
+  const html = sanitizeInlineHtml(reportData.serviceHandoffHtml || '');
+  view.innerHTML = html || '<span class="handoff-placeholder">Nenhuma passagem registrada.</span>';
+  card.hidden = isServiceHandoffEditing;
+  panel.hidden = !isServiceHandoffEditing;
+  if (isServiceHandoffEditing && document.activeElement !== editor) editor.innerHTML = html;
 }
 
 function saveServiceHandoff() {
@@ -294,10 +302,47 @@ function saveServiceHandoff() {
   scheduleSave();
 }
 
+function openServiceHandoffEditor() {
+  isServiceHandoffEditing = true;
+  renderServiceHandoff();
+  const editor = document.querySelector('#serviceHandoffEditor');
+  if (editor) {
+    editor.focus();
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+}
+
+function closeServiceHandoffEditor() {
+  const editor = document.querySelector('#serviceHandoffEditor');
+  if (editor) reportData.serviceHandoffHtml = sanitizeInlineHtml(editor.innerHTML);
+  isServiceHandoffEditing = false;
+  scheduleSave();
+  renderServiceHandoff();
+}
+
 function bindServiceHandoffEditor() {
   const editor = document.querySelector('#serviceHandoffEditor');
+  const card = document.querySelector('#serviceHandoffCard');
+  const okButton = document.querySelector('#serviceHandoffOkButton');
+  const panel = document.querySelector('#serviceHandoffEditorPanel');
   if (!editor || editor.dataset.bound === 'true') return;
   editor.dataset.bound = 'true';
+  if (card) {
+    card.addEventListener('click', openServiceHandoffEditor);
+    card.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openServiceHandoffEditor();
+      }
+    });
+  }
+  if (panel) panel.addEventListener('click', event => event.stopPropagation());
+  if (okButton) okButton.addEventListener('click', closeServiceHandoffEditor);
   editor.addEventListener('input', saveServiceHandoff);
   editor.addEventListener('blur', () => {
     editor.innerHTML = sanitizeInlineHtml(editor.innerHTML);
@@ -316,7 +361,7 @@ function bindServiceHandoffEditor() {
 }
 
 function isServiceHandoffActive() {
-  return document.activeElement === document.querySelector('#serviceHandoffEditor');
+  return isServiceHandoffEditing || document.activeElement === document.querySelector('#serviceHandoffEditor');
 }
 
 function renderHighlights() {
