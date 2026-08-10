@@ -32,8 +32,8 @@ let redoHistory = [];
 let currentHistorySnapshot = '';
 let isRestoringHistory = false;
 const PERSISTENT_REPORT_DATE = 'dados-persistentes';
-const PERSISTENT_HIGHLIGHTS_KEY = `${STORAGE_KEY}-coordinator-highlights`;
-const PERSISTENT_GAMES_KEY = `${STORAGE_KEY}-coordinator-games`;
+const COORDINATOR_PERSISTENT_KEY = `${STORAGE_KEY}-coordinator-persistent`;
+const PERSISTENT_COORDINATOR_SECTIONS = ['highlights', 'notes', 'programs', 'games', 'links'];
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -764,14 +764,9 @@ function saveLocal() {
 }
 
 function loadLocalPersistentData() {
-  const highlightsValue = localStorage.getItem(PERSISTENT_HIGHLIGHTS_KEY);
-  const gamesValue = localStorage.getItem(PERSISTENT_GAMES_KEY);
-  if (highlightsValue === null && gamesValue === null) return null;
   try {
-    return {
-      highlights: JSON.parse(highlightsValue || '[]'),
-      games: JSON.parse(gamesValue || '[]')
-    };
+    const data = JSON.parse(localStorage.getItem(COORDINATOR_PERSISTENT_KEY) || 'null');
+    return data && typeof data === 'object' ? data : null;
   } catch {
     return null;
   }
@@ -780,8 +775,22 @@ function loadLocalPersistentData() {
 function applyPersistentCoordinatorData(data, persistentData) {
   const next = cleanReportData(data || {});
   if (!persistentData) return next;
-  next.highlights = Array.isArray(persistentData.highlights) ? persistentData.highlights : [];
-  next.games = Array.isArray(persistentData.games) ? persistentData.games : [];
+  PERSISTENT_COORDINATOR_SECTIONS.forEach(section => {
+    if (!Object.prototype.hasOwnProperty.call(persistentData, section)) return;
+    if (section !== 'programs') {
+      next[section] = Array.isArray(persistentData[section]) ? persistentData[section] : [];
+      return;
+    }
+    const currentPrograms = new Map();
+    (next.programs || []).forEach(item => {
+      if (item.id) currentPrograms.set(item.id, item);
+      if (item.name) currentPrograms.set(item.name, item);
+    });
+    next.programs = (persistentData.programs || []).map(item => {
+      const current = currentPrograms.get(item.id) || currentPrograms.get(item.name);
+      return current ? { ...item, status: current.status || item.status } : item;
+    });
+  });
   return next;
 }
 
@@ -790,12 +799,14 @@ async function loadPersistentCoordinatorData() {
   if (supabaseClient) {
     const { payload, error } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
     if (!error && payload) {
-      persistentData = {
-        highlights: Array.isArray(payload.highlights) ? payload.highlights : [],
-        games: Array.isArray(payload.games) ? payload.games : []
-      };
-      localStorage.setItem(PERSISTENT_HIGHLIGHTS_KEY, JSON.stringify(persistentData.highlights));
-      localStorage.setItem(PERSISTENT_GAMES_KEY, JSON.stringify(persistentData.games));
+      persistentData = {};
+      const remoteSections = Number(payload._persistentVersion) >= 2
+        ? PERSISTENT_COORDINATOR_SECTIONS
+        : ['highlights', 'games'];
+      remoteSections.forEach(section => {
+        persistentData[section] = Array.isArray(payload[section]) ? payload[section] : [];
+      });
+      localStorage.setItem(COORDINATOR_PERSISTENT_KEY, JSON.stringify(persistentData));
     } else if (error) {
       console.error(error);
     }

@@ -32,7 +32,9 @@ let currentRemotePayload = null;
 const supabaseClient = createSupabaseClient();
 const COORDINATOR_HIGHLIGHTS_KEY = `${STORAGE_KEY}-coordinator-highlights`;
 const COORDINATOR_GAMES_KEY = `${STORAGE_KEY}-coordinator-games`;
+const COORDINATOR_PERSISTENT_KEY = `${STORAGE_KEY}-coordinator-persistent`;
 const PERSISTENT_REPORT_DATE = 'dados-persistentes';
+const PERSISTENT_COORDINATOR_SECTIONS = ['highlights', 'notes', 'programs', 'games', 'links'];
 const HISTORY_LIMIT_LOCAL = 10;
 const PROTECTED_LINK_LABELS = new Set([
   'gerador de previa',
@@ -523,8 +525,7 @@ function isFormFieldActive() {
 
 function save() {
   const data = getData();
-  saveCoordinatorHighlights(data.highlights);
-  saveCoordinatorGames(data.games);
+  saveCoordinatorPersistentState(data);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   localStorage.setItem(getDateStorageKey(data.reportDate), JSON.stringify(data));
   saveStatus.textContent = supabaseClient ? 'Salvo localmente; salvando online...' : 'Salvo neste navegador';
@@ -539,17 +540,20 @@ function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 
 function scheduleRemoteSave(data = getData()) {
   if (!supabaseClient) return;
   clearTimeout(remoteSaveTimer);
-  remoteSaveTimer = setTimeout(() => saveRemoteReport(data), SYNC_INTERVAL_MS);
+  remoteSaveTimer = setTimeout(() => {
+    remoteSaveTimer = null;
+    saveRemoteReport(data);
+  }, SYNC_INTERVAL_MS);
 }
 
 async function publishUpdates() {
   const button = document.querySelector('#publishButton');
   const data = getData();
-  saveCoordinatorHighlights(data.highlights);
-  saveCoordinatorGames(data.games);
+  saveCoordinatorPersistentState(data);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   localStorage.setItem(getDateStorageKey(data.reportDate), JSON.stringify(data));
   clearTimeout(remoteSaveTimer);
+  remoteSaveTimer = null;
 
   if (!supabaseClient) {
     saveStatus.textContent = 'Modo local: publique no GitHub para usar a sincronização online';
@@ -708,16 +712,43 @@ function saveCoordinatorGames(games = collectItems('games')) {
   localStorage.setItem(COORDINATOR_GAMES_KEY, JSON.stringify(Array.isArray(games) ? games : []));
 }
 
+function loadCoordinatorPersistentState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(COORDINATOR_PERSISTENT_KEY));
+    if (saved && typeof saved === 'object') return saved;
+  } catch {}
+
+  const legacyState = {};
+  if (hasCoordinatorHighlightsState()) legacyState.highlights = loadCoordinatorHighlights();
+  if (hasCoordinatorGamesState()) legacyState.games = loadCoordinatorGames();
+  return Object.keys(legacyState).length ? legacyState : null;
+}
+
+function saveCoordinatorPersistentState(data) {
+  const persistentState = {};
+  PERSISTENT_COORDINATOR_SECTIONS.forEach(section => {
+    persistentState[section] = Array.isArray(data?.[section]) ? data[section] : [];
+  });
+  localStorage.setItem(COORDINATOR_PERSISTENT_KEY, JSON.stringify(persistentState));
+  saveCoordinatorHighlights(persistentState.highlights);
+  saveCoordinatorGames(persistentState.games);
+}
+
 async function loadPersistentCoordinatorData() {
   if (!supabaseClient) return null;
+  if (remoteSaveTimer) return loadCoordinatorPersistentState();
   const { payload, error } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
   if (error) {
     console.error(error);
     return null;
   }
   if (!payload) return null;
-  saveCoordinatorHighlights(Array.isArray(payload.highlights) ? payload.highlights : []);
-  saveCoordinatorGames(Array.isArray(payload.games) ? payload.games : []);
+  if (Number(payload._persistentVersion) >= 2) {
+    saveCoordinatorPersistentState(payload);
+  } else {
+    saveCoordinatorHighlights(Array.isArray(payload.highlights) ? payload.highlights : []);
+    saveCoordinatorGames(Array.isArray(payload.games) ? payload.games : []);
+  }
   return payload;
 }
 
@@ -725,8 +756,12 @@ async function savePersistentCoordinatorData(data) {
   if (!supabaseClient) return;
   const persistentData = cleanReportData({
     reportDate: PERSISTENT_REPORT_DATE,
+    _persistentVersion: 2,
     highlights: Array.isArray(data.highlights) ? data.highlights : [],
-    games: Array.isArray(data.games) ? data.games : []
+    notes: Array.isArray(data.notes) ? data.notes : [],
+    programs: Array.isArray(data.programs) ? data.programs : [],
+    games: Array.isArray(data.games) ? data.games : [],
+    links: Array.isArray(data.links) ? data.links : []
   });
   const { payload: previousPayload } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
   const { error } = await saveRemoteReportToStorage(supabaseClient, persistentData, previousPayload);
@@ -735,25 +770,28 @@ async function savePersistentCoordinatorData(data) {
 
 function withPersistentHighlights(data) {
   if (!data) return data;
-  const persistentHighlights = loadCoordinatorHighlights();
-  const persistentGames = loadCoordinatorGames();
+  const persistentState = loadCoordinatorPersistentState();
   let nextData = { ...data };
-
-  // Depois de inicializado, o estado persistente e a fonte principal. Isso
-  // impede que um registro antigo de outra data ressuscite itens ja excluidos.
-  if (hasCoordinatorHighlightsState()) {
-    nextData.highlights = persistentHighlights;
-  } else {
-    nextData.highlights = Array.isArray(data.highlights) ? data.highlights : [];
-    saveCoordinatorHighlights(nextData.highlights);
-  }
-
-  if (hasCoordinatorGamesState()) {
-    nextData.games = persistentGames;
-  } else {
-    nextData.games = Array.isArray(data.games) ? data.games : [];
-    saveCoordinatorGames(nextData.games);
-  }
+  PERSISTENT_COORDINATOR_SECTIONS.forEach(section => {
+    if (persistentState && Object.prototype.hasOwnProperty.call(persistentState, section)) {
+      if (section === 'programs') {
+        const currentPrograms = new Map();
+        (data.programs || []).forEach(item => {
+          if (item.id) currentPrograms.set(item.id, item);
+          if (item.name) currentPrograms.set(item.name, item);
+        });
+        nextData.programs = (persistentState.programs || []).map(item => {
+          const current = currentPrograms.get(item.id) || currentPrograms.get(item.name);
+          return current ? { ...item, status: current.status || item.status } : item;
+        });
+      } else {
+        nextData[section] = Array.isArray(persistentState[section]) ? persistentState[section] : [];
+      }
+    } else {
+      nextData[section] = Array.isArray(data[section]) ? data[section] : [];
+    }
+  });
+  saveCoordinatorPersistentState(nextData);
   return nextData;
 }
 
