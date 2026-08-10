@@ -618,13 +618,13 @@ async function saveRemoteReport(data = getData()) {
 }
 async function loadRemoteReport(silent = false) {
   if (!supabaseClient) return null;
-  await loadPersistentCoordinatorData();
   const { payload, error } = await fetchRemoteReport(supabaseClient, dateInput.value);
   if (error) {
     console.error(error);
     if (!silent) saveStatus.textContent = `Falha ao carregar Supabase: ${error.message}`;
     return null;
   }
+  await loadPersistentCoordinatorData(payload ? cleanReportData(payload) : null);
   if (payload && !silent) {
     currentRemotePayload = payload;
     lastRemoteSignature = getReportSignature(payload);
@@ -734,7 +734,24 @@ function saveCoordinatorPersistentState(data) {
   saveCoordinatorGames(persistentState.games);
 }
 
-async function loadPersistentCoordinatorData() {
+function findStoredPersistentSection(section) {
+  const dateKeyPrefix = `${STORAGE_KEY}-20`;
+  const reportKeys = [];
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    if (key?.startsWith(dateKeyPrefix)) reportKeys.push(key);
+  }
+  reportKeys.sort().reverse();
+  for (const key of reportKeys) {
+    try {
+      const report = JSON.parse(localStorage.getItem(key));
+      if (Array.isArray(report?.[section]) && report[section].length) return report[section];
+    } catch {}
+  }
+  return [];
+}
+
+async function loadPersistentCoordinatorData(fallbackData = null) {
   if (!supabaseClient) return null;
   if (remoteSaveTimer) return loadCoordinatorPersistentState();
   const { payload, error } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
@@ -744,7 +761,30 @@ async function loadPersistentCoordinatorData() {
   }
   if (!payload) return null;
   if (Number(payload._persistentVersion) >= 2) {
-    saveCoordinatorPersistentState(payload);
+    const clearedSections = new Set(payload._persistentClearedSections || []);
+    const recoveredPayload = { ...payload };
+    PERSISTENT_COORDINATOR_SECTIONS.forEach(section => {
+      if (Array.isArray(payload[section]) && payload[section].length) return;
+      if (clearedSections.has(section)) return;
+      const fallbackItems = Array.isArray(fallbackData?.[section]) ? fallbackData[section] : [];
+      recoveredPayload[section] = fallbackItems.length ? fallbackItems : findStoredPersistentSection(section);
+    });
+    let missingSections = PERSISTENT_COORDINATOR_SECTIONS.filter(section =>
+      !clearedSections.has(section) && !recoveredPayload[section]?.length
+    );
+    for (let offset = 1; offset <= 14 && missingSections.length; offset += 1) {
+      const previousDate = getOffsetDateKey(-offset, dateInput.value || getTodayKey());
+      const { payload: previousReport, error: previousError } = await fetchRemoteReport(supabaseClient, previousDate);
+      if (previousError) break;
+      missingSections.forEach(section => {
+        if (Array.isArray(previousReport?.[section]) && previousReport[section].length) {
+          recoveredPayload[section] = previousReport[section];
+        }
+      });
+      missingSections = missingSections.filter(section => !recoveredPayload[section]?.length);
+    }
+    saveCoordinatorPersistentState(recoveredPayload);
+    return recoveredPayload;
   } else {
     saveCoordinatorHighlights(Array.isArray(payload.highlights) ? payload.highlights : []);
     saveCoordinatorGames(Array.isArray(payload.games) ? payload.games : []);
@@ -757,6 +797,7 @@ async function savePersistentCoordinatorData(data) {
   const persistentData = cleanReportData({
     reportDate: PERSISTENT_REPORT_DATE,
     _persistentVersion: 2,
+    _persistentClearedSections: PERSISTENT_COORDINATOR_SECTIONS.filter(section => !Array.isArray(data[section]) || !data[section].length),
     highlights: Array.isArray(data.highlights) ? data.highlights : [],
     notes: Array.isArray(data.notes) ? data.notes : [],
     programs: Array.isArray(data.programs) ? data.programs : [],

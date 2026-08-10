@@ -800,11 +800,13 @@ async function loadPersistentCoordinatorData() {
     const { payload, error } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
     if (!error && payload) {
       persistentData = {};
+      const clearedSections = new Set(payload._persistentClearedSections || []);
       const remoteSections = Number(payload._persistentVersion) >= 2
         ? PERSISTENT_COORDINATOR_SECTIONS
         : ['highlights', 'games'];
       remoteSections.forEach(section => {
-        persistentData[section] = Array.isArray(payload[section]) ? payload[section] : [];
+        const items = Array.isArray(payload[section]) ? payload[section] : [];
+        if (items.length || clearedSections.has(section)) persistentData[section] = items;
       });
       localStorage.setItem(COORDINATOR_PERSISTENT_KEY, JSON.stringify(persistentData));
     } else if (error) {

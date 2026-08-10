@@ -26,6 +26,9 @@ function cleanReportData(data = {}) {
     clean[section] = Array.isArray(data[section]) ? data[section] : [];
   });
   if (data._persistentVersion) clean._persistentVersion = data._persistentVersion;
+  if (Array.isArray(data._persistentClearedSections)) {
+    clean._persistentClearedSections = data._persistentClearedSections;
+  }
   return clean;
 }
 
