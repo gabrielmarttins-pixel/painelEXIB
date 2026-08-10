@@ -503,6 +503,7 @@ function renderStrategy() {
     const badges = [item.network && '<span class="strategy-badge network">Em rede</span>', item.local && '<span class="strategy-badge local">Local</span>'].filter(Boolean).join('');
     return `
       <article class="preview-card strategy-preview-card ${getStrategyClass(item.name)} analyst-editable" data-edit="strategy" data-index="${index}" tabindex="0">
+        <button class="analyst-card-remove" type="button" data-remove-strategy="${index}" aria-label="Remover programa" title="Remover programa">×</button>
         <div class="strategy-program">
           <span class="strategy-dot"></span>
           <div class="strategy-title-stack">
@@ -701,7 +702,27 @@ function applyStrategyPreset(preset) {
   saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
 }
 
+function removeStrategyItem(index) {
+  if (!Number.isInteger(index) || !reportData.strategy[index]) return;
+  beginHistoryAction();
+  reportData.strategy.splice(index, 1);
+  shouldSaveFullReport = false;
+  hasPendingSync = true;
+  saveLocal();
+  render();
+  commitHistoryAction();
+  saveStatus.textContent = supabaseClient ? 'Programa removido da grade; sincronização online agendada' : 'Programa removido da grade neste navegador';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
+}
+
 function bindEditableCards() {
+  document.querySelectorAll('[data-remove-strategy]').forEach(button => {
+    button.addEventListener('click', event => {
+      event.stopPropagation();
+      removeStrategyItem(Number(button.dataset.removeStrategy));
+    });
+  });
   document.querySelectorAll('.analyst-editable').forEach(card => {
     card.addEventListener('click', () => openEditor(card.dataset.edit, Number(card.dataset.index), card));
     card.addEventListener('keydown', event => {

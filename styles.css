@@ -218,6 +218,9 @@ button:disabled{cursor:wait;opacity:.7}
 .strategy-empty{color:#5d6475;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 .strategy-section .edit-chip{grid-column:2;justify-self:end;margin-top:-2px}
 .strategy-preview-card .analyst-editor{grid-column:1/-1}
+.analyst-card-remove{position:absolute;right:10px;top:10px;z-index:6;width:28px;height:28px;border:0;border-radius:50%;background:#ffe7eb;color:#d6193b;cursor:pointer;font:800 18px/1 Arial,sans-serif;box-shadow:0 6px 14px #d6193b14}
+.analyst-card-remove:hover,.analyst-card-remove:focus{background:#d6193b;color:#fff;outline:none}
+.strategy-preview-card{position:relative}
 .strategy-section .strategy-badges{margin-top:0;gap:5px;flex:0 0 auto}
 .strategy-section .strategy-badge{padding:5px 8px;font-size:9px;white-space:nowrap}
 .analyst-shell .strategy-section .strategy-program{align-items:flex-start}
