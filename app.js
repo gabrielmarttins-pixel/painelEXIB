@@ -30,6 +30,7 @@ let isLoading = false;
 let lastRemoteSignature = '';
 let currentRemotePayload = null;
 const supabaseClient = createSupabaseClient();
+const COORDINATOR_HIGHLIGHTS_KEY = `${STORAGE_KEY}-coordinator-highlights`;
 
 function makeId() { return `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
 
@@ -302,6 +303,7 @@ function isFormFieldActive() {
 
 function save() {
   const data = getData();
+  saveCoordinatorHighlights(data.highlights);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   localStorage.setItem(getDateStorageKey(data.reportDate), JSON.stringify(data));
   saveStatus.textContent = supabaseClient ? 'Salvo localmente; salvando online...' : 'Salvo neste navegador';
@@ -322,6 +324,7 @@ function scheduleRemoteSave(data = getData()) {
 async function publishUpdates() {
   const button = document.querySelector('#publishButton');
   const data = getData();
+  saveCoordinatorHighlights(data.highlights);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   localStorage.setItem(getDateStorageKey(data.reportDate), JSON.stringify(data));
   clearTimeout(remoteSaveTimer);
@@ -399,7 +402,7 @@ async function loadRemoteReport(silent = false) {
     lastRemoteSignature = getReportSignature(payload);
     if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload._meta);
   }
-  return payload ? cleanReportData(payload) : null;
+  return payload ? withPersistentHighlights(cleanReportData(payload)) : null;
 }
 
 function setWeekday() {
@@ -447,6 +450,29 @@ function updateFooter() {
   document.querySelector('#footerDate').textContent = new Intl.DateTimeFormat('pt-BR').format(new Date(year, month - 1, day));
 }
 
+function loadCoordinatorHighlights() {
+  try {
+    const highlights = JSON.parse(localStorage.getItem(COORDINATOR_HIGHLIGHTS_KEY));
+    return Array.isArray(highlights) ? highlights : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCoordinatorHighlights(highlights = collectItems('highlights')) {
+  localStorage.setItem(COORDINATOR_HIGHLIGHTS_KEY, JSON.stringify(Array.isArray(highlights) ? highlights : []));
+}
+
+function withPersistentHighlights(data) {
+  if (!data) return data;
+  const persistentHighlights = loadCoordinatorHighlights();
+  if (!Array.isArray(data.highlights) || !data.highlights.length) {
+    return { ...data, highlights: persistentHighlights };
+  }
+  saveCoordinatorHighlights(data.highlights);
+  return data;
+}
+
 function removeAutomaticItems(section) {
   document.querySelectorAll(`#${sections[section].container} .item-card`).forEach(item => {
     if (item.dataset.default === 'true') item.remove();
@@ -466,7 +492,6 @@ function applyDateDefaults() {
   const [year, month, day] = dateInput.value.split('-').map(Number);
   const dayOfWeek = new Date(year, month - 1, day).getDay();
 
-  removeAutomaticItems('highlights');
   if (day === 27 && !hasItemWithField('highlights', 'title', day27Highlight.title)) {
     addItem('highlights', day27Highlight, false);
   }
@@ -1422,8 +1447,8 @@ async function loadReportForDate(reportDate, { silent = false } = {}) {
   } catch (error) {
     console.error(error);
   }
-  const localData = loadLocalReport(reportDate);
-  const data = hasReportContent(remoteData) ? remoteData : localData || { reportDate, weekday: weekdayInput.value };
+  const localData = withPersistentHighlights(loadLocalReport(reportDate));
+  const data = withPersistentHighlights(hasReportContent(remoteData) ? remoteData : localData || { reportDate, weekday: weekdayInput.value });
   renderReportData({ ...data, reportDate, weekday: data.weekday || weekdayInput.value });
   setReportDate(reportDate);
   applyDateDefaults();
@@ -1447,7 +1472,7 @@ async function copyPreviousDay() {
     const { payload, error } = await fetchRemoteReport(supabaseClient, previousDate);
     if (!error && payload) previousData = cleanReportData(payload);
   }
-  previousData = previousData || loadLocalReport(previousDate);
+  previousData = withPersistentHighlights(previousData || loadLocalReport(previousDate));
   if (!hasReportContent(previousData)) {
     saveStatus.textContent = 'Nenhuma informação encontrada no dia anterior';
     return;
@@ -1470,8 +1495,8 @@ async function load() {
     console.error(error);
     saveStatus.textContent = 'Não foi possível carregar dados online; usando dados locais';
   }
-  const localData = loadLocalReport(getTodayKey());
-  const data = hasReportContent(remoteData) ? remoteData : localData || remoteData;
+  const localData = withPersistentHighlights(loadLocalReport(getTodayKey()));
+  const data = withPersistentHighlights(hasReportContent(remoteData) ? remoteData : localData || remoteData);
   renderReportData(data);
   setReportDate(data?.reportDate || getTodayKey());
   applyDateDefaults();
@@ -1506,7 +1531,9 @@ async function syncFromRemote(force = false) {
     return;
   }
 
-  const remoteData = payload ? cleanReportData(payload) : null;
+  const rawRemoteData = payload ? cleanReportData(payload) : null;
+  const remoteData = withPersistentHighlights(rawRemoteData);
+  const restoredHighlights = Boolean(rawRemoteData && !rawRemoteData.highlights.length && remoteData?.highlights?.length);
   if (!hasReportContent(remoteData)) {
     if (force) saveStatus.textContent = 'Nenhum dado online encontrado';
     return;
@@ -1514,7 +1541,7 @@ async function syncFromRemote(force = false) {
 
   const remoteSignature = getReportSignature(remoteData);
   const currentSignature = getReportSignature(getData());
-  if (remoteSignature === currentSignature) {
+  if (remoteSignature === currentSignature && !restoredHighlights) {
     if (force) saveStatus.textContent = 'Dados já estão atualizados';
     if (payload?._meta && lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload._meta);
     return;
@@ -1531,6 +1558,11 @@ async function syncFromRemote(force = false) {
   lastRemoteSignature = remoteSignature;
   if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload?._meta);
   saveStatus.textContent = 'Atualizado com dados online';
+  if (force && restoredHighlights) {
+    lastRemoteSignature = rawRemoteData ? getReportSignature(rawRemoteData) : '';
+    await saveRemoteReport(getData());
+    saveStatus.textContent = 'Destaques resgatados e sincronizados';
+  }
 }
 
 document.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', () => addItem(button.dataset.add)));

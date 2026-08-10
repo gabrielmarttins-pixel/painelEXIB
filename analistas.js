@@ -600,7 +600,11 @@ function mergeAnalystChanges(base, edited) {
   merged.serviceHandoffHtml = edited.serviceHandoffHtml || '';
   merged.news = edited.news;
   merged.strategy = edited.strategy;
-  const editedPrograms = new Map(edited.programs.map(item => [item.id || item.name, item]));
+  const editedPrograms = new Map();
+  edited.programs.forEach(item => {
+    if (item.id) editedPrograms.set(item.id, item);
+    if (item.name) editedPrograms.set(item.name, item);
+  });
   merged.programs = (merged.programs.length ? merged.programs : edited.programs).map(item => {
     const editedItem = editedPrograms.get(item.id || item.name);
     return editedItem ? { ...item, status: editedItem.status } : item;
@@ -697,7 +701,10 @@ async function selectReportDate(reportDate) {
 }
 
 async function copyPreviousDay() {
-  closeEditor();
+  await copyPreviousEditableSections(['serviceHandoffHtml', 'news', 'strategy', 'programs'], 'Informacoes editaveis copiadas');
+}
+
+async function getPreviousDayData() {
   const currentDate = reportData.reportDate || todayKey();
   const previousDate = getOffsetDateKey(-1, currentDate);
   let previousData = null;
@@ -705,17 +712,35 @@ async function copyPreviousDay() {
     const { payload, error } = await fetchRemoteReport(supabaseClient, previousDate);
     if (!error && payload) previousData = cleanReportData(payload);
   }
-  previousData = previousData || loadLocalReport(previousDate);
-  if (!previousData || (!String(previousData.serviceHandoffHtml || '').trim() && !Object.keys(previousData).some(key => Array.isArray(previousData[key]) && previousData[key].length))) {
-    saveStatus.textContent = 'Nenhuma informação encontrada no dia anterior';
+  return previousData || loadLocalReport(previousDate);
+}
+
+function hasPreviousSectionData(previousData, section) {
+  if (!previousData) return false;
+  if (section === 'serviceHandoffHtml') return Boolean(String(previousData.serviceHandoffHtml || '').trim());
+  return Array.isArray(previousData[section]) && previousData[section].length > 0;
+}
+
+async function copyPreviousEditableSections(sectionList, successLabel = 'Informacoes copiadas') {
+  closeEditor();
+  const currentDate = reportData.reportDate || todayKey();
+  const previousData = await getPreviousDayData();
+  const sectionsWithData = sectionList.filter(section => hasPreviousSectionData(previousData, section));
+  if (!sectionsWithData.length) {
+    saveStatus.textContent = 'Nenhuma informacao encontrada no dia anterior para este bloco';
     return;
   }
-  reportData = applyDefaults({ ...previousData, reportDate: currentDate, weekday: weekdayFor(currentDate) });
-  shouldSaveFullReport = true;
+  const nextData = cleanReportData({ ...reportData, reportDate: currentDate, weekday: weekdayFor(currentDate) });
+  sectionsWithData.forEach(section => {
+    if (section === 'serviceHandoffHtml') nextData.serviceHandoffHtml = previousData.serviceHandoffHtml || '';
+    else nextData[section] = Array.isArray(previousData[section]) ? previousData[section].map(item => ({ ...item, id: makeId(), _default: false })) : [];
+  });
+  reportData = applyDefaults(nextData);
+  shouldSaveFullReport = false;
   hasPendingSync = true;
   saveLocal();
   render();
-  saveStatus.textContent = supabaseClient ? 'Informações copiadas; sincronização online agendada' : 'Informações copiadas neste navegador';
+  saveStatus.textContent = supabaseClient ? `${successLabel}; sincronizacao online agendada` : `${successLabel} neste navegador`;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
 }
