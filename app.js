@@ -32,6 +32,7 @@ let currentRemotePayload = null;
 const supabaseClient = createSupabaseClient();
 const COORDINATOR_HIGHLIGHTS_KEY = `${STORAGE_KEY}-coordinator-highlights`;
 const COORDINATOR_GAMES_KEY = `${STORAGE_KEY}-coordinator-games`;
+const PERSISTENT_REPORT_DATE = 'dados-persistentes';
 const HISTORY_LIMIT_LOCAL = 10;
 const PROTECTED_LINK_LABELS = new Set([
   'gerador de previa',
@@ -607,11 +608,13 @@ async function saveRemoteReport(data = getData()) {
   }
   currentRemotePayload = payload;
   lastRemoteSignature = getReportSignature(payload);
+  await savePersistentCoordinatorData(data);
   if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload?._meta);
   saveStatus.textContent = row ? 'Salvo e sincronizado' : 'Salvo localmente; Supabase não confirmou';
 }
 async function loadRemoteReport(silent = false) {
   if (!supabaseClient) return null;
+  await loadPersistentCoordinatorData();
   const { payload, error } = await fetchRemoteReport(supabaseClient, dateInput.value);
   if (error) {
     console.error(error);
@@ -703,6 +706,31 @@ function hasCoordinatorGamesState() {
 
 function saveCoordinatorGames(games = collectItems('games')) {
   localStorage.setItem(COORDINATOR_GAMES_KEY, JSON.stringify(Array.isArray(games) ? games : []));
+}
+
+async function loadPersistentCoordinatorData() {
+  if (!supabaseClient) return null;
+  const { payload, error } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
+  if (error) {
+    console.error(error);
+    return null;
+  }
+  if (!payload) return null;
+  saveCoordinatorHighlights(Array.isArray(payload.highlights) ? payload.highlights : []);
+  saveCoordinatorGames(Array.isArray(payload.games) ? payload.games : []);
+  return payload;
+}
+
+async function savePersistentCoordinatorData(data) {
+  if (!supabaseClient) return;
+  const persistentData = cleanReportData({
+    reportDate: PERSISTENT_REPORT_DATE,
+    highlights: Array.isArray(data.highlights) ? data.highlights : [],
+    games: Array.isArray(data.games) ? data.games : []
+  });
+  const { payload: previousPayload } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
+  const { error } = await saveRemoteReportToStorage(supabaseClient, persistentData, previousPayload);
+  if (error) console.error('Falha ao sincronizar dados persistentes:', error);
 }
 
 function withPersistentHighlights(data) {

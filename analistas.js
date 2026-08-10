@@ -31,6 +31,9 @@ let undoHistory = [];
 let redoHistory = [];
 let currentHistorySnapshot = '';
 let isRestoringHistory = false;
+const PERSISTENT_REPORT_DATE = 'dados-persistentes';
+const PERSISTENT_HIGHLIGHTS_KEY = `${STORAGE_KEY}-coordinator-highlights`;
+const PERSISTENT_GAMES_KEY = `${STORAGE_KEY}-coordinator-games`;
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -760,6 +763,46 @@ function saveLocal() {
   localStorage.setItem(getDateStorageKey(reportData.reportDate), JSON.stringify(reportData));
 }
 
+function loadLocalPersistentData() {
+  const highlightsValue = localStorage.getItem(PERSISTENT_HIGHLIGHTS_KEY);
+  const gamesValue = localStorage.getItem(PERSISTENT_GAMES_KEY);
+  if (highlightsValue === null && gamesValue === null) return null;
+  try {
+    return {
+      highlights: JSON.parse(highlightsValue || '[]'),
+      games: JSON.parse(gamesValue || '[]')
+    };
+  } catch {
+    return null;
+  }
+}
+
+function applyPersistentCoordinatorData(data, persistentData) {
+  const next = cleanReportData(data || {});
+  if (!persistentData) return next;
+  next.highlights = Array.isArray(persistentData.highlights) ? persistentData.highlights : [];
+  next.games = Array.isArray(persistentData.games) ? persistentData.games : [];
+  return next;
+}
+
+async function loadPersistentCoordinatorData() {
+  let persistentData = loadLocalPersistentData();
+  if (supabaseClient) {
+    const { payload, error } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
+    if (!error && payload) {
+      persistentData = {
+        highlights: Array.isArray(payload.highlights) ? payload.highlights : [],
+        games: Array.isArray(payload.games) ? payload.games : []
+      };
+      localStorage.setItem(PERSISTENT_HIGHLIGHTS_KEY, JSON.stringify(persistentData.highlights));
+      localStorage.setItem(PERSISTENT_GAMES_KEY, JSON.stringify(persistentData.games));
+    } else if (error) {
+      console.error(error);
+    }
+  }
+  return persistentData;
+}
+
 function mergeAnalystChanges(base, edited) {
   const merged = cleanReportData(base || {});
   merged.reportDate = edited.reportDate;
@@ -835,6 +878,7 @@ async function loadReport(force = false, reportDate = reportData.reportDate || t
 
   saveStatus.textContent = supabaseClient ? 'Carregando dados online...' : 'Carregando dados locais...';
   const localData = loadLocalReport(reportDate);
+  const persistentData = await loadPersistentCoordinatorData();
   let remoteData = null;
   if (supabaseClient) {
     const { payload, error } = await fetchRemoteReport(supabaseClient, reportDate);
@@ -849,7 +893,7 @@ async function loadReport(force = false, reportDate = reportData.reportDate || t
   const baseData = hasContent(localData, ['reportDate']) || Object.keys(localData).some(key => Array.isArray(localData[key]) && localData[key].length)
     ? localData
     : { reportDate };
-  reportData = applyDefaults(remoteData || baseData);
+  reportData = applyDefaults(applyPersistentCoordinatorData(remoteData || baseData, persistentData));
   saveLocal();
   render();
   initializeHistory(reportData);
