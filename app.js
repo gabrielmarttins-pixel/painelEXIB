@@ -680,6 +680,10 @@ function loadCoordinatorHighlights() {
   }
 }
 
+function hasCoordinatorHighlightsState() {
+  return localStorage.getItem(COORDINATOR_HIGHLIGHTS_KEY) !== null;
+}
+
 function saveCoordinatorHighlights(highlights = collectItems('highlights')) {
   localStorage.setItem(COORDINATOR_HIGHLIGHTS_KEY, JSON.stringify(Array.isArray(highlights) ? highlights : []));
 }
@@ -693,6 +697,10 @@ function loadCoordinatorGames() {
   }
 }
 
+function hasCoordinatorGamesState() {
+  return localStorage.getItem(COORDINATOR_GAMES_KEY) !== null;
+}
+
 function saveCoordinatorGames(games = collectItems('games')) {
   localStorage.setItem(COORDINATOR_GAMES_KEY, JSON.stringify(Array.isArray(games) ? games : []));
 }
@@ -701,16 +709,22 @@ function withPersistentHighlights(data) {
   if (!data) return data;
   const persistentHighlights = loadCoordinatorHighlights();
   const persistentGames = loadCoordinatorGames();
-  let nextData = data;
-  if (!Array.isArray(data.highlights) || !data.highlights.length) {
-    nextData = { ...nextData, highlights: persistentHighlights };
+  let nextData = { ...data };
+
+  // Depois de inicializado, o estado persistente e a fonte principal. Isso
+  // impede que um registro antigo de outra data ressuscite itens ja excluidos.
+  if (hasCoordinatorHighlightsState()) {
+    nextData.highlights = persistentHighlights;
   } else {
-    saveCoordinatorHighlights(data.highlights);
+    nextData.highlights = Array.isArray(data.highlights) ? data.highlights : [];
+    saveCoordinatorHighlights(nextData.highlights);
   }
-  if (!Array.isArray(data.games) || !data.games.length) {
-    nextData = { ...nextData, games: persistentGames };
+
+  if (hasCoordinatorGamesState()) {
+    nextData.games = persistentGames;
   } else {
-    saveCoordinatorGames(data.games);
+    nextData.games = Array.isArray(data.games) ? data.games : [];
+    saveCoordinatorGames(nextData.games);
   }
   return nextData;
 }
