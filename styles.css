@@ -259,6 +259,8 @@ button:disabled{cursor:wait;opacity:.7}
 .program-row{grid-template-columns:1.35fr 120px 105px 115px 150px 145px}
 .links-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .link-row{display:grid;grid-template-columns:1fr 1.5fr;gap:12px;border-left:5px solid #087bff}
+.link-row .item-actions .remove{background:#ffe7eb;color:#d6193b}
+.link-row .item-actions .remove:hover{background:#d6193b;color:#fff}
 .links-section .preview-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
 .useful-link{display:flex;align-items:center;justify-content:center;min-height:44px;padding:11px 14px;border-radius:11px;background:linear-gradient(110deg,#00a7ff,#2860ff 52%,#8200ff);color:#fff;text-align:center;text-decoration:none;font-size:13px;font-weight:700;box-shadow:0 7px 16px #2860ff22}
 .useful-link:hover{filter:brightness(1.06);transform:translateY(-1px)}

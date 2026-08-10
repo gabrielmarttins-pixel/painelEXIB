@@ -33,6 +33,17 @@ const supabaseClient = createSupabaseClient();
 const COORDINATOR_HIGHLIGHTS_KEY = `${STORAGE_KEY}-coordinator-highlights`;
 const COORDINATOR_GAMES_KEY = `${STORAGE_KEY}-coordinator-games`;
 const HISTORY_LIMIT_LOCAL = 10;
+const PROTECTED_LINK_LABELS = new Set([
+  'gerador de previa',
+  'painel prog',
+  'maestro web',
+  'grade',
+  'an',
+  'tempo real',
+  'paralela',
+  'atividades',
+  'mediacentral'
+]);
 let undoHistory = [];
 let redoHistory = [];
 let currentHistorySnapshot = '';
@@ -176,6 +187,10 @@ function normalizeUrl(value) {
   }
 }
 
+function isProtectedUsefulLink(values = {}) {
+  return PROTECTED_LINK_LABELS.has(normalizeKey(values.label));
+}
+
 function normalizeProgramIds(value) {
   const source = Array.isArray(value?.idsList) ? value.idsList : String(value?.ids || '').split(/[,\n;|]+/);
   const ids = source.map(id => String(id || '').trim()).filter(Boolean);
@@ -234,7 +249,7 @@ function addItem(section, values = {}, shouldSave = true) {
   const item = fragment.querySelector('.item-card');
   item.dataset.id = values.id || makeId();
   item.dataset.default = values._default ? 'true' : 'false';
-  item.dataset.permanent = section === 'links' && values._permanent ? 'true' : 'false';
+  item.dataset.permanent = section === 'links' && values._permanent && isProtectedUsefulLink(values) ? 'true' : 'false';
   item.querySelectorAll('[data-field]').forEach(field => {
     if (values[field.dataset.field] == null) return;
     if (field.type === 'checkbox') field.checked = Boolean(values[field.dataset.field]);
