@@ -219,6 +219,14 @@ function getStatusClass(status) {
   return 'status-preparing';
 }
 
+function getProgramTimeClass(start) {
+  const hour = Number(String(start || '').split(':')[0]);
+  if (!Number.isFinite(hour)) return 'program-default';
+  if (hour >= 5 && hour < 12) return 'program-morning';
+  if (hour >= 12 && hour < 18) return 'program-afternoon';
+  return 'program-night';
+}
+
 function getCategoryClass(category) {
   const normalized = normalizeKey(category);
   if (normalized.includes('midia')) return 'category-media';
@@ -549,7 +557,7 @@ function renderGames() {
 function renderPrograms() {
   const items = reportData.programs;
   document.querySelector('#programsView').innerHTML = items.length ? items.map((item, index) => `
-    <article class="preview-card program-preview-card analyst-editable" data-edit="program" data-index="${index}" tabindex="0">
+    <article class="preview-card program-preview-card ${getProgramTimeClass(item.start)} analyst-editable" data-edit="program" data-index="${index}" tabindex="0">
       <div class="program-title-row">
         <span class="status-badge ${getStatusClass(item.status)}">${escapeHtml(item.status || 'Em preparação')}</span>
         <h3>${escapeHtml(item.name || 'Programa local')}</h3>

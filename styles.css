@@ -59,6 +59,18 @@ button:disabled{cursor:wait;opacity:.7}
 .item-actions button:disabled{cursor:default;opacity:.28}
 .item-actions .remove{position:static;background:#ececef;color:#777}
 .item-actions .remove:hover{background:#ffe1e5;color:#d6193b}
+.item-card.is-collapsed{cursor:pointer;padding:20px 118px 18px 22px}
+.item-card.is-collapsed.news-row,.item-card.is-collapsed.strategy-row,.item-card.is-collapsed.program-row{display:block}
+.item-card.is-collapsed>.coordinator-card-summary{display:block}
+.item-card:not(.is-collapsed)>.coordinator-card-summary{display:none}
+.item-card.is-collapsed>label,.item-card.is-collapsed>.split,.item-card.is-collapsed>.strategy-checks,.item-card.is-collapsed>.game-details,.item-card.is-collapsed>.game-teams,.item-card.is-collapsed>.program-ids-editor{display:none}
+.coordinator-card-summary{min-height:76px;outline:none}
+.closed-card-title{font-size:18px;font-weight:700;letter-spacing:-.02em;color:var(--ink);padding-right:8px}
+.closed-card-body{color:var(--muted);font-size:14px;line-height:1.42;margin-top:8px;white-space:normal}
+.closed-card-body strong{font-weight:700}
+.closed-card-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.closed-card-tags span{display:inline-flex;align-items:center;border-radius:999px;background:#fff;color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.035em;padding:6px 9px;box-shadow:0 4px 10px #1d2b4a0a}
+.closed-card-hint{display:inline-block;color:#5b5f68;font-size:11px;font-weight:700;margin-top:12px}
 .highlight-card{border-top:0}
 .highlight-card:before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(110deg,#00a7ff,#2860ff 50%,#8200ff)}
 .highlight-card.priority-medium:before{background:linear-gradient(110deg,#00a86b,#00c97b 50%,#9bdc00)}
@@ -119,7 +131,11 @@ button:disabled{cursor:wait;opacity:.7}
 .news-card-content{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;max-width:70%;min-height:125px}
 .news-card-content .preview-meta{margin-top:14px}
 .news-preview-card .edit-chip{position:relative;z-index:5;margin-top:10px;background:linear-gradient(110deg,#0057d9,#087bff);color:#fff;border:1px solid rgba(255,255,255,.75);box-shadow:0 7px 16px #0057d940;text-shadow:0 1px 1px #00347a}
-.program-preview-card:before{background:linear-gradient(180deg,#751cff,#db007b)}
+.program-preview-card:before{background:var(--program-time-gradient,linear-gradient(180deg,#751cff,#db007b))}
+.program-preview-card.program-morning{--program-time-gradient:linear-gradient(180deg,#ffd22e 0%,#ff9d00 52%,#ff5a1f 100%)}
+.program-preview-card.program-afternoon{--program-time-gradient:linear-gradient(180deg,#00a7ff 0%,#2860ff 52%,#6a28ff 100%)}
+.program-preview-card.program-night{--program-time-gradient:linear-gradient(180deg,#2860ff 0%,#2730a7 50%,#11183f 100%)}
+.program-preview-card.program-default{--program-time-gradient:linear-gradient(180deg,#751cff,#db007b)}
 .program-title-row{display:flex;align-items:center;gap:10px;min-width:0}
 .program-title-row h3{min-width:0}
 .program-date-badge{display:inline-flex;align-items:center;justify-content:center;margin-left:auto;padding:7px 10px;border-radius:999px;background:linear-gradient(110deg,#00a7ff,#2860ff 52%,#8200ff);color:#fff;font-size:11px;font-weight:800;letter-spacing:.035em;white-space:nowrap;box-shadow:0 6px 14px #2860ff22}

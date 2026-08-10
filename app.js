@@ -164,6 +164,14 @@ function getStatusClass(status) {
   return 'status-preparing';
 }
 
+function getProgramTimeClass(start) {
+  const hour = Number(String(start || '').split(':')[0]);
+  if (!Number.isFinite(hour)) return 'program-default';
+  if (hour >= 5 && hour < 12) return 'program-morning';
+  if (hour >= 12 && hour < 18) return 'program-afternoon';
+  return 'program-night';
+}
+
 function getCategoryClass(category) {
   const normalized = String(category || '')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -206,7 +214,7 @@ function addProgramIdInput(item, value = '') {
   input.placeholder = `ID ${list.querySelectorAll('.program-id-input').length + 1}`;
   input.value = value;
   input.addEventListener('focus', beginHistoryAction);
-  input.addEventListener('input', () => { scheduleSave(); commitHistoryAction(); });
+  input.addEventListener('input', () => { item.dispatchEvent(new CustomEvent('item-summary-change')); scheduleSave(); commitHistoryAction(); });
   list.append(input);
 }
 
@@ -220,6 +228,7 @@ function setupProgramIds(item, values = {}) {
   button?.addEventListener('click', () => {
     beginHistoryAction();
     addProgramIdInput(item);
+    item.dispatchEvent(new CustomEvent('item-summary-change'));
     scheduleSave();
     commitHistoryAction();
   });
@@ -234,6 +243,96 @@ function getProgramIds(item) {
 function getProgramIdBadges(item) {
   const ids = Array.isArray(item.idsList) ? item.idsList : String(item.ids || '').split(/[,\n;|]+/);
   return ids.map(id => String(id || '').trim()).filter(Boolean);
+}
+
+function getItemValues(section, item) {
+  const value = { id: item.dataset.id, _default: item.dataset.default === 'true', _permanent: item.dataset.permanent === 'true' };
+  item.querySelectorAll('[data-field]').forEach(field => {
+    value[field.dataset.field] = field.type === 'checkbox' ? field.checked : field.value;
+  });
+  if (section === 'programs') {
+    value.idsList = getProgramIds(item);
+    value.ids = value.idsList.join(', ');
+  }
+  return value;
+}
+
+function hasFilledSummaryValue(value) {
+  if (Array.isArray(value)) return value.some(item => String(item || '').trim());
+  if (typeof value === 'boolean') return value;
+  return String(value || '').trim() !== '';
+}
+
+function buildClosedSummary(section, values) {
+  const summary = { title: 'Item sem título', body: '', tags: [], meta: [] };
+  if (section === 'highlights') {
+    summary.title = values.title || 'Destaque';
+    summary.body = values.details || '';
+    summary.tags = [values.category, values.urgent ? 'Urgente' : '', values.priority && `Prioridade: ${values.priority}`];
+  } else if (section === 'news') {
+    summary.title = values.name || 'Jornal';
+    summary.tags = [values.start && `Início ${values.start}`, values.production && `Produção ${values.production}`, values.blocks && `${values.blocks} blocos`];
+    summary.body = values.notes || '';
+  } else if (section === 'strategy') {
+    summary.title = values.name || 'Programa';
+    summary.tags = [values.network ? 'Em rede' : '', values.local ? 'Local' : ''];
+    summary.body = values.observation || '';
+  } else if (section === 'games') {
+    summary.title = `${getGameTeam(values, 'team1')} x ${getGameTeam(values, 'team2')}`;
+    summary.tags = [values.time, values.signal, values.championship];
+    summary.body = values.date ? formatGameDate(values.date) : '';
+  } else if (section === 'programs') {
+    summary.title = values.name || 'Programa local';
+    summary.tags = [values.status || 'Em preparação', values.exhibitionDate && formatReportDate(values.exhibitionDate), values.start && `Início ${values.start}`, values.duration];
+    summary.meta = getProgramIdBadges(values).map(id => `ID: ${id}`);
+  } else if (section === 'notes') {
+    summary.title = values.subject || 'Informação';
+    summary.body = values.text || '';
+  } else if (section === 'links') {
+    summary.title = values.label || 'Link útil';
+    summary.body = values.url || '';
+  }
+  return summary;
+}
+
+function updateItemSummary(section, item) {
+  const summaryElement = item.querySelector('.coordinator-card-summary');
+  if (!summaryElement) return;
+  const summary = buildClosedSummary(section, getItemValues(section, item));
+  const tags = [...summary.tags, ...summary.meta].filter(hasFilledSummaryValue);
+  summaryElement.innerHTML = `
+    <div class="closed-card-title">${escapeHtml(summary.title)}</div>
+    ${summary.body ? `<div class="closed-card-body">${formatWhatsappText(summary.body)}</div>` : ''}
+    ${tags.length ? `<div class="closed-card-tags">${tags.map(tag => `<span>${escapeHtml(tag)}</span>`).join('')}</div>` : ''}
+    <span class="closed-card-hint">Clique para editar</span>
+  `;
+}
+
+function setupClosedItem(section, item, values, shouldSave) {
+  const summary = document.createElement('div');
+  summary.className = 'coordinator-card-summary';
+  summary.setAttribute('role', 'button');
+  summary.tabIndex = 0;
+  item.querySelector('.item-actions')?.after(summary);
+  const hasInitialData = Object.entries(values).some(([key, value]) => !key.startsWith('_') && key !== 'id' && hasFilledSummaryValue(value));
+  if (!shouldSave || hasInitialData) item.classList.add('is-collapsed');
+  const openItem = () => {
+    if (!item.classList.contains('is-collapsed')) return;
+    item.classList.remove('is-collapsed');
+    item.querySelector('input, textarea, select')?.focus();
+  };
+  item.addEventListener('click', event => {
+    if (event.target.closest('.item-actions')) return;
+    openItem();
+  });
+  item.addEventListener('keydown', event => {
+    if ((event.key === 'Enter' || event.key === ' ') && item.classList.contains('is-collapsed')) {
+      event.preventDefault();
+      openItem();
+    }
+  });
+  item.addEventListener('item-summary-change', () => updateItemSummary(section, item));
+  updateItemSummary(section, item);
 }
 
 function addItem(section, values = {}, shouldSave = true) {
@@ -257,10 +356,12 @@ function addItem(section, values = {}, shouldSave = true) {
   });
   if (section === 'highlights') updateHighlightPriority(item);
   if (section === 'programs') setupProgramIds(item, values);
+  setupClosedItem(section, item, values, shouldSave);
   if (section === 'games') {
     updateCustomTeamFields(item);
     item.querySelectorAll('[data-field="team1"], [data-field="team2"]').forEach(select => {
       select.addEventListener('change', () => updateCustomTeamFields(item));
+      select.addEventListener('change', () => updateItemSummary(section, item));
     });
   }
   const removeButton = item.querySelector('.remove');
@@ -287,6 +388,15 @@ function addItem(section, values = {}, shouldSave = true) {
   item.querySelectorAll('input, textarea, select').forEach(field => field.addEventListener('input', () => {
     item.dataset.default = 'false';
     if (section === 'highlights' && field.dataset.field === 'priority') updateHighlightPriority(item);
+    updateItemSummary(section, item);
+    scheduleSave();
+    commitHistoryAction();
+  }));
+  item.querySelectorAll('input, textarea, select').forEach(field => field.addEventListener('change', () => {
+    item.dataset.default = 'false';
+    if (section === 'highlights' && field.dataset.field === 'priority') updateHighlightPriority(item);
+    if (section === 'games') updateCustomTeamFields(item);
+    updateItemSummary(section, item);
     scheduleSave();
     commitHistoryAction();
   }));
@@ -297,17 +407,7 @@ function addItem(section, values = {}, shouldSave = true) {
 }
 
 function collectItems(section) {
-  return [...document.querySelector(`#${sections[section].container}`).querySelectorAll('.item-card')].map(item => {
-    const value = { id: item.dataset.id, _default: item.dataset.default === 'true', _permanent: item.dataset.permanent === 'true' };
-    item.querySelectorAll('[data-field]').forEach(field => {
-      value[field.dataset.field] = field.type === 'checkbox' ? field.checked : field.value;
-    });
-    if (section === 'programs') {
-      value.idsList = getProgramIds(item);
-      value.ids = value.idsList.join(', ');
-    }
-    return value;
-  });
+  return [...document.querySelector(`#${sections[section].container}`).querySelectorAll('.item-card')].map(item => getItemValues(section, item));
 }
 
 function getData() {
@@ -864,7 +964,7 @@ function showPreview() {
   }).join('');
 
   const programsHtml = programs.map(item => `
-    <article class="preview-card program-preview-card">
+    <article class="preview-card program-preview-card ${getProgramTimeClass(item.start)}">
       <div class="program-title-row">
         <span class="status-badge ${getStatusClass(item.status)}">${escapeHtml(item.status || 'Em preparação')}</span>
         <h3>${escapeHtml(item.name || 'Programa local')}</h3>
