@@ -65,7 +65,12 @@
     <section class="section-card">
       <div class="section-heading">
         <div><span class="section-number">04</span><h2>Estratégia de grade</h2><p>Defina exibição em rede, local e observações para cada programa.</p></div>
-        <button class="add-button" data-add="strategy" type="button">+ Adicionar programa</button>
+        <div class="section-actions">
+          <button class="preset-button" data-strategy-preset="weekday" type="button">Grade Seg a Sex</button>
+          <button class="preset-button" data-strategy-preset="saturday" type="button">Grade s&aacute;bado</button>
+          <button class="preset-button" data-strategy-preset="sunday" type="button">Grade domingo</button>
+          <button class="add-button" data-add="strategy" type="button">+ Adicionar programa</button>
+        </div>
       </div>
       <div class="strategy-list" id="strategy"></div>
     </section>

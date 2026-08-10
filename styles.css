@@ -391,6 +391,10 @@ button:disabled{cursor:wait;opacity:.7}
 .analyst-editor-actions{display:flex;justify-content:flex-end;margin-top:12px}
 .analyst-empty{grid-column:1/-1;margin:0}
 @media(max-width:680px){.analyst-editor-grid{grid-template-columns:1fr}.analyst-shell{width:calc(100% - 16px)}}
+.section-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;flex:none}
+.preset-button{border:0;border-radius:999px;background:#f3f7ff;color:#0057d9;cursor:pointer;font:700 13px Globotipo;padding:10px 14px;box-shadow:inset 0 0 0 1px #dceaff;transition:background .16s ease,color .16s ease,transform .16s ease}
+.preset-button:hover,.preset-button:focus{background:linear-gradient(110deg,#00a7ff,#2860ff 52%,#8200ff);color:#fff;outline:none;transform:translateY(-1px)}
+@media(max-width:850px){.section-actions{justify-content:flex-start;margin-top:18px}.section-actions .add-button{margin-top:0}}
 
 
 

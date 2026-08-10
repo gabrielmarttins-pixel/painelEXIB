@@ -554,6 +554,36 @@ function applyDateDefaults() {
   updateMoveButtons('programs');
 }
 
+function applyStrategyPreset(preset) {
+  const programNames = strategyPrograms[preset];
+  if (!Array.isArray(programNames) || !programNames.length) return;
+
+  const existingByName = new Map();
+  collectItems('strategy').forEach(item => {
+    const key = normalizeKey(item.name);
+    if (key && !existingByName.has(key)) existingByName.set(key, item);
+  });
+
+  const container = document.querySelector(`#${sections.strategy.container}`);
+  container.querySelectorAll('.item-card').forEach(item => item.remove());
+  programNames.forEach(name => {
+    const existing = existingByName.get(normalizeKey(name)) || {};
+    addItem('strategy', {
+      ...existing,
+      id: existing.id || makeId(),
+      name,
+      network: Boolean(existing.network),
+      local: Boolean(existing.local),
+      observation: existing.observation || '',
+      _default: false
+    }, false);
+  });
+  updateEmpty('strategy');
+  updateMoveButtons('strategy');
+  save();
+  saveStatus.textContent = 'Estratégia de grade atualizada';
+}
+
 function clearReportFields() {
   Object.values(sections).forEach(config => document.querySelector(`#${config.container}`).replaceChildren());
 }
@@ -1590,6 +1620,7 @@ async function syncFromRemote(force = false) {
 }
 
 document.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', () => addItem(button.dataset.add)));
+document.querySelectorAll('[data-strategy-preset]').forEach(button => button.addEventListener('click', () => applyStrategyPreset(button.dataset.strategyPreset)));
 document.querySelectorAll('[data-day-offset]').forEach(button => button.addEventListener('click', () => selectReportDate(getOffsetDateKey(Number(button.dataset.dayOffset)))));
 document.querySelector('#copyPreviousDayButton')?.addEventListener('click', copyPreviousDay);
 document.querySelector('#refreshButton').addEventListener('click', () => syncFromRemote(true));
