@@ -31,6 +31,7 @@ let lastRemoteSignature = '';
 let currentRemotePayload = null;
 const supabaseClient = createSupabaseClient();
 const COORDINATOR_HIGHLIGHTS_KEY = `${STORAGE_KEY}-coordinator-highlights`;
+const COORDINATOR_GAMES_KEY = `${STORAGE_KEY}-coordinator-games`;
 
 function makeId() { return `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
 
@@ -304,6 +305,7 @@ function isFormFieldActive() {
 function save() {
   const data = getData();
   saveCoordinatorHighlights(data.highlights);
+  saveCoordinatorGames(data.games);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   localStorage.setItem(getDateStorageKey(data.reportDate), JSON.stringify(data));
   saveStatus.textContent = supabaseClient ? 'Salvo localmente; salvando online...' : 'Salvo neste navegador';
@@ -325,6 +327,7 @@ async function publishUpdates() {
   const button = document.querySelector('#publishButton');
   const data = getData();
   saveCoordinatorHighlights(data.highlights);
+  saveCoordinatorGames(data.games);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   localStorage.setItem(getDateStorageKey(data.reportDate), JSON.stringify(data));
   clearTimeout(remoteSaveTimer);
@@ -463,14 +466,35 @@ function saveCoordinatorHighlights(highlights = collectItems('highlights')) {
   localStorage.setItem(COORDINATOR_HIGHLIGHTS_KEY, JSON.stringify(Array.isArray(highlights) ? highlights : []));
 }
 
+function loadCoordinatorGames() {
+  try {
+    const games = JSON.parse(localStorage.getItem(COORDINATOR_GAMES_KEY));
+    return Array.isArray(games) ? games : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCoordinatorGames(games = collectItems('games')) {
+  localStorage.setItem(COORDINATOR_GAMES_KEY, JSON.stringify(Array.isArray(games) ? games : []));
+}
+
 function withPersistentHighlights(data) {
   if (!data) return data;
   const persistentHighlights = loadCoordinatorHighlights();
+  const persistentGames = loadCoordinatorGames();
+  let nextData = data;
   if (!Array.isArray(data.highlights) || !data.highlights.length) {
-    return { ...data, highlights: persistentHighlights };
+    nextData = { ...nextData, highlights: persistentHighlights };
+  } else {
+    saveCoordinatorHighlights(data.highlights);
   }
-  saveCoordinatorHighlights(data.highlights);
-  return data;
+  if (!Array.isArray(data.games) || !data.games.length) {
+    nextData = { ...nextData, games: persistentGames };
+  } else {
+    saveCoordinatorGames(data.games);
+  }
+  return nextData;
 }
 
 function removeAutomaticItems(section) {
