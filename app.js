@@ -1514,7 +1514,7 @@ async function syncFromRemote(force = false) {
 
   const remoteSignature = getReportSignature(remoteData);
   const currentSignature = getReportSignature(getData());
-  if (remoteSignature === currentSignature || remoteSignature === lastRemoteSignature) {
+  if (remoteSignature === currentSignature) {
     if (force) saveStatus.textContent = 'Dados já estão atualizados';
     if (payload?._meta && lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload._meta);
     return;
