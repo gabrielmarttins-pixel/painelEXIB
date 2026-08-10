@@ -26,6 +26,11 @@ let activeEditor = null;
 let hasPendingSync = false;
 let shouldSaveFullReport = false;
 let isServiceHandoffEditing = false;
+const HISTORY_LIMIT_LOCAL = 10;
+let undoHistory = [];
+let redoHistory = [];
+let currentHistorySnapshot = '';
+let isRestoringHistory = false;
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -300,6 +305,7 @@ function saveServiceHandoff() {
   if (!editor) return;
   reportData.serviceHandoffHtml = sanitizeInlineHtml(editor.innerHTML);
   scheduleSave();
+  commitHistoryAction();
 }
 
 function openServiceHandoffEditor() {
@@ -343,6 +349,7 @@ function bindServiceHandoffEditor() {
   }
   if (panel) panel.addEventListener('click', event => event.stopPropagation());
   if (okButton) okButton.addEventListener('click', closeServiceHandoffEditor);
+  editor.addEventListener('focus', beginHistoryAction);
   editor.addEventListener('input', saveServiceHandoff);
   editor.addEventListener('blur', () => {
     editor.innerHTML = sanitizeInlineHtml(editor.innerHTML);
@@ -352,12 +359,107 @@ function bindServiceHandoffEditor() {
   document.querySelectorAll('[data-handoff-command], [data-handoff-color]').forEach(button => {
     button.addEventListener('mousedown', event => event.preventDefault());
     button.addEventListener('click', () => {
+      beginHistoryAction();
       editor.focus();
       if (button.dataset.handoffCommand) document.execCommand(button.dataset.handoffCommand, false);
       if (button.dataset.handoffColor) document.execCommand('foreColor', false, button.dataset.handoffColor);
       saveServiceHandoff();
     });
   });
+}
+
+function getHistorySnapshot(data = reportData) {
+  return JSON.stringify(cleanReportData(data));
+}
+
+function updateHistoryButtons() {
+  document.querySelector('#undoButton')?.toggleAttribute('disabled', undoHistory.length === 0);
+  document.querySelector('#redoButton')?.toggleAttribute('disabled', redoHistory.length === 0);
+}
+
+function initializeHistory(data = reportData) {
+  undoHistory = [];
+  redoHistory = [];
+  currentHistorySnapshot = getHistorySnapshot(data);
+  updateHistoryButtons();
+}
+
+function recordHistoryCheckpoint(data = reportData) {
+  if (isRestoringHistory) return;
+  const snapshot = getHistorySnapshot(data);
+  if (!snapshot || snapshot === currentHistorySnapshot) return;
+  if (currentHistorySnapshot) {
+    undoHistory.push(currentHistorySnapshot);
+    if (undoHistory.length > HISTORY_LIMIT_LOCAL) undoHistory.shift();
+  }
+  currentHistorySnapshot = snapshot;
+  redoHistory = [];
+  updateHistoryButtons();
+}
+
+function beginHistoryAction() {
+  if (isRestoringHistory) return;
+  const snapshot = getHistorySnapshot();
+  if (snapshot !== currentHistorySnapshot) {
+    recordHistoryCheckpoint();
+    return;
+  }
+  if (!snapshot) return;
+  undoHistory.push(snapshot);
+  if (undoHistory.length > HISTORY_LIMIT_LOCAL) undoHistory.shift();
+  redoHistory = [];
+  updateHistoryButtons();
+}
+
+function commitHistoryAction(data = reportData) {
+  if (isRestoringHistory) return;
+  currentHistorySnapshot = getHistorySnapshot(data);
+  updateHistoryButtons();
+}
+
+function restoreHistorySnapshot(snapshot) {
+  if (!snapshot) return;
+  let data;
+  try {
+    data = JSON.parse(snapshot);
+  } catch {
+    return;
+  }
+  closeEditor();
+  isRestoringHistory = true;
+  reportData = applyDefaults(cleanReportData(data));
+  saveLocal();
+  render();
+  commitHistoryAction();
+  isRestoringHistory = false;
+  shouldSaveFullReport = false;
+  hasPendingSync = true;
+  commitHistoryAction();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
+}
+
+function undoChange() {
+  recordHistoryCheckpoint();
+  const previous = undoHistory.pop();
+  if (!previous) return updateHistoryButtons();
+  redoHistory.push(currentHistorySnapshot);
+  if (redoHistory.length > HISTORY_LIMIT_LOCAL) redoHistory.shift();
+  currentHistorySnapshot = previous;
+  restoreHistorySnapshot(previous);
+  saveStatus.textContent = 'Alteração desfeita';
+  updateHistoryButtons();
+}
+
+function redoChange() {
+  const next = redoHistory.pop();
+  if (!next) return updateHistoryButtons();
+  undoHistory.push(currentHistorySnapshot);
+  if (undoHistory.length > HISTORY_LIMIT_LOCAL) undoHistory.shift();
+  currentHistorySnapshot = next;
+  restoreHistorySnapshot(next);
+  saveStatus.textContent = 'Alteração refeita';
+  updateHistoryButtons();
 }
 
 function isServiceHandoffActive() {
@@ -550,6 +652,7 @@ function openEditor(type, index, card) {
   });
   activeEditor.querySelectorAll('[data-field]').forEach(field => {
     field.addEventListener('click', event => event.stopPropagation());
+    field.addEventListener('focus', beginHistoryAction);
     field.addEventListener('input', () => updateItem(type, index, field));
     field.addEventListener('change', () => updateItem(type, index, field));
   });
@@ -561,6 +664,41 @@ function updateItem(type, index, field) {
   if (!item) return;
   item[field.dataset.field] = field.type === 'checkbox' ? field.checked : field.value;
   scheduleSave();
+  commitHistoryAction();
+}
+
+function applyStrategyPreset(preset) {
+  closeEditor();
+  const programNames = strategyPrograms[preset];
+  if (!Array.isArray(programNames) || !programNames.length) return;
+  beginHistoryAction();
+
+  const existingByName = new Map();
+  reportData.strategy.forEach(item => {
+    const key = normalizeKey(item.name);
+    if (key && !existingByName.has(key)) existingByName.set(key, item);
+  });
+
+  reportData.strategy = programNames.map(name => {
+    const existing = existingByName.get(normalizeKey(name)) || {};
+    return {
+      ...existing,
+      id: existing.id || makeId(),
+      name,
+      network: Boolean(existing.network),
+      local: Boolean(existing.local),
+      observation: existing.observation || '',
+      _default: false
+    };
+  });
+  shouldSaveFullReport = false;
+  hasPendingSync = true;
+  saveLocal();
+  render();
+  commitHistoryAction();
+  saveStatus.textContent = supabaseClient ? 'Estratégia de grade atualizada; sincronização online agendada' : 'Estratégia de grade atualizada neste navegador';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
 }
 
 function bindEditableCards() {
@@ -685,6 +823,7 @@ async function loadReport(force = false, reportDate = reportData.reportDate || t
   reportData = applyDefaults(remoteData || baseData);
   saveLocal();
   render();
+  initializeHistory(reportData);
   if (!currentRemotePayload && lastUpdateStatus) lastUpdateStatus.textContent = supabaseClient ? 'Última atualização: ainda não sincronizado' : 'Última atualização: modo local';
   saveStatus.textContent = force ? 'Dados atualizados' : 'Painel carregado';
 }
@@ -723,6 +862,7 @@ function hasPreviousSectionData(previousData, section) {
 
 async function copyPreviousEditableSections(sectionList, successLabel = 'Informacoes copiadas') {
   closeEditor();
+  beginHistoryAction();
   const currentDate = reportData.reportDate || todayKey();
   const previousData = await getPreviousDayData();
   const sectionsWithData = sectionList.filter(section => hasPreviousSectionData(previousData, section));
@@ -740,18 +880,23 @@ async function copyPreviousEditableSections(sectionList, successLabel = 'Informa
   hasPendingSync = true;
   saveLocal();
   render();
+  commitHistoryAction();
   saveStatus.textContent = supabaseClient ? `${successLabel}; sincronizacao online agendada` : `${successLabel} neste navegador`;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
 }
 
 document.querySelectorAll('[data-day-offset]').forEach(button => button.addEventListener('click', () => selectReportDate(getOffsetDateKey(Number(button.dataset.dayOffset)))));
+document.querySelectorAll('[data-strategy-preset]').forEach(button => button.addEventListener('click', () => applyStrategyPreset(button.dataset.strategyPreset)));
 document.querySelector('#copyPreviousDayButton')?.addEventListener('click', copyPreviousDay);
 document.querySelector('#refreshButton').addEventListener('click', () => loadReport(true, reportData.reportDate || todayKey()));
+document.querySelector('#undoButton')?.addEventListener('click', undoChange);
+document.querySelector('#redoButton')?.addEventListener('click', redoChange);
 loadReport().catch(error => {
   console.error(error);
   reportData = applyDefaults({ reportDate: todayKey() });
   render();
+  initializeHistory(reportData);
   saveStatus.textContent = 'Falha ao iniciar; usando modo local';
   if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: modo local';
 });

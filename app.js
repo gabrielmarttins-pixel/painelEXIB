@@ -32,6 +32,11 @@ let currentRemotePayload = null;
 const supabaseClient = createSupabaseClient();
 const COORDINATOR_HIGHLIGHTS_KEY = `${STORAGE_KEY}-coordinator-highlights`;
 const COORDINATOR_GAMES_KEY = `${STORAGE_KEY}-coordinator-games`;
+const HISTORY_LIMIT_LOCAL = 10;
+let undoHistory = [];
+let redoHistory = [];
+let currentHistorySnapshot = '';
+let isRestoringHistory = false;
 
 function makeId() { return `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
 
@@ -185,7 +190,8 @@ function addProgramIdInput(item, value = '') {
   input.type = 'text';
   input.placeholder = `ID ${list.querySelectorAll('.program-id-input').length + 1}`;
   input.value = value;
-  input.addEventListener('input', scheduleSave);
+  input.addEventListener('focus', beginHistoryAction);
+  input.addEventListener('input', () => { scheduleSave(); commitHistoryAction(); });
   list.append(input);
 }
 
@@ -197,8 +203,10 @@ function setupProgramIds(item, values = {}) {
   normalizeProgramIds(values).forEach(id => addProgramIdInput(item, id));
   while (list.querySelectorAll('.program-id-input').length < 2) addProgramIdInput(item);
   button?.addEventListener('click', () => {
+    beginHistoryAction();
     addProgramIdInput(item);
     scheduleSave();
+    commitHistoryAction();
   });
 }
 
@@ -226,7 +234,7 @@ function addItem(section, values = {}, shouldSave = true) {
   const item = fragment.querySelector('.item-card');
   item.dataset.id = values.id || makeId();
   item.dataset.default = values._default ? 'true' : 'false';
-  item.dataset.permanent = section === 'links' && (!shouldSave || values._permanent) ? 'true' : 'false';
+  item.dataset.permanent = section === 'links' && values._permanent ? 'true' : 'false';
   item.querySelectorAll('[data-field]').forEach(field => {
     if (values[field.dataset.field] == null) return;
     if (field.type === 'checkbox') field.checked = Boolean(values[field.dataset.field]);
@@ -244,9 +252,10 @@ function addItem(section, values = {}, shouldSave = true) {
   if (item.dataset.permanent === 'true') {
     removeButton.remove();
   } else {
-    removeButton.addEventListener('click', () => { item.remove(); updateEmpty(section); updateMoveButtons(section); save(); });
+    removeButton.addEventListener('click', () => { beginHistoryAction(); item.remove(); updateEmpty(section); updateMoveButtons(section); save(); commitHistoryAction(); });
   }
   item.querySelectorAll('[data-move]').forEach(moveButton => moveButton.addEventListener('click', () => {
+    beginHistoryAction();
     const container = item.parentElement;
     if (moveButton.dataset.move === 'up') {
       const previous = item.previousElementSibling;
@@ -257,11 +266,14 @@ function addItem(section, values = {}, shouldSave = true) {
     }
     updateMoveButtons(section);
     save();
+    commitHistoryAction();
   }));
+  item.querySelectorAll('input, textarea, select').forEach(field => field.addEventListener('focus', beginHistoryAction));
   item.querySelectorAll('input, textarea, select').forEach(field => field.addEventListener('input', () => {
     item.dataset.default = 'false';
     if (section === 'highlights' && field.dataset.field === 'priority') updateHighlightPriority(item);
     scheduleSave();
+    commitHistoryAction();
   }));
   document.querySelector(`#${config.container}`).append(fragment);
   updateEmpty(section);
@@ -290,6 +302,97 @@ function getData() {
     serviceHandoffHtml: currentRemotePayload?.serviceHandoffHtml || '',
     highlights: collectItems('highlights'), news: collectItems('news'), strategy: collectItems('strategy'), games: collectItems('games'), programs: collectItems('programs'), notes: collectItems('notes'), links: collectItems('links')
   };
+}
+
+function getHistorySnapshot(data = getData()) {
+  return JSON.stringify(data);
+}
+
+function updateHistoryButtons() {
+  document.querySelector('#undoButton')?.toggleAttribute('disabled', undoHistory.length === 0);
+  document.querySelector('#redoButton')?.toggleAttribute('disabled', redoHistory.length === 0);
+}
+
+function initializeHistory(data = getData()) {
+  undoHistory = [];
+  redoHistory = [];
+  currentHistorySnapshot = getHistorySnapshot(data);
+  updateHistoryButtons();
+}
+
+function recordHistoryCheckpoint(data = getData()) {
+  if (isLoading || isRestoringHistory) return;
+  const snapshot = getHistorySnapshot(data);
+  if (!snapshot || snapshot === currentHistorySnapshot) return;
+  if (currentHistorySnapshot) {
+    undoHistory.push(currentHistorySnapshot);
+    if (undoHistory.length > HISTORY_LIMIT_LOCAL) undoHistory.shift();
+  }
+  currentHistorySnapshot = snapshot;
+  redoHistory = [];
+  updateHistoryButtons();
+}
+
+function beginHistoryAction() {
+  if (isLoading || isRestoringHistory) return;
+  const snapshot = getHistorySnapshot();
+  if (snapshot !== currentHistorySnapshot) {
+    recordHistoryCheckpoint();
+    return;
+  }
+  if (!snapshot) return;
+  undoHistory.push(snapshot);
+  if (undoHistory.length > HISTORY_LIMIT_LOCAL) undoHistory.shift();
+  redoHistory = [];
+  updateHistoryButtons();
+}
+
+function commitHistoryAction(data = getData()) {
+  if (isRestoringHistory) return;
+  currentHistorySnapshot = getHistorySnapshot(data);
+  updateHistoryButtons();
+}
+
+function restoreHistorySnapshot(snapshot) {
+  if (!snapshot) return;
+  let data;
+  try {
+    data = JSON.parse(snapshot);
+  } catch {
+    return;
+  }
+  isRestoringHistory = true;
+  renderReportData(data);
+  setReportDate(data.reportDate || getTodayKey());
+  currentRemotePayload = { ...(currentRemotePayload || {}), serviceHandoffHtml: data.serviceHandoffHtml || '' };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
+  localStorage.setItem(getDateStorageKey(dateInput.value), JSON.stringify(getData()));
+  updateFooter();
+  isRestoringHistory = false;
+  scheduleRemoteSave(getData());
+}
+
+function undoChange() {
+  recordHistoryCheckpoint();
+  const previous = undoHistory.pop();
+  if (!previous) return updateHistoryButtons();
+  redoHistory.push(currentHistorySnapshot);
+  if (redoHistory.length > HISTORY_LIMIT_LOCAL) redoHistory.shift();
+  currentHistorySnapshot = previous;
+  restoreHistorySnapshot(previous);
+  saveStatus.textContent = 'Alteração desfeita';
+  updateHistoryButtons();
+}
+
+function redoChange() {
+  const next = redoHistory.pop();
+  if (!next) return updateHistoryButtons();
+  undoHistory.push(currentHistorySnapshot);
+  if (undoHistory.length > HISTORY_LIMIT_LOCAL) undoHistory.shift();
+  currentHistorySnapshot = next;
+  restoreHistorySnapshot(next);
+  saveStatus.textContent = 'Alteração refeita';
+  updateHistoryButtons();
 }
 
 function hasReportContent(data) {
@@ -557,6 +660,7 @@ function applyDateDefaults() {
 function applyStrategyPreset(preset) {
   const programNames = strategyPrograms[preset];
   if (!Array.isArray(programNames) || !programNames.length) return;
+  beginHistoryAction();
 
   const existingByName = new Map();
   collectItems('strategy').forEach(item => {
@@ -581,6 +685,7 @@ function applyStrategyPreset(preset) {
   updateEmpty('strategy');
   updateMoveButtons('strategy');
   save();
+  commitHistoryAction();
   saveStatus.textContent = 'Estratégia de grade atualizada';
 }
 
@@ -1510,6 +1615,7 @@ async function loadReportForDate(reportDate, { silent = false } = {}) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
   localStorage.setItem(getDateStorageKey(reportDate), JSON.stringify(getData()));
   updateFooter();
+  initializeHistory(getData());
   if (!silent) saveStatus.textContent = 'Dados carregados';
 }
 
@@ -1519,6 +1625,7 @@ async function selectReportDate(reportDate) {
 }
 
 async function copyPreviousDay() {
+  beginHistoryAction();
   const currentDate = dateInput.value || getTodayKey();
   const previousDate = getOffsetDateKey(-1, currentDate);
   let previousData = null;
@@ -1535,6 +1642,7 @@ async function copyPreviousDay() {
   setReportDate(currentDate);
   applyDateDefaults();
   save();
+  commitHistoryAction();
   saveStatus.textContent = 'Informações do dia anterior copiadas';
 }
 
@@ -1556,6 +1664,7 @@ async function load() {
   applyDateDefaults();
   isLoading = false;
   save();
+  initializeHistory(getData());
   updateFooter();
   if (!currentRemotePayload && lastUpdateStatus) {
     lastUpdateStatus.textContent = supabaseClient
@@ -1610,6 +1719,7 @@ async function syncFromRemote(force = false) {
   updateFooter();
   isLoading = false;
   lastRemoteSignature = remoteSignature;
+  initializeHistory(getData());
   if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload?._meta);
   saveStatus.textContent = 'Atualizado com dados online';
   if (force && restoredHighlights) {
@@ -1619,13 +1729,19 @@ async function syncFromRemote(force = false) {
   }
 }
 
-document.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', () => addItem(button.dataset.add)));
+document.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', () => {
+  beginHistoryAction();
+  addItem(button.dataset.add);
+  commitHistoryAction();
+}));
 document.querySelectorAll('[data-strategy-preset]').forEach(button => button.addEventListener('click', () => applyStrategyPreset(button.dataset.strategyPreset)));
 document.querySelectorAll('[data-day-offset]').forEach(button => button.addEventListener('click', () => selectReportDate(getOffsetDateKey(Number(button.dataset.dayOffset)))));
 document.querySelector('#copyPreviousDayButton')?.addEventListener('click', copyPreviousDay);
 document.querySelector('#refreshButton').addEventListener('click', () => syncFromRemote(true));
 document.querySelector('#publishButton')?.addEventListener('click', publishUpdates);
 document.querySelector('#printButton')?.addEventListener('click', showPreview);
+document.querySelector('#undoButton')?.addEventListener('click', undoChange);
+document.querySelector('#redoButton')?.addEventListener('click', redoChange);
 
 load().catch(error => {
   console.error(error);

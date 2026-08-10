@@ -79,7 +79,17 @@
     </section>
 
     <section class="preview-section strategy-section" id="strategySection">
-      <div class="preview-section-title"><h2>Estrat&eacute;gia de grade</h2><p class="analyst-hint">Clique em um programa para marcar Em rede, Local ou ajustar observa&ccedil;&atilde;o.</p></div>
+      <div class="preview-section-title strategy-title-row">
+        <div>
+          <h2>Estrat&eacute;gia de grade</h2>
+          <p class="analyst-hint">Clique em um programa para marcar Em rede, Local ou ajustar observa&ccedil;&atilde;o.</p>
+        </div>
+        <div class="section-actions analyst-preset-actions">
+          <button class="preset-button" data-strategy-preset="weekday" type="button">Grade Seg a Sex</button>
+          <button class="preset-button" data-strategy-preset="saturday" type="button">Grade s&aacute;bado</button>
+          <button class="preset-button" data-strategy-preset="sunday" type="button">Grade domingo</button>
+        </div>
+      </div>
       <div class="preview-cards" id="strategyView"></div>
     </section>
 
@@ -100,6 +110,11 @@
 
     <footer><span>Exibição - TV Globo DF</span><span id="footerDate"></span></footer>
   </main>
+
+  <div class="history-actions" aria-label="Histórico de alterações">
+    <button class="history-button" id="undoButton" type="button" aria-label="Desfazer" title="Desfazer" disabled>←</button>
+    <button class="history-button" id="redoButton" type="button" aria-label="Refazer" title="Refazer" disabled>→</button>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=20260810-3"></script>
