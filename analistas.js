@@ -274,9 +274,11 @@ function applyDefaults(data) {
     });
   }
   const strategyList = dayOfWeek === 0 ? strategyPrograms.sunday : dayOfWeek === 6 ? strategyPrograms.saturday : strategyPrograms.weekday;
-  strategyList.forEach(name => {
-    if (!next.strategy.some(item => item.name === name)) next.strategy.push({ id: makeId(), name, network: false, local: false, observation: '', _default: true });
-  });
+  if (!next.strategy.length) {
+    strategyList.forEach(name => {
+      next.strategy.push({ id: makeId(), name, network: false, local: false, observation: '', _default: true });
+    });
+  }
   if (dayOfWeek === 3 && !next.notes.some(item => item.subject === wednesdayNote.subject)) {
     next.notes.push({ ...wednesdayNote, id: makeId() });
   }
@@ -514,7 +516,11 @@ function renderStrategy() {
     const badges = [item.network && '<span class="strategy-badge network">Em rede</span>', item.local && '<span class="strategy-badge local">Local</span>'].filter(Boolean).join('');
     return `
       <article class="preview-card strategy-preview-card ${getStrategyClass(item.name)} analyst-editable" data-edit="strategy" data-index="${index}" tabindex="0">
-        <button class="analyst-card-remove" type="button" data-remove-strategy="${index}" aria-label="Remover programa" title="Remover programa">×</button>
+        <div class="strategy-card-actions">
+          <button class="strategy-order-button" type="button" data-move-strategy="${index}" data-direction="up" aria-label="Mover programa para cima" title="Mover para cima" ${index === 0 ? 'disabled' : ''}>↑</button>
+          <button class="strategy-order-button" type="button" data-move-strategy="${index}" data-direction="down" aria-label="Mover programa para baixo" title="Mover para baixo" ${index === items.length - 1 ? 'disabled' : ''}>↓</button>
+          <button class="analyst-card-remove" type="button" data-remove-strategy="${index}" aria-label="Remover programa" title="Remover programa">×</button>
+        </div>
         <div class="strategy-program">
           <span class="strategy-dot"></span>
           <div class="strategy-title-stack">
@@ -727,7 +733,47 @@ function removeStrategyItem(index) {
   saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
 }
 
+function addStrategyItem() {
+  closeEditor();
+  beginHistoryAction();
+  const index = reportData.strategy.length;
+  reportData.strategy.push({ id: makeId(), name: '', network: false, local: false, observation: '', _default: false });
+  shouldSaveFullReport = false;
+  hasPendingSync = true;
+  saveLocal();
+  render();
+  commitHistoryAction();
+  const card = document.querySelector(`[data-edit="strategy"][data-index="${index}"]`);
+  if (card) openEditor('strategy', index, card);
+  saveStatus.textContent = 'Novo programa adicionado à grade';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
+}
+
+function moveStrategyItem(index, direction) {
+  const targetIndex = direction === 'up' ? index - 1 : index + 1;
+  if (!reportData.strategy[index] || !reportData.strategy[targetIndex]) return;
+  closeEditor();
+  beginHistoryAction();
+  const [item] = reportData.strategy.splice(index, 1);
+  reportData.strategy.splice(targetIndex, 0, item);
+  shouldSaveFullReport = false;
+  hasPendingSync = true;
+  saveLocal();
+  render();
+  commitHistoryAction();
+  saveStatus.textContent = 'Ordem da grade atualizada';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
+}
+
 function bindEditableCards() {
+  document.querySelectorAll('[data-move-strategy]').forEach(button => {
+    button.addEventListener('click', event => {
+      event.stopPropagation();
+      moveStrategyItem(Number(button.dataset.moveStrategy), button.dataset.direction);
+    });
+  });
   document.querySelectorAll('[data-remove-strategy]').forEach(button => {
     button.addEventListener('click', event => {
       event.stopPropagation();
@@ -974,6 +1020,7 @@ async function copyPreviousEditableSections(sectionList, successLabel = 'Informa
 
 document.querySelectorAll('[data-day-offset]').forEach(button => button.addEventListener('click', () => selectReportDate(getOffsetDateKey(Number(button.dataset.dayOffset)))));
 document.querySelectorAll('[data-strategy-preset]').forEach(button => button.addEventListener('click', () => applyStrategyPreset(button.dataset.strategyPreset)));
+document.querySelector('#addStrategyProgram')?.addEventListener('click', addStrategyItem);
 document.querySelector('#copyPreviousDayButton')?.addEventListener('click', copyPreviousDay);
 document.querySelector('#refreshButton').addEventListener('click', () => loadReport(true, reportData.reportDate || todayKey()));
 document.querySelector('#undoButton')?.addEventListener('click', undoChange);

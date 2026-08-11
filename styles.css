@@ -236,6 +236,13 @@ button:disabled{cursor:wait;opacity:.7}
 .strategy-preview-card .analyst-editor{grid-column:1/-1}
 .analyst-card-remove{position:absolute;right:10px;top:10px;z-index:6;width:28px;height:28px;border:0;border-radius:50%;background:#ffe7eb;color:#d6193b;cursor:pointer;font:800 18px/1 Arial,sans-serif;box-shadow:0 6px 14px #d6193b14}
 .analyst-card-remove:hover,.analyst-card-remove:focus{background:#d6193b;color:#fff;outline:none}
+.strategy-card-actions{position:absolute;right:10px;top:10px;z-index:6;display:flex;align-items:center;gap:5px}
+.analyst-shell .strategy-preview-card{padding-right:118px}
+.strategy-card-actions .analyst-card-remove{position:static}
+.strategy-order-button{width:28px;height:28px;border:0;border-radius:50%;background:#eaf3ff;color:#087bff;cursor:pointer;font:800 16px/1 Arial,sans-serif;box-shadow:0 6px 14px #087bff12}
+.strategy-order-button:hover,.strategy-order-button:focus{background:#087bff;color:#fff;outline:none}
+.strategy-order-button:disabled{opacity:.32;cursor:default;background:#eceef2;color:#7d818b}
+.strategy-add-button{color:#fff!important;background:linear-gradient(110deg,#00a7ff,#2860ff 55%,#751cff)!important}
 .strategy-preview-card{position:relative}
 .strategy-section .strategy-badges{margin-top:0;gap:5px;flex:0 0 auto}
 .strategy-section .strategy-badge{padding:5px 8px;font-size:9px;white-space:nowrap}
