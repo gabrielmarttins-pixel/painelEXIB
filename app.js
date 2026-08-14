@@ -850,6 +850,10 @@ function hasItemWithField(section, field, value) {
   });
 }
 
+function hasSectionItems(section) {
+  return Boolean(document.querySelector(`#${sections[section].container} .item-card`));
+}
+
 function applyDateDefaults() {
   if (!dateInput.value) return;
   const [year, month, day] = dateInput.value.split('-').map(Number);
@@ -861,31 +865,27 @@ function applyDateDefaults() {
   updateEmpty('highlights');
   updateMoveButtons('highlights');
 
-  removeAutomaticItems('news');
-  if (dayOfWeek >= 1 && dayOfWeek <= 5) weekdayNews.forEach(item => {
-    if (!hasItemWithField('news', 'name', item.name)) addItem('news', item, false);
-  });
+  if (dayOfWeek >= 1 && dayOfWeek <= 5 && !hasSectionItems('news')) {
+    weekdayNews.forEach(item => addItem('news', item, false));
+  }
   updateEmpty('news');
   updateMoveButtons('news');
 
-  removeAutomaticItems('strategy');
   const defaultStrategy = dayOfWeek === 0 ? strategyPrograms.sunday : dayOfWeek === 6 ? strategyPrograms.saturday : strategyPrograms.weekday;
-  defaultStrategy.forEach(name => {
-    if (!hasItemWithField('strategy', 'name', name)) {
+  if (!hasSectionItems('strategy')) {
+    defaultStrategy.forEach(name => {
       addItem('strategy', { name, network: false, local: false, observation: '', _default: true }, false);
-    }
-  });
+    });
+  }
   updateEmpty('strategy');
   updateMoveButtons('strategy');
 
-  removeAutomaticItems('notes');
   if (dayOfWeek === 3 && !hasItemWithField('notes', 'subject', wednesdayNote.subject)) {
     addItem('notes', wednesdayNote, false);
   }
   updateEmpty('notes');
   updateMoveButtons('notes');
 
-  removeAutomaticItems('programs');
   if (dayOfWeek === 5 && !hasItemWithField('programs', 'name', fridayProgram.name)) {
     addItem('programs', fridayProgram, false);
   }
