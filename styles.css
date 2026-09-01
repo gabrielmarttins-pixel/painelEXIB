@@ -365,6 +365,7 @@ button:disabled{cursor:wait;opacity:.7}
 .club-crests{inset:5px 10px}
 .club-crests .crest{width:38%;height:82%}
 .club-crests .flag{width:34%;height:60%;object-fit:cover;border-radius:10px;filter:drop-shadow(0 6px 12px #00000022)}
+.club-crests .crest-placeholder{width:76px;height:76px;flex:0 0 76px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#00a7ff,#2860ff 52%,#751cff);color:#fff;font-size:34px;font-weight:700;line-height:1;box-shadow:0 8px 22px #2860ff35}
 .game-schedule{padding:0 4px;font-size:11px}
 .game-schedule strong{font-size:12px}
 .game-card-meta .game-time{display:inline-flex;align-items:center;justify-content:center;padding:7px 14px;border-radius:999px;background:linear-gradient(110deg,#00a86b,#00c97b);color:#fff!important;font-size:17px!important;line-height:1;box-shadow:0 7px 16px #00a86b24}

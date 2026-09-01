@@ -175,12 +175,18 @@ function getChampionshipClass(championship) {
   return 'game-default';
 }
 
-function getTeamVisual(team) {
+function getTeamInitial(team) {
+  const name = String(team || '').trim();
+  return (name.match(/[\p{L}\p{N}]/u)?.[0] || '?').toLocaleUpperCase('pt-BR');
+}
+
+function getTeamVisual(team, side) {
   const crest = teamCrests[team];
   const flag = getCountryFlag(team);
-  if (crest) return `<img class="crest" src="${escapeHtml(crest)}" alt="">`;
-  if (flag) return `<img class="crest flag" src="${escapeHtml(flag)}" alt="">`;
-  return '';
+  const sideClass = side === 'right' ? 'crest-right' : 'crest-left';
+  if (crest) return `<img class="crest ${sideClass}" src="${escapeHtml(crest)}" alt="">`;
+  if (flag) return `<img class="crest flag ${sideClass}" src="${escapeHtml(flag)}" alt="">`;
+  return `<span class="crest crest-placeholder ${sideClass}">${escapeHtml(getTeamInitial(team))}</span>`;
 }
 
 function getProgramIdBadges(item) {
@@ -548,8 +554,8 @@ function renderGames() {
         ${item.date ? `<div class="game-schedule"><span>${escapeHtml(formatGameDate(item.date))}</span></div>` : ''}
         <article class="preview-card game ${getChampionshipClass(item.championship)}">
           <div class="club-crests" aria-hidden="true">
-            ${getTeamVisual(team1)}
-            ${getTeamVisual(team2)}
+            ${getTeamVisual(team1, 'left')}
+            ${getTeamVisual(team2, 'right')}
           </div>
           <div class="game-card-content">
             <h3>${escapeHtml(team1)} x ${escapeHtml(team2)}</h3>

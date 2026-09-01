@@ -124,6 +124,21 @@ function getTeamCrest(team) {
   return teamCrests[team] || '';
 }
 
+function getTeamInitial(team) {
+  const name = String(team || '').trim();
+  return (name.match(/[\p{L}\p{N}]/u)?.[0] || '?').toLocaleUpperCase('pt-BR');
+}
+
+function getGameTeamVisual(item, fieldName, side) {
+  const team = getGameTeam(item, fieldName);
+  const crest = getTeamCrest(item[fieldName]);
+  const flag = crest ? '' : getCountryFlag(team);
+  const sideClass = side === 'right' ? 'crest-right' : 'crest-left';
+  if (crest) return `<img class="crest ${sideClass}" src="${escapeHtml(crest)}" alt="">`;
+  if (flag) return `<img class="crest flag ${sideClass}" src="${escapeHtml(flag)}" alt="">`;
+  return `<span class="crest crest-placeholder ${sideClass}">${escapeHtml(getTeamInitial(team))}</span>`;
+}
+
 function getCountryFlag(team) {
   const normalized = String(team || '')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -600,6 +615,9 @@ async function saveRemoteReport(data = getData()) {
       saveStatus.textContent = 'Atualizado com dados online';
       return;
     }
+    saveStatus.textContent = 'Salvamento cancelado para proteger alterações mais recentes';
+    if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(latestPayload._meta);
+    return;
   }
 
   data.serviceHandoffHtml = latestPayload?.serviceHandoffHtml || data.serviceHandoffHtml || '';
@@ -1062,17 +1080,13 @@ function showPreview() {
     </article>`).join('');
 
   const gamesHtml = games.map(item => {
-    const crest1 = getTeamCrest(item.team1);
-    const crest2 = getTeamCrest(item.team2);
-    const flag1 = crest1 ? '' : getCountryFlag(getGameTeam(item, 'team1'));
-    const flag2 = crest2 ? '' : getCountryFlag(getGameTeam(item, 'team2'));
     return `
       <div class="game-preview-item">
         ${item.date ? `<div class="game-schedule"><span>${escapeHtml(formatGameDate(item.date))}</span></div>` : ''}
         <article class="preview-card game ${getChampionshipClass(item.championship)}">
           <div class="club-crests" aria-hidden="true">
-            ${crest1 ? `<img class="crest crest-left" src="${escapeHtml(crest1)}" alt="">` : flag1 ? `<img class="crest flag crest-left" src="${escapeHtml(flag1)}" alt="">` : ''}
-            ${crest2 ? `<img class="crest crest-right" src="${escapeHtml(crest2)}" alt="">` : flag2 ? `<img class="crest flag crest-right" src="${escapeHtml(flag2)}" alt="">` : ''}
+            ${getGameTeamVisual(item, 'team1', 'left')}
+            ${getGameTeamVisual(item, 'team2', 'right')}
           </div>
           <div class="game-card-content">
             <h3>${escapeHtml(getGameTeam(item, 'team1'))} x ${escapeHtml(getGameTeam(item, 'team2'))}</h3>
@@ -1899,7 +1913,11 @@ async function load() {
   setReportDate(data?.reportDate || getTodayKey());
   applyDateDefaults();
   isLoading = false;
-  save();
+  const loadedData = getData();
+  saveCoordinatorPersistentState(loadedData);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedData));
+  localStorage.setItem(getDateStorageKey(loadedData.reportDate), JSON.stringify(loadedData));
+  saveStatus.textContent = 'Dados carregados';
   initializeHistory(getData());
   updateFooter();
   if (!currentRemotePayload && lastUpdateStatus) {
