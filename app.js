@@ -51,8 +51,39 @@ let undoHistory = [];
 let redoHistory = [];
 let currentHistorySnapshot = '';
 let isRestoringHistory = false;
+const STRATEGY_TAB_KEYS = ['weekday', 'saturday', 'sunday'];
+let activeStrategyTab = 'weekday';
+let strategyTabsState = null;
 
 function makeId() { return `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
+
+function strategyTabForDate(dateValue) {
+  const [year, month, day] = String(dateValue || getTodayKey()).split('-').map(Number);
+  const weekday = new Date(year, month - 1, day).getDay();
+  return weekday === 0 ? 'sunday' : weekday === 6 ? 'saturday' : 'weekday';
+}
+
+function cleanStrategyList(key) {
+  return (strategyPrograms[key] || []).map(name => ({ id: makeId(), name, network: false, local: false, observation: '', _default: false }));
+}
+
+function normalizeStrategyTabs(data = {}) {
+  const source = data.strategyTabs && typeof data.strategyTabs === 'object' ? data.strategyTabs : {};
+  const migratedKey = strategyTabForDate(data.reportDate);
+  return STRATEGY_TAB_KEYS.reduce((tabs, key) => {
+    const items = Array.isArray(source[key]) ? source[key] : (key === migratedKey && Array.isArray(data.strategy) && data.strategy.length ? data.strategy : cleanStrategyList(key));
+    tabs[key] = items.map(item => ({ ...item, id: item.id || makeId() }));
+    return tabs;
+  }, {});
+}
+
+function updateStrategyTabsUi() {
+  document.querySelectorAll('[data-strategy-tab]').forEach(button => {
+    const active = button.dataset.strategyTab === activeStrategyTab;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', String(active));
+  });
+}
 
 function normalizeKey(value) {
   return String(value || '')
@@ -430,12 +461,16 @@ function collectItems(section) {
 
 function getData() {
   const persistentState = loadCoordinatorPersistentState();
+  strategyTabsState ||= normalizeStrategyTabs({ reportDate: dateInput.value });
+  strategyTabsState[activeStrategyTab] = collectItems('strategy');
   return {
     reportDate: dateInput.value,
     weekday: weekdayInput.value,
     serviceHandoffHtml: persistentState?.serviceHandoffHtml ?? currentRemotePayload?.serviceHandoffHtml ?? '',
     _persistentHandoffInitialized: persistentState?._persistentHandoffInitialized === true,
-    highlights: collectItems('highlights'), news: collectItems('news'), strategy: collectItems('strategy'), games: collectItems('games'), programs: collectItems('programs'), notes: collectItems('notes'), links: collectItems('links')
+    _persistentStrategyInitialized: true,
+    strategyTabs: strategyTabsState,
+    highlights: collectItems('highlights'), news: collectItems('news'), strategy: strategyTabsState[activeStrategyTab], games: collectItems('games'), programs: collectItems('programs'), notes: collectItems('notes'), links: collectItems('links')
   };
 }
 
@@ -752,6 +787,8 @@ function saveCoordinatorPersistentState(data) {
   });
   persistentState.serviceHandoffHtml = data?.serviceHandoffHtml || '';
   persistentState._persistentHandoffInitialized = data?._persistentHandoffInitialized === true;
+  persistentState.strategyTabs = normalizeStrategyTabs(data || {});
+  persistentState._persistentStrategyInitialized = true;
   localStorage.setItem(COORDINATOR_PERSISTENT_KEY, JSON.stringify(persistentState));
   saveCoordinatorHighlights(persistentState.highlights);
   saveCoordinatorGames(persistentState.games);
@@ -791,6 +828,32 @@ function findStoredServiceHandoff() {
   return '';
 }
 
+function findStoredStrategyTabs(fallbackData = null) {
+  const recovered = {};
+  const reports = [];
+  if (fallbackData) reports.push(fallbackData);
+  const dateKeyPrefix = `${STORAGE_KEY}-20`;
+  const reportKeys = [];
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    if (key?.startsWith(dateKeyPrefix)) reportKeys.push(key);
+  }
+  reportKeys.sort().reverse().forEach(key => {
+    try { reports.push(JSON.parse(localStorage.getItem(key))); } catch {}
+  });
+  reports.forEach(report => {
+    STRATEGY_TAB_KEYS.forEach(key => {
+      if (!recovered[key] && Array.isArray(report?.strategyTabs?.[key])) recovered[key] = report.strategyTabs[key];
+    });
+    const key = strategyTabForDate(report?.reportDate);
+    if (!recovered[key] && Array.isArray(report?.strategy) && report.strategy.length) recovered[key] = report.strategy;
+  });
+  return STRATEGY_TAB_KEYS.reduce((tabs, key) => {
+    tabs[key] = (recovered[key] || cleanStrategyList(key)).map(item => ({ ...item, id: item.id || makeId() }));
+    return tabs;
+  }, {});
+}
+
 async function loadPersistentCoordinatorData(fallbackData = null) {
   if (!supabaseClient) return null;
   if (remoteSaveTimer) return loadCoordinatorPersistentState();
@@ -814,6 +877,10 @@ async function loadPersistentCoordinatorData(fallbackData = null) {
         ? fallbackData.serviceHandoffHtml
         : findStoredServiceHandoff();
       recoveredPayload._persistentHandoffInitialized = Boolean(String(recoveredPayload.serviceHandoffHtml || '').trim());
+    }
+    if (payload._persistentStrategyInitialized !== true || !payload.strategyTabs) {
+      recoveredPayload.strategyTabs = findStoredStrategyTabs(fallbackData);
+      recoveredPayload._persistentStrategyInitialized = true;
     }
     let missingSections = PERSISTENT_COORDINATOR_SECTIONS.filter(section =>
       !clearedSections.has(section) && !recoveredPayload[section]?.length
@@ -852,6 +919,8 @@ async function savePersistentCoordinatorData(data) {
     _persistentVersion: 2,
     _persistentClearedSections: PERSISTENT_COORDINATOR_SECTIONS.filter(section => !Array.isArray(data[section]) || !data[section].length),
     _persistentHandoffInitialized: previousPayload?._persistentHandoffInitialized === true || Boolean(String(data.serviceHandoffHtml || '').trim()),
+    _persistentStrategyInitialized: true,
+    strategyTabs: normalizeStrategyTabs(data),
     serviceHandoffHtml: data.serviceHandoffHtml || '',
     highlights: Array.isArray(data.highlights) ? data.highlights : [],
     notes: Array.isArray(data.notes) ? data.notes : [],
@@ -889,6 +958,10 @@ function withPersistentHighlights(data) {
   if (persistentState?._persistentHandoffInitialized === true || String(persistentState?.serviceHandoffHtml || '').trim()) {
     nextData.serviceHandoffHtml = persistentState.serviceHandoffHtml || '';
     nextData._persistentHandoffInitialized = true;
+  }
+  if (persistentState?._persistentStrategyInitialized === true || persistentState?.strategyTabs) {
+    nextData.strategyTabs = normalizeStrategyTabs(persistentState);
+    nextData._persistentStrategyInitialized = true;
   }
   saveCoordinatorPersistentState(nextData);
   return nextData;
@@ -929,12 +1002,6 @@ function applyDateDefaults() {
   updateEmpty('news');
   updateMoveButtons('news');
 
-  const defaultStrategy = dayOfWeek === 0 ? strategyPrograms.sunday : dayOfWeek === 6 ? strategyPrograms.saturday : strategyPrograms.weekday;
-  if (!hasSectionItems('strategy')) {
-    defaultStrategy.forEach(name => {
-      addItem('strategy', { name, network: false, local: false, observation: '', _default: true }, false);
-    });
-  }
   updateEmpty('strategy');
   updateMoveButtons('strategy');
 
@@ -951,36 +1018,31 @@ function applyDateDefaults() {
   updateMoveButtons('programs');
 }
 
-function applyStrategyPreset(preset) {
-  const programNames = strategyPrograms[preset];
-  if (!Array.isArray(programNames) || !programNames.length) return;
-  beginHistoryAction();
-
-  const existingByName = new Map();
-  collectItems('strategy').forEach(item => {
-    const key = normalizeKey(item.name);
-    if (key && !existingByName.has(key)) existingByName.set(key, item);
-  });
-
+function selectStrategyTab(tab) {
+  if (!STRATEGY_TAB_KEYS.includes(tab) || tab === activeStrategyTab) return;
+  strategyTabsState ||= normalizeStrategyTabs(getData());
+  strategyTabsState[activeStrategyTab] = collectItems('strategy');
+  activeStrategyTab = tab;
   const container = document.querySelector(`#${sections.strategy.container}`);
   container.querySelectorAll('.item-card').forEach(item => item.remove());
-  programNames.forEach(name => {
-    const existing = existingByName.get(normalizeKey(name)) || {};
-    addItem('strategy', {
-      ...existing,
-      id: existing.id || makeId(),
-      name,
-      network: Boolean(existing.network),
-      local: Boolean(existing.local),
-      observation: existing.observation || '',
-      _default: false
-    }, false);
-  });
+  strategyTabsState[tab].forEach(item => addItem('strategy', item, false));
+  updateEmpty('strategy');
+  updateMoveButtons('strategy');
+  updateStrategyTabsUi();
+}
+
+function clearStrategy() {
+  beginHistoryAction();
+  strategyTabsState ||= normalizeStrategyTabs(getData());
+  strategyTabsState[activeStrategyTab] = cleanStrategyList(activeStrategyTab);
+  const container = document.querySelector(`#${sections.strategy.container}`);
+  container.querySelectorAll('.item-card').forEach(item => item.remove());
+  strategyTabsState[activeStrategyTab].forEach(item => addItem('strategy', item, false));
   updateEmpty('strategy');
   updateMoveButtons('strategy');
   save();
   commitHistoryAction();
-  saveStatus.textContent = 'Estratégia de grade atualizada';
+  saveStatus.textContent = 'Grade restaurada para a estrutura padrão';
 }
 
 function clearReportFields() {
@@ -1874,14 +1936,18 @@ function loadLocalReport(reportDate = dateInput.value || getTodayKey()) {
 function renderReportData(data) {
   clearReportFields();
   if (data) {
+    activeStrategyTab = strategyTabForDate(data.reportDate || dateInput.value);
+    strategyTabsState = normalizeStrategyTabs(data);
     Object.keys(sections).forEach(section => {
-      (data[section] || []).forEach(item => addItem(section, item, false));
+      const items = section === 'strategy' ? strategyTabsState[activeStrategyTab] : (data[section] || []);
+      items.forEach(item => addItem(section, item, false));
       updateEmpty(section);
       updateMoveButtons(section);
     });
   } else {
     Object.keys(sections).forEach(section => updateEmpty(section));
   }
+  updateStrategyTabsUi();
 }
 
 async function loadReportForDate(reportDate, { silent = false } = {}) {
@@ -2028,7 +2094,8 @@ document.querySelectorAll('[data-add]').forEach(button => button.addEventListene
   addItem(button.dataset.add);
   commitHistoryAction();
 }));
-document.querySelectorAll('[data-strategy-preset]').forEach(button => button.addEventListener('click', () => applyStrategyPreset(button.dataset.strategyPreset)));
+document.querySelectorAll('[data-strategy-tab]').forEach(button => button.addEventListener('click', () => selectStrategyTab(button.dataset.strategyTab)));
+document.querySelector('#clearStrategy')?.addEventListener('click', clearStrategy);
 document.querySelectorAll('[data-day-offset]').forEach(button => button.addEventListener('click', () => selectReportDate(getOffsetDateKey(Number(button.dataset.dayOffset)))));
 document.querySelector('#copyPreviousDayButton')?.addEventListener('click', copyPreviousDay);
 document.querySelector('#refreshButton').addEventListener('click', () => syncFromRemote(true));

@@ -25,6 +25,12 @@ function cleanReportData(data = {}) {
   Object.keys(sections).forEach(section => {
     clean[section] = Array.isArray(data[section]) ? data[section] : [];
   });
+  if (data.strategyTabs && typeof data.strategyTabs === 'object') {
+    clean.strategyTabs = ['weekday', 'saturday', 'sunday'].reduce((tabs, key) => {
+      tabs[key] = Array.isArray(data.strategyTabs[key]) ? data.strategyTabs[key] : [];
+      return tabs;
+    }, {});
+  }
   if (data._persistentVersion) clean._persistentVersion = data._persistentVersion;
   if (Array.isArray(data._persistentClearedSections)) {
     clean._persistentClearedSections = data._persistentClearedSections;
@@ -32,6 +38,7 @@ function cleanReportData(data = {}) {
   if (data._persistentHandoffInitialized === true) {
     clean._persistentHandoffInitialized = true;
   }
+  if (data._persistentStrategyInitialized === true) clean._persistentStrategyInitialized = true;
   return clean;
 }
 

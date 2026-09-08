@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Painel de Exibição - TV Globo DF</title>
   <link rel="icon" type="image/png" href="assets/plim-plim.png">
-  <link rel="stylesheet" href="styles.css?v=20260901-1">
+  <link rel="stylesheet" href="styles.css?v=20260908-2">
 </head>
 <body>
   <header class="topbar">
@@ -66,9 +66,12 @@
       <div class="section-heading">
         <div><span class="section-number">04</span><h2>Estratégia de grade</h2><p>Defina exibição em rede, local e observações para cada programa.</p></div>
         <div class="section-actions">
-          <button class="preset-button" data-strategy-preset="weekday" type="button">Grade Seg a Sex</button>
-          <button class="preset-button" data-strategy-preset="saturday" type="button">Grade s&aacute;bado</button>
-          <button class="preset-button" data-strategy-preset="sunday" type="button">Grade domingo</button>
+          <div class="strategy-tabs" role="tablist" aria-label="Grades de programa&ccedil;&atilde;o">
+            <button class="strategy-tab" data-strategy-tab="weekday" type="button" role="tab">Seg a Sex</button>
+            <button class="strategy-tab" data-strategy-tab="saturday" type="button" role="tab">S&aacute;bado</button>
+            <button class="strategy-tab" data-strategy-tab="sunday" type="button" role="tab">Domingo</button>
+          </div>
+          <button class="preset-button strategy-clear-button" id="clearStrategy" type="button">Limpar grade</button>
           <button class="add-button" data-add="strategy" type="button">+ Adicionar programa</button>
         </div>
       </div>
@@ -112,8 +115,8 @@
 
   <div id="previewView" class="preview-view" hidden></div>
   <div class="history-actions" aria-label="Histórico de alterações">
-    <button class="history-button" id="undoButton" type="button" aria-label="Desfazer" title="Desfazer" disabled>←</button>
-    <button class="history-button" id="redoButton" type="button" aria-label="Refazer" title="Refazer" disabled>→</button>
+    <button class="history-button" id="undoButton" type="button" aria-label="Desfazer" title="Desfazer" disabled>↶</button>
+    <button class="history-button" id="redoButton" type="button" aria-label="Refazer" title="Refazer" disabled>↷</button>
   </div>
 
   <template id="highlightTemplate">
@@ -204,8 +207,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=20260810-3"></script>
   <script src="defaults.js?v=20260810-3"></script>
-  <script src="storage.js?v=20260908-1"></script>
-  <script src="app.js?v=20260908-1"></script>
+  <script src="storage.js?v=20260908-2"></script>
+  <script src="app.js?v=20260908-2"></script>
 </body>
 </html>
 

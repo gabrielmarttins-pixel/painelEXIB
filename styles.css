@@ -425,8 +425,14 @@ button:disabled{cursor:wait;opacity:.7}
 .preset-button:hover,.preset-button:focus{background:linear-gradient(110deg,#00a7ff,#2860ff 52%,#8200ff);color:#fff;outline:none;transform:translateY(-1px)}
 @media(max-width:850px){.section-actions{justify-content:flex-start;margin-top:18px}.section-actions .add-button{margin-top:0}}
 .strategy-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.strategy-tabs{display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:999px;background:#eef1f6}
+.strategy-tab{border:0;border-radius:999px;background:transparent;color:#4f596b;cursor:pointer;font:800 12px/1 Globotipo,Arial,sans-serif;padding:10px 14px;white-space:nowrap}
+.strategy-tab:hover,.strategy-tab:focus{color:#087bff;outline:none}
+.strategy-tab.active,.strategy-tab[aria-selected="true"]{background:linear-gradient(110deg,#00a7ff,#2860ff 55%,#751cff);color:#fff;box-shadow:0 5px 14px #087bff2c}
+.strategy-clear-button{color:#d82d45!important;background:#fff1f3!important;border-color:#ffd4da!important}
+.strategy-clear-button:hover,.strategy-clear-button:focus{background:#d82d45!important;color:#fff!important}
 .analyst-preset-actions{margin-top:0}
-@media(max-width:760px){.strategy-title-row{display:block}.analyst-preset-actions{margin-top:14px}}
+@media(max-width:760px){.strategy-title-row{display:block}.analyst-preset-actions{margin-top:14px}.strategy-tabs{display:flex;width:100%;overflow-x:auto}.strategy-tab{flex:1}}
 .history-actions{position:fixed;right:22px;bottom:22px;z-index:30;display:flex;gap:8px;padding:8px;border-radius:999px;background:#ffffffd9;border:1px solid #e1e5ee;box-shadow:0 14px 32px #1d2b4a24;backdrop-filter:blur(10px)}
 .history-button{width:40px;height:40px;display:grid;place-items:center;border:0;border-radius:50%;background:#eef6ff;color:#0057d9;cursor:pointer;font:900 22px/1 Globotipo,Arial,sans-serif;padding:0;transition:background .16s ease,color .16s ease,opacity .16s ease,transform .16s ease}
 .history-button:hover:not(:disabled),.history-button:focus:not(:disabled){background:linear-gradient(110deg,#00a7ff,#2860ff 52%,#8200ff);color:#fff;outline:none;transform:translateY(-1px)}

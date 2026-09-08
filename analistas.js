@@ -34,9 +34,45 @@ let isRestoringHistory = false;
 const PERSISTENT_REPORT_DATE = 'dados-persistentes';
 const COORDINATOR_PERSISTENT_KEY = `${STORAGE_KEY}-coordinator-persistent`;
 const PERSISTENT_COORDINATOR_SECTIONS = ['highlights', 'notes', 'programs', 'games', 'links'];
+const STRATEGY_TAB_KEYS = ['weekday', 'saturday', 'sunday'];
+let activeStrategyTab = 'weekday';
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function strategyTabForDate(dateValue) {
+  const [year, month, day] = String(dateValue || todayKey()).split('-').map(Number);
+  const weekday = new Date(year, month - 1, day).getDay();
+  return weekday === 0 ? 'sunday' : weekday === 6 ? 'saturday' : 'weekday';
+}
+
+function cleanStrategyList(key) {
+  return (strategyPrograms[key] || []).map(name => ({ id: makeId(), name, network: false, local: false, observation: '', _default: false }));
+}
+
+function normalizeStrategyTabs(data = {}) {
+  const source = data.strategyTabs && typeof data.strategyTabs === 'object' ? data.strategyTabs : {};
+  const migratedKey = strategyTabForDate(data.reportDate);
+  return STRATEGY_TAB_KEYS.reduce((tabs, key) => {
+    const items = Array.isArray(source[key]) ? source[key] : (key === migratedKey && Array.isArray(data.strategy) && data.strategy.length ? data.strategy : cleanStrategyList(key));
+    tabs[key] = ensureIds(items);
+    return tabs;
+  }, {});
+}
+
+function syncCurrentStrategyTab() {
+  reportData.strategyTabs ||= normalizeStrategyTabs(reportData);
+  reportData.strategyTabs[activeStrategyTab] = reportData.strategy;
+  reportData._persistentStrategyInitialized = true;
+}
+
+function updateStrategyTabsUi() {
+  document.querySelectorAll('[data-strategy-tab]').forEach(button => {
+    const active = button.dataset.strategyTab === activeStrategyTab;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', String(active));
+  });
 }
 
 function todayKey() {
@@ -279,12 +315,9 @@ function applyDefaults(data) {
       if (!next.news.some(news => news.name === item.name)) next.news.push({ ...item, id: makeId() });
     });
   }
-  const strategyList = dayOfWeek === 0 ? strategyPrograms.sunday : dayOfWeek === 6 ? strategyPrograms.saturday : strategyPrograms.weekday;
-  if (!next.strategy.length) {
-    strategyList.forEach(name => {
-      next.strategy.push({ id: makeId(), name, network: false, local: false, observation: '', _default: true });
-    });
-  }
+  next.strategyTabs = normalizeStrategyTabs(next);
+  next.strategy = next.strategyTabs[activeStrategyTab];
+  next._persistentStrategyInitialized = true;
   if (dayOfWeek === 3 && !next.notes.some(item => item.subject === wednesdayNote.subject)) {
     next.notes.push({ ...wednesdayNote, id: makeId() });
   }
@@ -624,6 +657,7 @@ function render() {
   renderLinks();
   bindServiceHandoffEditor();
   bindEditableCards();
+  updateStrategyTabsUi();
 }
 
 function closeEditor() {
@@ -691,36 +725,26 @@ function updateItem(type, index, field) {
   commitHistoryAction();
 }
 
-function applyStrategyPreset(preset) {
+function selectStrategyTab(tab) {
+  if (!STRATEGY_TAB_KEYS.includes(tab) || tab === activeStrategyTab) return;
   closeEditor();
-  const programNames = strategyPrograms[preset];
-  if (!Array.isArray(programNames) || !programNames.length) return;
+  syncCurrentStrategyTab();
+  activeStrategyTab = tab;
+  reportData.strategy = reportData.strategyTabs[tab];
+  render();
+}
+
+function clearStrategy() {
+  closeEditor();
   beginHistoryAction();
-
-  const existingByName = new Map();
-  reportData.strategy.forEach(item => {
-    const key = normalizeKey(item.name);
-    if (key && !existingByName.has(key)) existingByName.set(key, item);
-  });
-
-  reportData.strategy = programNames.map(name => {
-    const existing = existingByName.get(normalizeKey(name)) || {};
-    return {
-      ...existing,
-      id: existing.id || makeId(),
-      name,
-      network: Boolean(existing.network),
-      local: Boolean(existing.local),
-      observation: existing.observation || '',
-      _default: false
-    };
-  });
+  reportData.strategy = cleanStrategyList(activeStrategyTab);
+  syncCurrentStrategyTab();
   shouldSaveFullReport = false;
   hasPendingSync = true;
   saveLocal();
   render();
   commitHistoryAction();
-  saveStatus.textContent = supabaseClient ? 'Estratégia de grade atualizada; sincronização online agendada' : 'Estratégia de grade atualizada neste navegador';
+  saveStatus.textContent = supabaseClient ? 'Grade restaurada; sincronização online agendada' : 'Grade restaurada neste navegador';
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
 }
@@ -811,6 +835,7 @@ function loadLocalReport(reportDate = reportData.reportDate || todayKey()) {
 }
 
 function saveLocal() {
+  syncCurrentStrategyTab();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(reportData));
   localStorage.setItem(getDateStorageKey(reportData.reportDate), JSON.stringify(reportData));
 }
@@ -829,6 +854,10 @@ function applyPersistentCoordinatorData(data, persistentData) {
   if (!persistentData) return next;
   if (persistentData._persistentHandoffInitialized === true || String(persistentData.serviceHandoffHtml || '').trim()) {
     next.serviceHandoffHtml = persistentData.serviceHandoffHtml || '';
+  }
+  if (persistentData._persistentStrategyInitialized === true || persistentData.strategyTabs) {
+    next.strategyTabs = normalizeStrategyTabs(persistentData);
+    next._persistentStrategyInitialized = true;
   }
   PERSISTENT_COORDINATOR_SECTIONS.forEach(section => {
     if (!Object.prototype.hasOwnProperty.call(persistentData, section)) return;
@@ -865,6 +894,8 @@ async function loadPersistentCoordinatorData() {
       });
       persistentData.serviceHandoffHtml = payload.serviceHandoffHtml || '';
       persistentData._persistentHandoffInitialized = payload._persistentHandoffInitialized === true;
+      persistentData.strategyTabs = payload.strategyTabs;
+      persistentData._persistentStrategyInitialized = payload._persistentStrategyInitialized === true;
       localStorage.setItem(COORDINATOR_PERSISTENT_KEY, JSON.stringify(persistentData));
     } else if (error) {
       console.error(error);
@@ -873,7 +904,7 @@ async function loadPersistentCoordinatorData() {
   return persistentData;
 }
 
-async function savePersistentServiceHandoff(serviceHandoffHtml) {
+async function savePersistentSharedData(serviceHandoffHtml, strategyTabs) {
   const { payload: remotePersistent, error: fetchError } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
   if (fetchError) return { error: fetchError };
   const localPersistent = loadLocalPersistentData() || {};
@@ -883,7 +914,9 @@ async function savePersistentServiceHandoff(serviceHandoffHtml) {
     reportDate: PERSISTENT_REPORT_DATE,
     _persistentVersion: Math.max(2, Number(base._persistentVersion) || 0),
     _persistentHandoffInitialized: true,
-    serviceHandoffHtml: serviceHandoffHtml || ''
+    _persistentStrategyInitialized: true,
+    serviceHandoffHtml: serviceHandoffHtml || '',
+    strategyTabs
   });
   const result = await saveRemoteReport(supabaseClient, persistentData, remotePersistent);
   if (!result.error) {
@@ -891,6 +924,8 @@ async function savePersistentServiceHandoff(serviceHandoffHtml) {
       ...localPersistent,
       serviceHandoffHtml: serviceHandoffHtml || '',
       _persistentHandoffInitialized: true
+      , strategyTabs
+      , _persistentStrategyInitialized: true
     }));
   }
   return result;
@@ -903,6 +938,9 @@ function mergeAnalystChanges(base, edited) {
   merged.serviceHandoffHtml = edited.serviceHandoffHtml || '';
   merged.news = edited.news;
   merged.strategy = edited.strategy;
+  merged.strategyTabs = normalizeStrategyTabs(edited);
+  merged.strategyTabs[activeStrategyTab] = edited.strategy;
+  merged._persistentStrategyInitialized = true;
   const editedPrograms = new Map();
   edited.programs.forEach(item => {
     if (item.id) editedPrograms.set(item.id, item);
@@ -944,7 +982,7 @@ async function saveOnline() {
     return;
   }
 
-  const { error: persistentError } = await savePersistentServiceHandoff(merged.serviceHandoffHtml || '');
+  const { error: persistentError } = await savePersistentSharedData(merged.serviceHandoffHtml || '', merged.strategyTabs);
   if (persistentError) {
     console.error(persistentError);
     hasPendingSync = true;
@@ -995,6 +1033,7 @@ async function loadReport(force = false, reportDate = reportData.reportDate || t
   const baseData = hasContent(localData, ['reportDate']) || Object.keys(localData).some(key => Array.isArray(localData[key]) && localData[key].length)
     ? localData
     : { reportDate };
+  activeStrategyTab = strategyTabForDate(reportDate);
   reportData = applyDefaults(applyPersistentCoordinatorData(remoteData || baseData, persistentData));
   saveLocal();
   render();
@@ -1015,7 +1054,7 @@ async function selectReportDate(reportDate) {
 }
 
 async function copyPreviousDay() {
-  await copyPreviousEditableSections(['news', 'strategy', 'programs'], 'Informações editáveis copiadas');
+  await copyPreviousEditableSections(['news', 'programs'], 'Informações editáveis copiadas');
 }
 
 async function getPreviousDayData() {
@@ -1062,7 +1101,8 @@ async function copyPreviousEditableSections(sectionList, successLabel = 'Informa
 }
 
 document.querySelectorAll('[data-day-offset]').forEach(button => button.addEventListener('click', () => selectReportDate(getOffsetDateKey(Number(button.dataset.dayOffset)))));
-document.querySelectorAll('[data-strategy-preset]').forEach(button => button.addEventListener('click', () => applyStrategyPreset(button.dataset.strategyPreset)));
+document.querySelectorAll('[data-strategy-tab]').forEach(button => button.addEventListener('click', () => selectStrategyTab(button.dataset.strategyTab)));
+document.querySelector('#clearStrategy')?.addEventListener('click', clearStrategy);
 document.querySelector('#addStrategyProgram')?.addEventListener('click', addStrategyItem);
 document.querySelector('#copyPreviousDayButton')?.addEventListener('click', copyPreviousDay);
 document.querySelector('#refreshButton').addEventListener('click', () => loadReport(true, reportData.reportDate || todayKey()));
