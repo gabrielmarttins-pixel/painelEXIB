@@ -29,6 +29,9 @@ function cleanReportData(data = {}) {
   if (Array.isArray(data._persistentClearedSections)) {
     clean._persistentClearedSections = data._persistentClearedSections;
   }
+  if (data._persistentHandoffInitialized === true) {
+    clean._persistentHandoffInitialized = true;
+  }
   return clean;
 }
 

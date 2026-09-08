@@ -827,6 +827,9 @@ function loadLocalPersistentData() {
 function applyPersistentCoordinatorData(data, persistentData) {
   const next = cleanReportData(data || {});
   if (!persistentData) return next;
+  if (persistentData._persistentHandoffInitialized === true || String(persistentData.serviceHandoffHtml || '').trim()) {
+    next.serviceHandoffHtml = persistentData.serviceHandoffHtml || '';
+  }
   PERSISTENT_COORDINATOR_SECTIONS.forEach(section => {
     if (!Object.prototype.hasOwnProperty.call(persistentData, section)) return;
     if (section !== 'programs') {
@@ -860,12 +863,37 @@ async function loadPersistentCoordinatorData() {
         const items = Array.isArray(payload[section]) ? payload[section] : [];
         if (items.length || clearedSections.has(section)) persistentData[section] = items;
       });
+      persistentData.serviceHandoffHtml = payload.serviceHandoffHtml || '';
+      persistentData._persistentHandoffInitialized = payload._persistentHandoffInitialized === true;
       localStorage.setItem(COORDINATOR_PERSISTENT_KEY, JSON.stringify(persistentData));
     } else if (error) {
       console.error(error);
     }
   }
   return persistentData;
+}
+
+async function savePersistentServiceHandoff(serviceHandoffHtml) {
+  const { payload: remotePersistent, error: fetchError } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
+  if (fetchError) return { error: fetchError };
+  const localPersistent = loadLocalPersistentData() || {};
+  const base = remotePersistent || localPersistent;
+  const persistentData = cleanReportData({
+    ...base,
+    reportDate: PERSISTENT_REPORT_DATE,
+    _persistentVersion: Math.max(2, Number(base._persistentVersion) || 0),
+    _persistentHandoffInitialized: true,
+    serviceHandoffHtml: serviceHandoffHtml || ''
+  });
+  const result = await saveRemoteReport(supabaseClient, persistentData, remotePersistent);
+  if (!result.error) {
+    localStorage.setItem(COORDINATOR_PERSISTENT_KEY, JSON.stringify({
+      ...localPersistent,
+      serviceHandoffHtml: serviceHandoffHtml || '',
+      _persistentHandoffInitialized: true
+    }));
+  }
+  return result;
 }
 
 function mergeAnalystChanges(base, edited) {
@@ -912,6 +940,15 @@ async function saveOnline() {
     console.error(error);
     hasPendingSync = true;
     saveStatus.textContent = 'Salvo neste navegador; sincronização online pendente';
+    if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: aguardando conexão com Supabase';
+    return;
+  }
+
+  const { error: persistentError } = await savePersistentServiceHandoff(merged.serviceHandoffHtml || '');
+  if (persistentError) {
+    console.error(persistentError);
+    hasPendingSync = true;
+    saveStatus.textContent = 'Relatório salvo; passagem de serviço ainda não sincronizada';
     if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: aguardando conexão com Supabase';
     return;
   }
@@ -978,7 +1015,7 @@ async function selectReportDate(reportDate) {
 }
 
 async function copyPreviousDay() {
-  await copyPreviousEditableSections(['serviceHandoffHtml', 'news', 'strategy', 'programs'], 'Informacoes editaveis copiadas');
+  await copyPreviousEditableSections(['news', 'strategy', 'programs'], 'Informações editáveis copiadas');
 }
 
 async function getPreviousDayData() {

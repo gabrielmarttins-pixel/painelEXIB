@@ -429,10 +429,12 @@ function collectItems(section) {
 }
 
 function getData() {
+  const persistentState = loadCoordinatorPersistentState();
   return {
     reportDate: dateInput.value,
     weekday: weekdayInput.value,
-    serviceHandoffHtml: currentRemotePayload?.serviceHandoffHtml || '',
+    serviceHandoffHtml: persistentState?.serviceHandoffHtml ?? currentRemotePayload?.serviceHandoffHtml ?? '',
+    _persistentHandoffInitialized: persistentState?._persistentHandoffInitialized === true,
     highlights: collectItems('highlights'), news: collectItems('news'), strategy: collectItems('strategy'), games: collectItems('games'), programs: collectItems('programs'), notes: collectItems('notes'), links: collectItems('links')
   };
 }
@@ -643,12 +645,13 @@ async function loadRemoteReport(silent = false) {
     return null;
   }
   await loadPersistentCoordinatorData(payload ? cleanReportData(payload) : null);
-  if (payload && !silent) {
-    currentRemotePayload = payload;
+  const cleanedPayload = payload ? withPersistentHighlights(cleanReportData(payload)) : null;
+  if (payload) {
+    currentRemotePayload = { ...payload, serviceHandoffHtml: cleanedPayload?.serviceHandoffHtml || '' };
     lastRemoteSignature = getReportSignature(payload);
-    if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload._meta);
+    if (!silent && lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload._meta);
   }
-  return payload ? withPersistentHighlights(cleanReportData(payload)) : null;
+  return cleanedPayload;
 }
 
 function setWeekday() {
@@ -747,6 +750,8 @@ function saveCoordinatorPersistentState(data) {
   PERSISTENT_COORDINATOR_SECTIONS.forEach(section => {
     persistentState[section] = Array.isArray(data?.[section]) ? data[section] : [];
   });
+  persistentState.serviceHandoffHtml = data?.serviceHandoffHtml || '';
+  persistentState._persistentHandoffInitialized = data?._persistentHandoffInitialized === true;
   localStorage.setItem(COORDINATOR_PERSISTENT_KEY, JSON.stringify(persistentState));
   saveCoordinatorHighlights(persistentState.highlights);
   saveCoordinatorGames(persistentState.games);
@@ -769,6 +774,23 @@ function findStoredPersistentSection(section) {
   return [];
 }
 
+function findStoredServiceHandoff() {
+  const dateKeyPrefix = `${STORAGE_KEY}-20`;
+  const reportKeys = [];
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    if (key?.startsWith(dateKeyPrefix)) reportKeys.push(key);
+  }
+  reportKeys.sort().reverse();
+  for (const key of reportKeys) {
+    try {
+      const report = JSON.parse(localStorage.getItem(key));
+      if (String(report?.serviceHandoffHtml || '').trim()) return report.serviceHandoffHtml;
+    } catch {}
+  }
+  return '';
+}
+
 async function loadPersistentCoordinatorData(fallbackData = null) {
   if (!supabaseClient) return null;
   if (remoteSaveTimer) return loadCoordinatorPersistentState();
@@ -787,10 +809,17 @@ async function loadPersistentCoordinatorData(fallbackData = null) {
       const fallbackItems = Array.isArray(fallbackData?.[section]) ? fallbackData[section] : [];
       recoveredPayload[section] = fallbackItems.length ? fallbackItems : findStoredPersistentSection(section);
     });
+    if (payload._persistentHandoffInitialized !== true) {
+      recoveredPayload.serviceHandoffHtml = String(fallbackData?.serviceHandoffHtml || '').trim()
+        ? fallbackData.serviceHandoffHtml
+        : findStoredServiceHandoff();
+      recoveredPayload._persistentHandoffInitialized = Boolean(String(recoveredPayload.serviceHandoffHtml || '').trim());
+    }
     let missingSections = PERSISTENT_COORDINATOR_SECTIONS.filter(section =>
       !clearedSections.has(section) && !recoveredPayload[section]?.length
     );
-    for (let offset = 1; offset <= 14 && missingSections.length; offset += 1) {
+    let missingHandoff = recoveredPayload._persistentHandoffInitialized !== true;
+    for (let offset = 1; offset <= 14 && (missingSections.length || missingHandoff); offset += 1) {
       const previousDate = getOffsetDateKey(-offset, dateInput.value || getTodayKey());
       const { payload: previousReport, error: previousError } = await fetchRemoteReport(supabaseClient, previousDate);
       if (previousError) break;
@@ -799,6 +828,11 @@ async function loadPersistentCoordinatorData(fallbackData = null) {
           recoveredPayload[section] = previousReport[section];
         }
       });
+      if (missingHandoff && String(previousReport?.serviceHandoffHtml || '').trim()) {
+        recoveredPayload.serviceHandoffHtml = previousReport.serviceHandoffHtml;
+        recoveredPayload._persistentHandoffInitialized = true;
+        missingHandoff = false;
+      }
       missingSections = missingSections.filter(section => !recoveredPayload[section]?.length);
     }
     saveCoordinatorPersistentState(recoveredPayload);
@@ -812,17 +846,19 @@ async function loadPersistentCoordinatorData(fallbackData = null) {
 
 async function savePersistentCoordinatorData(data) {
   if (!supabaseClient) return;
+  const { payload: previousPayload } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
   const persistentData = cleanReportData({
     reportDate: PERSISTENT_REPORT_DATE,
     _persistentVersion: 2,
     _persistentClearedSections: PERSISTENT_COORDINATOR_SECTIONS.filter(section => !Array.isArray(data[section]) || !data[section].length),
+    _persistentHandoffInitialized: previousPayload?._persistentHandoffInitialized === true || Boolean(String(data.serviceHandoffHtml || '').trim()),
+    serviceHandoffHtml: data.serviceHandoffHtml || '',
     highlights: Array.isArray(data.highlights) ? data.highlights : [],
     notes: Array.isArray(data.notes) ? data.notes : [],
     programs: Array.isArray(data.programs) ? data.programs : [],
     games: Array.isArray(data.games) ? data.games : [],
     links: Array.isArray(data.links) ? data.links : []
   });
-  const { payload: previousPayload } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
   const { error } = await saveRemoteReportToStorage(supabaseClient, persistentData, previousPayload);
   if (error) console.error('Falha ao sincronizar dados persistentes:', error);
 }
@@ -850,6 +886,10 @@ function withPersistentHighlights(data) {
       nextData[section] = Array.isArray(data[section]) ? data[section] : [];
     }
   });
+  if (persistentState?._persistentHandoffInitialized === true || String(persistentState?.serviceHandoffHtml || '').trim()) {
+    nextData.serviceHandoffHtml = persistentState.serviceHandoffHtml || '';
+    nextData._persistentHandoffInitialized = true;
+  }
   saveCoordinatorPersistentState(nextData);
   return nextData;
 }
