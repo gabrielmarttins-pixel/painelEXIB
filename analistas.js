@@ -33,7 +33,7 @@ let currentHistorySnapshot = '';
 let isRestoringHistory = false;
 const PERSISTENT_REPORT_DATE = 'dados-persistentes';
 const COORDINATOR_PERSISTENT_KEY = `${STORAGE_KEY}-coordinator-persistent`;
-const PERSISTENT_COORDINATOR_SECTIONS = ['highlights', 'notes', 'programs', 'games', 'links'];
+const PERSISTENT_COORDINATOR_SECTIONS = ['highlights', 'notes', 'news', 'programs', 'games', 'links'];
 const STRATEGY_TAB_KEYS = ['weekday', 'saturday', 'sunday'];
 let activeStrategyTab = 'weekday';
 
@@ -73,6 +73,28 @@ function updateStrategyTabsUi() {
     button.classList.toggle('active', active);
     button.setAttribute('aria-selected', String(active));
   });
+}
+
+function persistentSnapshotFrom(data = {}) {
+  const snapshot = {
+    serviceHandoffHtml: data.serviceHandoffHtml || '',
+    strategyTabs: normalizeStrategyTabs(data),
+    _persistentHandoffInitialized: true,
+    _persistentStrategyInitialized: true
+  };
+  PERSISTENT_COORDINATOR_SECTIONS.forEach(section => {
+    snapshot[section] = Array.isArray(data[section]) ? data[section] : [];
+  });
+  return snapshot;
+}
+
+function resolvePersistentState(state, reportDate) {
+  if (!state) return null;
+  const eligibleDate = Object.keys(state._persistentSnapshots || {})
+    .filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date) && date <= reportDate)
+    .sort()
+    .pop();
+  return eligibleDate ? { ...state, ...state._persistentSnapshots[eligibleDate] } : state;
 }
 
 function todayKey() {
@@ -852,6 +874,7 @@ function loadLocalPersistentData() {
 function applyPersistentCoordinatorData(data, persistentData) {
   const next = cleanReportData(data || {});
   if (!persistentData) return next;
+  persistentData = resolvePersistentState(persistentData, next.reportDate || reportData.reportDate || todayKey());
   if (persistentData._persistentHandoffInitialized === true || String(persistentData.serviceHandoffHtml || '').trim()) {
     next.serviceHandoffHtml = persistentData.serviceHandoffHtml || '';
   }
@@ -883,7 +906,10 @@ async function loadPersistentCoordinatorData() {
   if (supabaseClient) {
     const { payload, error } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
     if (!error && payload) {
-      persistentData = {};
+      persistentData = {
+        _persistentVersion: payload._persistentVersion,
+        _persistentSnapshots: payload._persistentSnapshots || {}
+      };
       const clearedSections = new Set(payload._persistentClearedSections || []);
       const remoteSections = Number(payload._persistentVersion) >= 2
         ? PERSISTENT_COORDINATOR_SECTIONS
@@ -904,7 +930,7 @@ async function loadPersistentCoordinatorData() {
   return persistentData;
 }
 
-async function savePersistentSharedData(serviceHandoffHtml, strategyTabs) {
+async function savePersistentSharedData(editedData) {
   const { payload: remotePersistent, error: fetchError } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
   if (fetchError) return { error: fetchError };
   const localPersistent = loadLocalPersistentData() || {};
@@ -912,21 +938,15 @@ async function savePersistentSharedData(serviceHandoffHtml, strategyTabs) {
   const persistentData = cleanReportData({
     ...base,
     reportDate: PERSISTENT_REPORT_DATE,
-    _persistentVersion: Math.max(2, Number(base._persistentVersion) || 0),
-    _persistentHandoffInitialized: true,
-    _persistentStrategyInitialized: true,
-    serviceHandoffHtml: serviceHandoffHtml || '',
-    strategyTabs
+    _persistentVersion: 3,
+    _persistentSnapshots: {
+      ...(base._persistentSnapshots || {}),
+      [editedData.reportDate]: persistentSnapshotFrom(editedData)
+    }
   });
   const result = await saveRemoteReport(supabaseClient, persistentData, remotePersistent);
   if (!result.error) {
-    localStorage.setItem(COORDINATOR_PERSISTENT_KEY, JSON.stringify({
-      ...localPersistent,
-      serviceHandoffHtml: serviceHandoffHtml || '',
-      _persistentHandoffInitialized: true
-      , strategyTabs
-      , _persistentStrategyInitialized: true
-    }));
+    localStorage.setItem(COORDINATOR_PERSISTENT_KEY, JSON.stringify(persistentData));
   }
   return result;
 }
@@ -982,11 +1002,11 @@ async function saveOnline() {
     return;
   }
 
-  const { error: persistentError } = await savePersistentSharedData(merged.serviceHandoffHtml || '', merged.strategyTabs);
+  const { error: persistentError } = await savePersistentSharedData(reportData);
   if (persistentError) {
     console.error(persistentError);
     hasPendingSync = true;
-    saveStatus.textContent = 'Relatório salvo; passagem de serviço ainda não sincronizada';
+    saveStatus.textContent = 'Relatório salvo; dados perenes ainda não sincronizados';
     if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: aguardando conexão com Supabase';
     return;
   }

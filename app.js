@@ -34,7 +34,7 @@ const COORDINATOR_HIGHLIGHTS_KEY = `${STORAGE_KEY}-coordinator-highlights`;
 const COORDINATOR_GAMES_KEY = `${STORAGE_KEY}-coordinator-games`;
 const COORDINATOR_PERSISTENT_KEY = `${STORAGE_KEY}-coordinator-persistent`;
 const PERSISTENT_REPORT_DATE = 'dados-persistentes';
-const PERSISTENT_COORDINATOR_SECTIONS = ['highlights', 'notes', 'programs', 'games', 'links'];
+const PERSISTENT_COORDINATOR_SECTIONS = ['highlights', 'notes', 'news', 'programs', 'games', 'links'];
 const HISTORY_LIMIT_LOCAL = 10;
 const PROTECTED_LINK_LABELS = new Set([
   'gerador de previa',
@@ -83,6 +83,28 @@ function updateStrategyTabsUi() {
     button.classList.toggle('active', active);
     button.setAttribute('aria-selected', String(active));
   });
+}
+
+function persistentSnapshotFrom(data = {}) {
+  const snapshot = {
+    serviceHandoffHtml: data.serviceHandoffHtml || '',
+    strategyTabs: normalizeStrategyTabs(data),
+    _persistentHandoffInitialized: true,
+    _persistentStrategyInitialized: true
+  };
+  PERSISTENT_COORDINATOR_SECTIONS.forEach(section => {
+    snapshot[section] = Array.isArray(data[section]) ? data[section] : [];
+  });
+  return snapshot;
+}
+
+function resolvePersistentState(state, reportDate) {
+  if (!state) return null;
+  const eligibleDate = Object.keys(state._persistentSnapshots || {})
+    .filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date) && date <= reportDate)
+    .sort()
+    .pop();
+  return eligibleDate ? { ...state, ...state._persistentSnapshots[eligibleDate] } : state;
 }
 
 function normalizeKey(value) {
@@ -460,7 +482,7 @@ function collectItems(section) {
 }
 
 function getData() {
-  const persistentState = loadCoordinatorPersistentState();
+  const persistentState = resolvePersistentState(loadCoordinatorPersistentState(), dateInput.value);
   strategyTabsState ||= normalizeStrategyTabs({ reportDate: dateInput.value });
   strategyTabsState[activeStrategyTab] = collectItems('strategy');
   return {
@@ -781,17 +803,20 @@ function loadCoordinatorPersistentState() {
 }
 
 function saveCoordinatorPersistentState(data) {
-  const persistentState = {};
-  PERSISTENT_COORDINATOR_SECTIONS.forEach(section => {
-    persistentState[section] = Array.isArray(data?.[section]) ? data[section] : [];
-  });
-  persistentState.serviceHandoffHtml = data?.serviceHandoffHtml || '';
-  persistentState._persistentHandoffInitialized = data?._persistentHandoffInitialized === true;
-  persistentState.strategyTabs = normalizeStrategyTabs(data || {});
-  persistentState._persistentStrategyInitialized = true;
+  if (data?.reportDate === PERSISTENT_REPORT_DATE) {
+    localStorage.setItem(COORDINATOR_PERSISTENT_KEY, JSON.stringify(data));
+    return;
+  }
+  const existing = loadCoordinatorPersistentState() || {};
+  const reportDate = data?.reportDate || dateInput.value || getTodayKey();
+  const persistentState = {
+    ...existing,
+    _persistentVersion: 3,
+    _persistentSnapshots: { ...(existing._persistentSnapshots || {}), [reportDate]: persistentSnapshotFrom(data) }
+  };
   localStorage.setItem(COORDINATOR_PERSISTENT_KEY, JSON.stringify(persistentState));
-  saveCoordinatorHighlights(persistentState.highlights);
-  saveCoordinatorGames(persistentState.games);
+  saveCoordinatorHighlights(data?.highlights || []);
+  saveCoordinatorGames(data?.games || []);
 }
 
 function findStoredPersistentSection(section) {
@@ -915,18 +940,13 @@ async function savePersistentCoordinatorData(data) {
   if (!supabaseClient) return;
   const { payload: previousPayload } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
   const persistentData = cleanReportData({
+    ...(previousPayload || {}),
     reportDate: PERSISTENT_REPORT_DATE,
-    _persistentVersion: 2,
-    _persistentClearedSections: PERSISTENT_COORDINATOR_SECTIONS.filter(section => !Array.isArray(data[section]) || !data[section].length),
-    _persistentHandoffInitialized: previousPayload?._persistentHandoffInitialized === true || Boolean(String(data.serviceHandoffHtml || '').trim()),
-    _persistentStrategyInitialized: true,
-    strategyTabs: normalizeStrategyTabs(data),
-    serviceHandoffHtml: data.serviceHandoffHtml || '',
-    highlights: Array.isArray(data.highlights) ? data.highlights : [],
-    notes: Array.isArray(data.notes) ? data.notes : [],
-    programs: Array.isArray(data.programs) ? data.programs : [],
-    games: Array.isArray(data.games) ? data.games : [],
-    links: Array.isArray(data.links) ? data.links : []
+    _persistentVersion: 3,
+    _persistentSnapshots: {
+      ...(previousPayload?._persistentSnapshots || {}),
+      [data.reportDate]: persistentSnapshotFrom(data)
+    }
   });
   const { error } = await saveRemoteReportToStorage(supabaseClient, persistentData, previousPayload);
   if (error) console.error('Falha ao sincronizar dados persistentes:', error);
@@ -934,7 +954,7 @@ async function savePersistentCoordinatorData(data) {
 
 function withPersistentHighlights(data) {
   if (!data) return data;
-  const persistentState = loadCoordinatorPersistentState();
+  const persistentState = resolvePersistentState(loadCoordinatorPersistentState(), data.reportDate || dateInput.value || getTodayKey());
   let nextData = { ...data };
   PERSISTENT_COORDINATOR_SECTIONS.forEach(section => {
     if (persistentState && Object.prototype.hasOwnProperty.call(persistentState, section)) {

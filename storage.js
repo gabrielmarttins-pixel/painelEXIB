@@ -31,6 +31,9 @@ function cleanReportData(data = {}) {
       return tabs;
     }, {});
   }
+  if (data._persistentSnapshots && typeof data._persistentSnapshots === 'object') {
+    clean._persistentSnapshots = data._persistentSnapshots;
+  }
   if (data._persistentVersion) clean._persistentVersion = data._persistentVersion;
   if (Array.isArray(data._persistentClearedSections)) {
     clean._persistentClearedSections = data._persistentClearedSections;
