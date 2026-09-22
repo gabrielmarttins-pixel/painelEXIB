@@ -6,7 +6,7 @@
   <base href="../">
   <title>Painel dos Programadores - TV Globo DF</title>
   <link rel="icon" type="image/png" href="assets/plim-plim.png">
-  <link rel="stylesheet" href="styles.css?v=20260908-3">
+  <link rel="stylesheet" href="styles.css?v=20260922-4">
 </head>
 <body class="analyst-page">
   <header class="topbar">
@@ -17,9 +17,19 @@
     <div class="top-actions">
       <span class="save-status" id="saveStatus">Carregando painel...</span>
       <span class="sync-meta" id="lastUpdateStatus">Última atualização: carregando...</span>
+      <button class="button secondary maestro-button" id="maestroButton" type="button">Conectar com Maestro</button>
+      <input id="maestroFileInput" type="file" accept=".csv,text/csv" hidden>
       <button class="button secondary" id="refreshButton" type="button">Atualizar dados</button>
     </div>
   </header>
+
+  <aside class="maestro-reminder" id="maestroReminder" aria-live="polite" hidden>
+    <div><strong>Atualização do Maestro</strong><span id="maestroReminderText">Envie a versão atualizada do Maestro.</span></div>
+    <div class="maestro-reminder-actions">
+      <button class="button primary" id="maestroReminderConnect" type="button">Enviar arquivo agora</button>
+      <button class="maestro-reminder-dismiss" id="maestroReminderDismiss" type="button" aria-label="Dispensar este aviso" title="Dispensar este aviso">&times;</button>
+    </div>
+  </aside>
 
   <main class="preview-shell analyst-shell">
     <section class="preview-section links-section links-top" id="linksSection">
@@ -111,6 +121,11 @@
       <div class="preview-cards"></div>
     </section>
 
+    <div class="report-download-panel" data-export-control>
+      <div><strong>Relatório do Painel Diário</strong><span>Gere um arquivo HTML com todas as informações da data selecionada.</span></div>
+      <button class="button primary" id="generateHtmlReport" type="button">Gerar Relatório</button>
+    </div>
+
     <footer><span>Exibição - TV Globo DF</span><span id="footerDate"></span></footer>
   </main>
 
@@ -122,7 +137,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=20260810-3"></script>
   <script src="defaults.js?v=20260810-3"></script>
+  <script src="maestro.js?v=20260922-1"></script>
   <script src="storage.js?v=20260908-4"></script>
-  <script src="analistas.js?v=20260908-4"></script>
+  <script src="analistas.js?v=20260922-11"></script>
 </body>
 </html>

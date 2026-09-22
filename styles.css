@@ -387,7 +387,8 @@ button:disabled{cursor:wait;opacity:.7}
 .analyst-shell #strategySection{order:6}
 .analyst-shell #gamesSection{order:7}
 .analyst-shell #programsSection{order:8}
-.analyst-shell footer{order:9}
+.analyst-shell .report-download-panel{order:9}
+.analyst-shell footer{order:10}
 .analyst-shell .links-top{padding:8px 0 4px;background:transparent}
 .analyst-shell .links-top .preview-cards{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
 .analyst-shell .links-top .useful-link{position:relative;isolation:isolate;overflow:hidden;min-height:38px;padding:9px 12px;border:1px solid transparent;border-radius:10px;background:#fff;color:#0057d9;font-size:13px;font-weight:800;line-height:1.15;box-shadow:inset 0 0 0 1px #dfe7f5,0 4px 10px #1d2b4a0b;transition:color .16s ease,transform .16s ease,box-shadow .16s ease}
@@ -437,6 +438,21 @@ button:disabled{cursor:wait;opacity:.7}
 .history-button{width:40px;height:40px;display:grid;place-items:center;border:0;border-radius:50%;background:#eef6ff;color:#0057d9;cursor:pointer;font:900 22px/1 Globotipo,Arial,sans-serif;padding:0;transition:background .16s ease,color .16s ease,opacity .16s ease,transform .16s ease}
 .history-button:hover:not(:disabled),.history-button:focus:not(:disabled){background:linear-gradient(110deg,#00a7ff,#2860ff 52%,#8200ff);color:#fff;outline:none;transform:translateY(-1px)}
 .history-button:disabled{cursor:not-allowed;opacity:.42}
+.maestro-reminder{position:sticky;top:72px;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:18px;max-width:1180px;margin:14px auto 0;padding:14px 18px;border:1px solid #b9d9ff;border-radius:16px;background:linear-gradient(110deg,#eef8ff,#f4f0ff);box-shadow:0 12px 30px #1456a51c;color:#17233f}
+.maestro-reminder[hidden]{display:none}
+.maestro-reminder>div:first-child{display:flex;flex-direction:column;gap:3px}
+.maestro-reminder strong{font-size:15px;color:#087bff}
+.maestro-reminder span{font-size:13px;font-weight:600}
+.maestro-reminder-actions{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.maestro-reminder-actions .button{min-height:38px;padding:9px 15px}
+.maestro-reminder-dismiss{width:34px;height:34px;border:0;border-radius:50%;background:#fff;color:#596273;cursor:pointer;font:800 22px/1 Arial,sans-serif}
+.maestro-reminder-dismiss:hover,.maestro-reminder-dismiss:focus{background:#17233f;color:#fff;outline:none}
+.report-download-panel{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:18px;padding:20px 24px;border-radius:20px;background:#fff;border:1px solid #e1e5ee;box-shadow:0 12px 30px #17233f0d}
+.report-download-panel>div{display:flex;flex-direction:column;gap:4px}
+.report-download-panel strong{font-size:17px}
+.report-download-panel span{font-size:13px;color:#5d6475}
+@media(max-width:700px){.maestro-reminder{position:relative;top:auto;margin:10px 12px 0;align-items:flex-start;flex-direction:column}.maestro-reminder-actions{width:100%}.maestro-reminder-actions .button{flex:1}}
+@media(max-width:700px){.report-download-panel{align-items:stretch;flex-direction:column}.report-download-panel .button{width:100%}}
 @media(max-width:560px){.history-actions{right:12px;bottom:12px}.history-button{width:36px;height:36px;font-size:20px}}
 @media print{.history-actions{display:none}}
 

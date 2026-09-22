@@ -26,6 +26,7 @@ const saveStatus = document.querySelector('#saveStatus');
 const lastUpdateStatus = document.querySelector('#lastUpdateStatus');
 let saveTimer;
 let remoteSaveTimer;
+let hasPendingRemoteSave = false;
 let isLoading = false;
 let lastRemoteSignature = '';
 let currentRemotePayload = null;
@@ -613,6 +614,7 @@ function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 
 
 function scheduleRemoteSave(data = getData()) {
   if (!supabaseClient) return;
+  hasPendingRemoteSave = true;
   clearTimeout(remoteSaveTimer);
   remoteSaveTimer = setTimeout(() => {
     remoteSaveTimer = null;
@@ -672,6 +674,7 @@ async function saveRemoteReport(data = getData()) {
       lastRemoteSignature = getReportSignature(getData());
       if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(latestPayload._meta);
       saveStatus.textContent = 'Atualizado com dados online';
+      hasPendingRemoteSave = false;
       return;
     }
     saveStatus.textContent = 'Salvamento cancelado para proteger alterações mais recentes';
@@ -689,7 +692,13 @@ async function saveRemoteReport(data = getData()) {
   }
   currentRemotePayload = payload;
   lastRemoteSignature = getReportSignature(payload);
-  await savePersistentCoordinatorData(data);
+  const persistentResult = await savePersistentCoordinatorData(data);
+  if (persistentResult?.error) {
+    hasPendingRemoteSave = true;
+    saveStatus.textContent = 'Relatório salvo; dados perenes ainda não sincronizados';
+    return;
+  }
+  hasPendingRemoteSave = false;
   if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload?._meta);
   saveStatus.textContent = row ? 'Salvo e sincronizado' : 'Salvo localmente; Supabase não confirmou';
 }
@@ -937,7 +946,7 @@ async function loadPersistentCoordinatorData(fallbackData = null) {
 }
 
 async function savePersistentCoordinatorData(data) {
-  if (!supabaseClient) return;
+  if (!supabaseClient) return { error: null };
   const { payload: previousPayload } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
   const persistentData = cleanReportData({
     ...(previousPayload || {}),
@@ -950,6 +959,7 @@ async function savePersistentCoordinatorData(data) {
   });
   const { error } = await saveRemoteReportToStorage(supabaseClient, persistentData, previousPayload);
   if (error) console.error('Falha ao sincronizar dados persistentes:', error);
+  return { error };
 }
 
 function withPersistentHighlights(data) {
@@ -2022,6 +2032,62 @@ async function copyPreviousDay() {
   saveStatus.textContent = 'Informações do dia anterior copiadas';
 }
 
+function buildMaestroStrategy(importedItems, currentItems, tab) {
+  const importedByName = new Map(importedItems.map(item => [normalizeKey(item.name), item]));
+  const currentByName = new Map(currentItems.map(item => [normalizeKey(item.name), item]));
+  const defaultNames = strategyPrograms[tab] || [];
+  const ordered = [...currentItems];
+  defaultNames.forEach(name => {
+    if (!currentByName.has(normalizeKey(name))) {
+      ordered.push({ id: makeId(), name, network: false, local: false, observation: '', _default: false });
+    }
+  });
+  return ordered.map(item => {
+    const maestro = importedByName.get(normalizeKey(item.name));
+    return maestro ? { ...item, network: maestro.network, local: maestro.local, observation: maestro.observation, _default: false } : item;
+  });
+}
+
+async function importMaestroFile(file) {
+  if (!file || !window.GloboMaestro) return;
+  try {
+    const imported = window.GloboMaestro.parseMaestroFile(await file.text());
+    if (!imported.news.length) throw new Error('Nenhum dos quatro jornais locais foi encontrado no arquivo.');
+    const summary = `${imported.news.length} jornais e dados de grade para ${formatReportDate(imported.date)}.`;
+    if (!confirm(`Importar ${summary}\n\nOs dados existentes dessa data serão atualizados.`)) return;
+    if (dateInput.value !== imported.date) await loadReportForDate(imported.date, { silent: true });
+    beginHistoryAction();
+
+    const newsContainer = document.querySelector(`#${sections.news.container}`);
+    newsContainer.querySelectorAll('.item-card').forEach(item => item.remove());
+    imported.news.forEach(item => addItem('news', { ...item, id: makeId(), _default: false }, false));
+    updateEmpty('news');
+    updateMoveButtons('news');
+
+    strategyTabsState ||= normalizeStrategyTabs(getData());
+    strategyTabsState[activeStrategyTab] = buildMaestroStrategy(imported.strategy, collectItems('strategy'), activeStrategyTab);
+    const strategyContainer = document.querySelector(`#${sections.strategy.container}`);
+    strategyContainer.querySelectorAll('.item-card').forEach(item => item.remove());
+    strategyTabsState[activeStrategyTab].forEach(item => addItem('strategy', item, false));
+    updateEmpty('strategy');
+    updateMoveButtons('strategy');
+
+    save();
+    const importedData = getData();
+    if (supabaseClient) {
+      clearTimeout(remoteSaveTimer);
+      remoteSaveTimer = null;
+      saveStatus.textContent = 'Salvando importação do Maestro...';
+      await saveRemoteReport(importedData);
+    }
+    commitHistoryAction();
+    if (!supabaseClient) saveStatus.textContent = 'Dados do Maestro importados neste navegador';
+  } catch (error) {
+    console.error(error);
+    alert(`Não foi possível importar o arquivo do Maestro. ${error.message || ''}`.trim());
+  }
+}
+
 async function load() {
   isLoading = true;
   setReportDate(getTodayKey());
@@ -2064,6 +2130,16 @@ async function syncFromRemote(force = false) {
     return;
   }
   if (isLoading || (!force && isFormFieldActive())) return;
+  if (force && (remoteSaveTimer || hasPendingRemoteSave)) {
+    clearTimeout(remoteSaveTimer);
+    remoteSaveTimer = null;
+    saveStatus.textContent = 'Salvando alterações pendentes...';
+    await saveRemoteReport(getData());
+    if (hasPendingRemoteSave) {
+      saveStatus.textContent = 'Atualização cancelada: existem alterações locais ainda não sincronizadas';
+      return;
+    }
+  }
   if (force) saveStatus.textContent = 'Atualizando dados...';
 
   const { payload, error } = await fetchRemoteReport(supabaseClient, dateInput.value);
@@ -2119,6 +2195,11 @@ document.querySelector('#clearStrategy')?.addEventListener('click', clearStrateg
 document.querySelectorAll('[data-day-offset]').forEach(button => button.addEventListener('click', () => selectReportDate(getOffsetDateKey(Number(button.dataset.dayOffset)))));
 document.querySelector('#copyPreviousDayButton')?.addEventListener('click', copyPreviousDay);
 document.querySelector('#refreshButton').addEventListener('click', () => syncFromRemote(true));
+document.querySelector('#maestroButton')?.addEventListener('click', () => document.querySelector('#maestroFileInput')?.click());
+document.querySelector('#maestroFileInput')?.addEventListener('change', event => {
+  const [file] = event.target.files || [];
+  importMaestroFile(file).finally(() => { event.target.value = ''; });
+});
 document.querySelector('#publishButton')?.addEventListener('click', publishUpdates);
 document.querySelector('#printButton')?.addEventListener('click', showPreview);
 document.querySelector('#undoButton')?.addEventListener('click', undoChange);

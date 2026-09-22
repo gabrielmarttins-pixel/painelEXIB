@@ -1120,12 +1120,180 @@ async function copyPreviousEditableSections(sectionList, successLabel = 'Informa
   saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
 }
 
+function maestroReminderOccurrence(now = new Date()) {
+  const candidates = [];
+  const addCandidate = (date, hour, minute) => {
+    const candidate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute, 0, 0);
+    if (candidate <= now) candidates.push(candidate);
+  };
+  addCandidate(now, 6, 30);
+  addCandidate(now, 22, 0);
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  addCandidate(yesterday, 22, 0);
+  return candidates.sort((a, b) => b - a)[0];
+}
+
+function maestroReminderKey(occurrence = maestroReminderOccurrence()) {
+  if (!occurrence) return '';
+  const date = `${occurrence.getFullYear()}-${String(occurrence.getMonth() + 1).padStart(2, '0')}-${String(occurrence.getDate()).padStart(2, '0')}`;
+  const time = `${String(occurrence.getHours()).padStart(2, '0')}${String(occurrence.getMinutes()).padStart(2, '0')}`;
+  return `${STORAGE_KEY}-maestro-reminder-${date}-${time}`;
+}
+
+function updateMaestroReminder() {
+  const reminder = document.querySelector('#maestroReminder');
+  if (!reminder) return;
+  const occurrence = maestroReminderOccurrence();
+  const key = maestroReminderKey(occurrence);
+  const dismissed = key && localStorage.getItem(key) === 'done';
+  reminder.hidden = !occurrence || dismissed;
+  if (!reminder.hidden) {
+    const time = occurrence.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    document.querySelector('#maestroReminderText').textContent = `Aviso das ${time}: envie a versão atualizada do Maestro.`;
+  }
+}
+
+function dismissMaestroReminder() {
+  const key = maestroReminderKey();
+  if (key) localStorage.setItem(key, 'done');
+  updateMaestroReminder();
+}
+
+function collectReportStyles() {
+  let css = '';
+  [...document.styleSheets].forEach(sheet => {
+    try {
+      css += [...sheet.cssRules].map(rule => rule.cssText).join('\n');
+    } catch {}
+  });
+  return css;
+}
+
+function dedicatedReportStyles() {
+  return `
+@font-face{font-family:Globotipo;src:url('assets/GlobotipoCorporativa-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:Globotipo;src:url('assets/GlobotipoCorporativa-Bold.ttf') format('truetype');font-weight:700;font-display:swap}
+:root{--ink:#101116;--muted:#5d6475;--line:#dfe3ea;--blue:#087bff;--gradient:linear-gradient(110deg,#00a7ff,#2860ff 52%,#8200ff)}
+*{box-sizing:border-box}html{background:#ececef}body{margin:0;padding:0 24px 24px;background:#ececef;color:var(--ink);font-family:Globotipo,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.preview-shell{width:min(1120px,100%);margin:18px auto 0;display:flex;flex-direction:column;gap:14px}.preview-hero,.preview-section{position:relative;overflow:hidden;background:#fff;border-radius:22px}.preview-hero{min-height:210px;padding:30px 38px;display:flex;align-items:center}.preview-hero:after{content:"";position:absolute;right:0;bottom:0;width:48%;height:96%;background:url("assets/programadores-tv-centro-exibidor-cinza-transparente.png") right bottom/contain no-repeat;opacity:.2}.preview-hero>div,.generated-report-meta{position:relative;z-index:1}.eyebrow{margin:0 0 10px;color:var(--blue);font-size:11px;font-weight:800;letter-spacing:.14em}.preview-hero h1{margin:0;font-size:42px;line-height:1;letter-spacing:-.04em}.preview-hero .date{margin:14px 0 0;font-size:14px;font-weight:700}.generated-report-meta{align-self:flex-end;margin:0 0 2px auto;color:var(--muted);font-size:10px}
+.preview-section{padding:24px 28px}.preview-section-title{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:13px;margin-bottom:14px;border-bottom:1px solid var(--line)}.preview-section-title h2{margin:0;font-size:21px;letter-spacing:-.025em}.preview-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.preview-card{position:relative;overflow:hidden;min-height:106px;padding:17px 20px;border-radius:15px;background:#f5f5f7;border:1px solid #e8e9ed}.preview-card:before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--gradient)}.preview-card h3{position:relative;margin:0 0 9px;font-size:16px}.preview-card p{position:relative;margin:6px 0 0;color:#50586a;font-size:12px;line-height:1.45}.preview-empty,.handoff-placeholder{color:#7a8190;font-size:12px}
+.links-top{padding:0;background:transparent}.links-top .preview-cards{grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:7px}.useful-link{display:flex;align-items:center;justify-content:center;min-height:37px;padding:9px 12px;border:1px solid #dbe6f5;border-radius:10px;background:#fff;color:#075fd8;font-size:12px;font-weight:800;text-align:center;text-decoration:none}
+.handoff-section .preview-cards,.handoff-preview-card{min-height:auto}.handoff-content{font-size:13px;line-height:1.55}.handoff-content p{margin:5px 0}.highlight-category,.program-category{display:inline-flex;padding:5px 8px;border-radius:7px;background:#087bff;color:#fff;font-size:9px;font-weight:800;text-transform:uppercase}.priority-label{font-size:10px;font-weight:800}.urgent-highlight{background:linear-gradient(115deg,#ff164c,#d900bc);color:#fff}.urgent-highlight h3,.urgent-highlight p{color:#fff}
+#newsView{grid-template-columns:repeat(2,minmax(0,1fr))}.news-preview-card{min-height:118px}.news-bom-dia:before{background:linear-gradient(#ffe733,#ffb000)}.news-df1:before{background:linear-gradient(#ff9d00,#ff5600)}.news-ge:before{background:linear-gradient(#ff3030,#c90037)}.news-df2:before{background:linear-gradient(#00a7ff,#2860ff)}.news-card-content{position:relative;max-width:100%}.info-pills{display:flex;flex-wrap:wrap;gap:7px}.info-pill{display:flex;flex-direction:column;gap:2px;min-width:78px;padding:7px 9px;border-radius:9px;background:#fff;border:1px solid #e0e5ed}.info-pill small{color:#6e7584;font-size:8px;font-weight:800;text-transform:uppercase}.info-pill strong{color:#075fd8;font-size:12px}
+#strategyView{grid-template-columns:1fr}.strategy-preview-card{display:grid;grid-template-columns:minmax(180px,.8fr) minmax(0,1.4fr);align-items:center;gap:16px;min-height:66px;padding:13px 18px 13px 26px}.strategy-afternoon-start:before{background:linear-gradient(#ffcf2e,#ff6b1a)}.strategy-afternoon:before{background:linear-gradient(#ff9d00,#e7357a)}.strategy-sunset:before{background:linear-gradient(#ff5a3d,#751cff)}.strategy-night:before{background:linear-gradient(#2860ff,#11183f)}.strategy-program{display:flex;align-items:center;gap:10px}.strategy-dot{width:10px;height:10px;flex:0 0 10px;border-radius:50%;background:var(--gradient)}.strategy-title-stack h3{margin-bottom:6px}.strategy-badges{display:flex;gap:5px}.strategy-badge,.status-badge,.signal-badge{display:inline-flex;padding:5px 8px;border-radius:7px;color:#fff;font-size:9px;font-weight:800}.strategy-badge.network,.signal-rede{background:linear-gradient(110deg,#00a7ff,#2860ff)}.strategy-badge.local{background:linear-gradient(110deg,#00a86b,#00c97b)}.strategy-info{min-width:0}.strategy-observation{padding:9px 11px;border:1px solid #dbe9ff;border-radius:10px;background:#fff!important;color:#17233f!important;font-weight:700;overflow-wrap:anywhere}
+.game-schedule{grid-column:1/-1;margin:5px 0 0;font-size:11px}.game-schedule strong{font-size:12px}.preview-card.game{min-height:120px}.game-card-content{position:relative;z-index:2}.game-time{display:inline-flex;margin-top:7px;padding:6px 12px;border-radius:999px;background:linear-gradient(110deg,#00a86b,#00c97b);color:#fff!important;font-size:15px!important;font-weight:800}.club-crests{position:absolute;inset:5px 10px;display:flex;justify-content:space-between;opacity:.18}.club-crests img{width:36%;height:82%;object-fit:contain}.crest-placeholder{width:68px;height:68px;border-radius:50%;display:grid;place-items:center;background:var(--gradient);color:#fff;font-size:28px;font-weight:800}.signal-badge{float:right;background:#087bff}
+.program-title-row{display:flex;align-items:center;gap:9px}.program-date-badge{padding:5px 8px;border-radius:7px;background:#fff;color:#087bff;font-size:10px;font-weight:800}.program-ids{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}.program-id{padding:5px 8px;border-radius:7px;background:#fff;border:1px solid #dfe5ee;color:#273147;font-size:9px;font-weight:800}.status-badge{background:#7a8190}.status-enviado{background:#ff8500}.status-capturado{background:#00a86b}.status-ao-vivo{background:#e50046}.program-preview-footer{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:10px}
+footer{display:flex;justify-content:space-between;padding:12px 5px 0;color:#6e7584;font-size:10px}
+@media(max-width:720px){body{padding:0 10px 16px}.preview-hero{padding:24px;min-height:175px}.preview-hero:after{opacity:.1}.preview-hero h1{font-size:34px}.preview-section{padding:19px}.preview-cards,#newsView{grid-template-columns:1fr}.strategy-preview-card{grid-template-columns:1fr}.generated-report-meta{display:none}}
+@media print{body{padding:0;background:#fff}.preview-shell{margin-top:10px;gap:8px}.preview-hero{min-height:150px}.preview-section{break-inside:auto;padding:16px 20px}.preview-card{break-inside:avoid}}
+`;
+}
+
+function generateHtmlReport() {
+  closeEditor();
+  if (isServiceHandoffActive()) closeServiceHandoffEditor(true);
+  render();
+  const source = document.querySelector('main.preview-shell');
+  if (!source) return;
+  const report = source.cloneNode(true);
+  report.querySelectorAll('[data-export-control],.day-actions,.analyst-hint,.edit-chip,.strategy-card-actions,.analyst-editor,.handoff-editor-panel,.hero-copy,.strategy-title-row>.section-actions,button,[hidden]').forEach(element => element.remove());
+  report.querySelectorAll('.news-presenter').forEach(image => image.remove());
+  report.querySelectorAll('.analyst-editable').forEach(element => element.classList.remove('analyst-editable'));
+  report.querySelectorAll('[contenteditable], [tabindex]').forEach(element => {
+    element.removeAttribute('contenteditable');
+    element.removeAttribute('tabindex');
+  });
+  report.querySelectorAll('img[src]').forEach(image => {
+    image.src = new URL(image.getAttribute('src'), document.baseURI).href;
+  });
+  report.querySelectorAll('a[href]').forEach(link => {
+    link.href = new URL(link.getAttribute('href'), document.baseURI).href;
+  });
+  const generatedAt = new Date().toLocaleString('pt-BR');
+  const meta = document.createElement('p');
+  meta.className = 'generated-report-meta';
+  meta.textContent = `Relatório gerado em ${generatedAt}`;
+  report.querySelector('.preview-hero')?.append(meta);
+  const styles = `${collectReportStyles()}\n${dedicatedReportStyles()}`;
+  const html = `<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<base href="${document.baseURI}"><title>Relatório diário - ${reportData.reportDate}</title>
+<style>${styles}</style>
+</head><body class="analyst-page export-report">${report.outerHTML}</body></html>`;
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `relatorio-diario-${reportData.reportDate || todayKey()}.html`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  saveStatus.textContent = 'Relatório HTML gerado';
+}
+
+function buildMaestroStrategy(importedItems, currentItems, tab) {
+  const importedByName = new Map(importedItems.map(item => [normalizeKey(item.name), item]));
+  const currentByName = new Map(currentItems.map(item => [normalizeKey(item.name), item]));
+  const defaultNames = strategyPrograms[tab] || [];
+  const ordered = [...currentItems];
+  defaultNames.forEach(name => {
+    if (!currentByName.has(normalizeKey(name))) {
+      ordered.push({ id: makeId(), name, network: false, local: false, observation: '', _default: false });
+    }
+  });
+  return ordered.map(item => {
+    const maestro = importedByName.get(normalizeKey(item.name));
+    return maestro ? { ...item, network: maestro.network, local: maestro.local, observation: maestro.observation, _default: false } : item;
+  });
+}
+
+async function importMaestroFile(file) {
+  if (!file || !window.GloboMaestro) return;
+  try {
+    const imported = window.GloboMaestro.parseMaestroFile(await file.text());
+    if (!imported.news.length) throw new Error('Nenhum dos quatro jornais locais foi encontrado no arquivo.');
+    const summary = `${imported.news.length} jornais e dados de grade para ${formatReportDate(imported.date)}.`;
+    if (!confirm(`Importar ${summary}\n\nOs dados existentes dessa data serão atualizados.`)) return;
+    if (reportData.reportDate !== imported.date) await selectReportDate(imported.date);
+    beginHistoryAction();
+    reportData.news = imported.news.map(item => ({ ...item, id: makeId(), _default: false }));
+    reportData.strategy = buildMaestroStrategy(imported.strategy, reportData.strategy, activeStrategyTab);
+    syncCurrentStrategyTab();
+    shouldSaveFullReport = false;
+    hasPendingSync = true;
+    saveLocal();
+    render();
+    commitHistoryAction();
+    clearTimeout(saveTimer);
+    if (supabaseClient) {
+      saveStatus.textContent = 'Salvando importação do Maestro...';
+      await saveOnline();
+    } else {
+      await savePersistentSharedData(reportData);
+      saveStatus.textContent = 'Dados do Maestro importados neste navegador';
+    }
+    dismissMaestroReminder();
+  } catch (error) {
+    console.error(error);
+    alert(`Não foi possível importar o arquivo do Maestro. ${error.message || ''}`.trim());
+  }
+}
+
 document.querySelectorAll('[data-day-offset]').forEach(button => button.addEventListener('click', () => selectReportDate(getOffsetDateKey(Number(button.dataset.dayOffset)))));
 document.querySelectorAll('[data-strategy-tab]').forEach(button => button.addEventListener('click', () => selectStrategyTab(button.dataset.strategyTab)));
 document.querySelector('#clearStrategy')?.addEventListener('click', clearStrategy);
 document.querySelector('#addStrategyProgram')?.addEventListener('click', addStrategyItem);
 document.querySelector('#copyPreviousDayButton')?.addEventListener('click', copyPreviousDay);
 document.querySelector('#refreshButton').addEventListener('click', () => loadReport(true, reportData.reportDate || todayKey()));
+document.querySelector('#maestroButton')?.addEventListener('click', () => document.querySelector('#maestroFileInput')?.click());
+document.querySelector('#maestroReminderConnect')?.addEventListener('click', () => document.querySelector('#maestroFileInput')?.click());
+document.querySelector('#maestroReminderDismiss')?.addEventListener('click', dismissMaestroReminder);
+document.querySelector('#generateHtmlReport')?.addEventListener('click', generateHtmlReport);
+document.querySelector('#maestroFileInput')?.addEventListener('change', event => {
+  const [file] = event.target.files || [];
+  importMaestroFile(file).finally(() => { event.target.value = ''; });
+});
 document.querySelector('#undoButton')?.addEventListener('click', undoChange);
 document.querySelector('#redoButton')?.addEventListener('click', redoChange);
 loadReport().catch(error => {
@@ -1136,6 +1304,8 @@ loadReport().catch(error => {
   saveStatus.textContent = 'Falha ao iniciar; usando modo local';
   if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: modo local';
 });
+updateMaestroReminder();
+setInterval(updateMaestroReminder, 30000);
 setInterval(() => {
   if (activeEditor || isServiceHandoffActive()) return;
   if (hasPendingSync) saveOnline();
