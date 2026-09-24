@@ -209,6 +209,16 @@ function normalizeKey(value) {
   return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
 }
 
+function getLinkInitials(label) {
+  const words = String(label || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .trim().split(/\s+/)
+    .filter(word => word && !['a', 'as', 'o', 'os', 'de', 'da', 'das', 'do', 'dos', 'e'].includes(word.toLocaleLowerCase('pt-BR')));
+  if (!words.length) return '↗';
+  if (words.length === 1) return words[0].slice(0, 2).toLocaleUpperCase('pt-BR');
+  return `${words[0][0]}${words[1][0]}`.toLocaleUpperCase('pt-BR');
+}
+
 function getCountryFlag(team) {
   const normalized = normalizeKey(team)
     .replace(/^selecao\s+(?:da|do|de)\s+/, '')
@@ -665,7 +675,10 @@ function renderLinks() {
   const items = reportData.links.filter(item => item.label && item.url);
   setSectionVisibility('linksSection', items.length);
   document.querySelector('#linksView').innerHTML = items.map(item => `
-    <a class="useful-link" href="${escapeHtml(/^https?:\/\//i.test(item.url) ? item.url : `https://${item.url}`)}" target="_blank" rel="noopener">${escapeHtml(item.label)}</a>
+    <a class="useful-link" href="${escapeHtml(/^https?:\/\//i.test(item.url) ? item.url : `https://${item.url}`)}" target="_blank" rel="noopener" aria-label="${escapeHtml(item.label)}" title="${escapeHtml(item.label)}">
+      <span class="useful-link-initials" aria-hidden="true">${escapeHtml(getLinkInitials(item.label))}</span>
+      <span class="useful-link-label" aria-hidden="true">${escapeHtml(item.label)}</span>
+    </a>
   `).join('');
 }
 

@@ -205,6 +205,16 @@ function getCountryFlag(team) {
   return code ? `assets/bandeiras/${code.toLocaleLowerCase('pt-BR')}.svg` : '';
 }
 
+function getLinkInitials(label) {
+  const words = String(label || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .trim().split(/\s+/)
+    .filter(word => word && !['a', 'as', 'o', 'os', 'de', 'da', 'das', 'do', 'dos', 'e'].includes(word.toLocaleLowerCase('pt-BR')));
+  if (!words.length) return '↗';
+  if (words.length === 1) return words[0].slice(0, 2).toLocaleUpperCase('pt-BR');
+  return `${words[0][0]}${words[1][0]}`.toLocaleUpperCase('pt-BR');
+}
+
 function getNewsPresenter(name) {
   return newsPresenters[String(name || '').trim().toLocaleUpperCase('pt-BR')] || '';
 }
@@ -1256,8 +1266,14 @@ function showPreview() {
     'violet'
   )).join('');
 
-  const linksHtml = links.map(item => `
-    <a class="useful-link" href="${escapeHtml(normalizeUrl(item.url))}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.label || item.url)}</a>`).join('');
+  const linksHtml = links.map(item => {
+    const label = item.label || item.url;
+    return `
+    <a class="useful-link" href="${escapeHtml(normalizeUrl(item.url))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">
+      <span class="useful-link-initials" aria-hidden="true">${escapeHtml(getLinkInitials(label))}</span>
+      <span class="useful-link-label" aria-hidden="true">${escapeHtml(label)}</span>
+    </a>`;
+  }).join('');
 
   preview.innerHTML = `
     <header class="topbar preview-topbar">
