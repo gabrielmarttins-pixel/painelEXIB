@@ -55,13 +55,13 @@ const countryCodes = {
   mexico:'MX', 'estados unidos':'US', eua:'US', canada:'CA', 'costa rica':'CR', panama:'PA', honduras:'HN', jamaica:'JM',
   alemanha:'DE', franca:'FR', espanha:'ES', portugal:'PT', italia:'IT', inglaterra:'GB-ENG', escocia:'GB-SCT', 'pais de gales':'GB-WLS', gales:'GB-WLS', irlanda:'IE', 'irlanda do norte':'GB-NIR',
   holanda:'NL', 'paises baixos':'NL', belgica:'BE', croacia:'HR', suica:'CH', austria:'AT', dinamarca:'DK', suecia:'SE', noruega:'NO', polonia:'PL', servia:'RS', turquia:'TR', grecia:'GR', ucrania:'UA', russia:'RU',
-  japao:'JP', 'coreia do sul':'KR', coreia:'KR', china:'CN', australia:'AU', 'nova zelandia':'NZ', 'arabia saudita':'SA', catar:'QA', ira:'IR',
+  japao:'JP', 'coreia do sul':'KR', coreia:'KR', china:'CN', india:'IN', australia:'AU', 'nova zelandia':'NZ', 'arabia saudita':'SA', catar:'QA', ira:'IR',
   marrocos:'MA', senegal:'SN', egito:'EG', nigeria:'NG', camaroes:'CM', gana:'GH', 'africa do sul':'ZA', argelia:'DZ', tunisia:'TN', 'costa do marfim':'CI',
   congo:'CG', 'republica do congo':'CG', 'congo brazzaville':'CG', 'republica democratica do congo':'CD', 'rd congo':'CD', 'dr congo':'CD', 'congo kinshasa':'CD',
   brasileira:'BR', uruguaia:'UY', paraguaia:'PY', chilena:'CL', colombiana:'CO', equatoriana:'EC', peruana:'PE', boliviana:'BO', venezuelana:'VE', mexicana:'MX', americana:'US', canadense:'CA',
   alema:'DE', francesa:'FR', espanhola:'ES', portuguesa:'PT', italiana:'IT', inglesa:'GB-ENG', escocesa:'GB-SCT', galesa:'GB-WLS', 'norte-irlandesa':'GB-NIR', 'norte irlandesa':'GB-NIR',
   holandesa:'NL', belga:'BE', croata:'HR', dinamarquesa:'DK', sueca:'SE', norueguesa:'NO', polonesa:'PL', turca:'TR', grega:'GR', ucraniana:'UA',
-  japonesa:'JP', 'sul-coreana':'KR', chinesa:'CN', australiana:'AU', marroquina:'MA', senegalesa:'SN', egipcia:'EG', nigeriana:'NG', camaronesa:'CM', ganesa:'GH', congolesa:'CG'
+  japonesa:'JP', 'sul-coreana':'KR', chinesa:'CN', indiana:'IN', australiana:'AU', marroquina:'MA', senegalesa:'SN', egipcia:'EG', nigeriana:'NG', camaronesa:'CM', ganesa:'GH', congolesa:'CG'
 };
 
 window.GloboConfig = {

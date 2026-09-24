@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" role="img" aria-label="Bandeira da India">
+  <path fill="#ff9933" d="M0 0h900v200H0z"/>
+  <path fill="#fff" d="M0 200h900v200H0z"/>
+  <path fill="#138808" d="M0 400h900v200H0z"/>
+  <g transform="translate(450 300)" fill="none" stroke="#000080">
+    <circle r="60" stroke-width="10"/>
+    <circle r="8" fill="#000080" stroke="none"/>
+    <g stroke-width="4">
+      <path d="M0-60V60M-60 0H60M-42.43-42.43l84.86 84.86M42.43-42.43l-84.86 84.86"/>
+      <path d="M-15.53-57.96l31.06 115.92M-57.96-15.53l115.92 31.06M-51.96-30l103.92 60M-30-51.96L30 51.96"/>
+      <path d="M15.53-57.96l-31.06 115.92M57.96-15.53l-115.92 31.06M51.96-30l-103.92 60M30-51.96L-30 51.96"/>
+    </g>
+  </g>
+</svg>

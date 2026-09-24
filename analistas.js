@@ -210,7 +210,11 @@ function normalizeKey(value) {
 }
 
 function getCountryFlag(team) {
-  const normalized = normalizeKey(team);
+  const normalized = normalizeKey(team)
+    .replace(/^selecao\s+(?:da|do|de)\s+/, '')
+    .replace(/^selecao\s+/, '')
+    .replace(/\b(masculina|feminina|sub[- ]?\d+|[mf])\b/g, ' ')
+    .replace(/\s+/g, ' ').trim();
   const code = countryCodes[normalized];
   if (!code) return '';
   return `https://flagcdn.com/w320/${code.toLowerCase()}.png`;

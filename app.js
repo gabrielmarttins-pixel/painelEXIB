@@ -197,7 +197,9 @@ function getCountryFlag(team) {
   const normalized = String(team || '')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .toLocaleLowerCase('pt-BR')
-    .replace(/\b(selecao|masculina|feminina|sub[- ]?\d+|[mf])\b/g, ' ')
+    .replace(/^selecao\s+(?:da|do|de)\s+/, '')
+    .replace(/^selecao\s+/, '')
+    .replace(/\b(masculina|feminina|sub[- ]?\d+|[mf])\b/g, ' ')
     .replace(/\s+/g, ' ').trim();
   const code = countryCodes[normalized];
   return code ? `assets/bandeiras/${code.toLocaleLowerCase('pt-BR')}.svg` : '';
