@@ -48,11 +48,12 @@ function isoDate(value) {
 }
 
 function newsName(row) {
-  const name = normalize(row.Apresenta || row.Titulo);
-  if (name === 'BOM DIA DF') return 'BOM DIA DF';
-  if (name === 'DF1') return 'DF1';
-  if (name.includes('GLOBO ESPORTE')) return 'GLOBO ESPORTE';
-  if (name === 'DF2') return 'DF2';
+  const names = [row.Apresenta, row.Titulo, row.Programa].map(normalize).filter(Boolean);
+  if (names.some(name => name === 'BOM DIA DF')) return 'BOM DIA DF';
+  if (names.some(name => name === 'DF1')) return 'DF1';
+  if (names.some(name => name.includes('GLOBO ESPORTE'))) return 'GLOBO ESPORTE';
+  if (names.some(name => name === 'DF2')) return 'DF2';
+  if (names.some(name => name.includes('GLOBO COMUNIDADE'))) return 'GLOBO COMUNIDADE';
   return '';
 }
 
@@ -71,7 +72,7 @@ function parseMaestroFile(text) {
     if (!newsGroups.has(name)) newsGroups.set(name, []);
     newsGroups.get(name).push(row);
   });
-  const expectedNews = ['BOM DIA DF', 'DF1', 'GLOBO ESPORTE', 'DF2'];
+  const expectedNews = ['BOM DIA DF', 'DF1', 'GLOBO ESPORTE', 'DF2', 'GLOBO COMUNIDADE'];
   const news = expectedNews.filter(name => newsGroups.has(name)).map(name => {
     const blocks = newsGroups.get(name).sort((a, b) => a.HoraInicio.localeCompare(b.HoraInicio));
     return {

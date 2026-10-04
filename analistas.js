@@ -714,7 +714,7 @@ function openEditor(type, index, card) {
   if (type === 'news') {
     activeEditor.innerHTML = `
       <label>Jornal<select data-field="name">
-        ${['BOM DIA DF', 'DF1', 'GLOBO ESPORTE', 'DF2'].map(name => `<option ${item.name === name ? 'selected' : ''}>${name}</option>`).join('')}
+        ${['BOM DIA DF', 'DF1', 'GLOBO ESPORTE', 'DF2', 'GLOBO COMUNIDADE'].map(name => `<option ${item.name === name ? 'selected' : ''}>${name}</option>`).join('')}
       </select></label>
       <div class="analyst-editor-grid">
         <label>Início<input data-field="start" type="time" value="${escapeHtml(item.start || '')}"></label>
@@ -1269,7 +1269,7 @@ async function importMaestroFile(file) {
   if (!file || !window.GloboMaestro) return;
   try {
     const imported = window.GloboMaestro.parseMaestroFile(await file.text());
-    if (!imported.news.length) throw new Error('Nenhum dos quatro jornais locais foi encontrado no arquivo.');
+    if (!imported.news.length) throw new Error('Nenhum jornal local reconhecido foi encontrado no arquivo.');
     const summary = `${imported.news.length} jornais e dados de grade para ${formatReportDate(imported.date)}.`;
     if (!confirm(`Importar ${summary}\n\nOs dados existentes dessa data serão atualizados.`)) return;
     if (reportData.reportDate !== imported.date) await selectReportDate(imported.date);

@@ -2070,7 +2070,7 @@ async function importMaestroFile(file) {
   if (!file || !window.GloboMaestro) return;
   try {
     const imported = window.GloboMaestro.parseMaestroFile(await file.text());
-    if (!imported.news.length) throw new Error('Nenhum dos quatro jornais locais foi encontrado no arquivo.');
+    if (!imported.news.length) throw new Error('Nenhum jornal local reconhecido foi encontrado no arquivo.');
     const summary = `${imported.news.length} jornais e dados de grade para ${formatReportDate(imported.date)}.`;
     if (!confirm(`Importar ${summary}\n\nOs dados existentes dessa data serão atualizados.`)) return;
     if (dateInput.value !== imported.date) await loadReportForDate(imported.date, { silent: true });
