@@ -89,6 +89,20 @@ async function fetchRemoteReport(supabaseClient, reportDate) {
   }
 }
 
+async function fetchRemoteReportMeta(supabaseClient, reportDate) {
+  if (!supabaseClient || !reportDate) return { row: null, error: null };
+  try {
+    const { data, error } = await supabaseClient
+      .from(SUPABASE_TABLE)
+      .select('id, atualizado_em')
+      .eq('id', getReportId(reportDate))
+      .maybeSingle();
+    return { row: data || null, error };
+  } catch (error) {
+    return { row: null, error };
+  }
+}
+
 async function saveRemoteReport(supabaseClient, data, previousPayload) {
   if (!supabaseClient) return { payload: null, row: null, error: null };
   const payload = buildPayload(data, previousPayload);
@@ -112,6 +126,7 @@ window.GloboStorage = {
   getReportSignature,
   formatLastUpdate,
   buildPayload,
+  fetchRemoteReportMeta,
   fetchRemoteReport,
   saveRemoteReport
 };

@@ -10,6 +10,7 @@ const { weekdayNews, strategyPrograms, wednesdayNote, fridayProgram, day27Highli
 const {
   cleanReportData,
   createSupabaseClient,
+  fetchRemoteReportMeta,
   fetchRemoteReport,
   formatLastUpdate,
   getReportSignature,
@@ -21,6 +22,7 @@ const lastUpdateStatus = document.querySelector('#lastUpdateStatus');
 const supabaseClient = createSupabaseClient();
 let reportData = cleanReportData({});
 let currentRemotePayload = null;
+let currentPersistentUpdatedAt = '';
 let saveTimer;
 let activeEditor = null;
 let hasPendingSync = false;
@@ -921,8 +923,9 @@ function applyPersistentCoordinatorData(data, persistentData) {
 async function loadPersistentCoordinatorData() {
   let persistentData = loadLocalPersistentData();
   if (supabaseClient) {
-    const { payload, error } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
+    const { payload, row, error } = await fetchRemoteReport(supabaseClient, PERSISTENT_REPORT_DATE);
     if (!error && payload) {
+      currentPersistentUpdatedAt = row?.atualizado_em || payload?._meta?.updatedAt || '';
       persistentData = {
         _persistentVersion: payload._persistentVersion,
         _persistentSnapshots: payload._persistentSnapshots || {}
@@ -963,6 +966,7 @@ async function savePersistentSharedData(editedData) {
   });
   const result = await saveRemoteReport(supabaseClient, persistentData, remotePersistent);
   if (!result.error) {
+    currentPersistentUpdatedAt = result.row?.atualizado_em || result.payload?._meta?.updatedAt || currentPersistentUpdatedAt;
     localStorage.setItem(COORDINATOR_PERSISTENT_KEY, JSON.stringify(persistentData));
   }
   return result;
@@ -1077,6 +1081,22 @@ async function loadReport(force = false, reportDate = reportData.reportDate || t
   initializeHistory(reportData);
   if (!currentRemotePayload && lastUpdateStatus) lastUpdateStatus.textContent = supabaseClient ? 'Última atualização: ainda não sincronizado' : 'Última atualização: modo local';
   saveStatus.textContent = force ? 'Dados atualizados' : 'Painel carregado';
+}
+
+async function pollRemoteChanges() {
+  if (!supabaseClient || activeEditor || isServiceHandoffActive() || hasPendingSync) return;
+  const reportDate = reportData.reportDate || todayKey();
+  const [daily, persistent] = await Promise.all([
+    fetchRemoteReportMeta(supabaseClient, reportDate),
+    fetchRemoteReportMeta(supabaseClient, PERSISTENT_REPORT_DATE)
+  ]);
+  if (daily.error || persistent.error) return;
+  const dailyUpdatedAt = daily.row?.atualizado_em || '';
+  const localDailyUpdatedAt = currentRemotePayload?._meta?.updatedAt || '';
+  const persistentUpdatedAt = persistent.row?.atualizado_em || '';
+  const dailyChanged = dailyUpdatedAt && new Date(dailyUpdatedAt).getTime() !== new Date(localDailyUpdatedAt).getTime();
+  const persistentChanged = persistentUpdatedAt && new Date(persistentUpdatedAt).getTime() !== new Date(currentPersistentUpdatedAt).getTime();
+  if (dailyChanged || persistentChanged) await loadReport(false, reportDate);
 }
 
 async function selectReportDate(reportDate) {
@@ -1326,6 +1346,6 @@ setInterval(updateMaestroReminder, 30000);
 setInterval(() => {
   if (activeEditor || isServiceHandoffActive()) return;
   if (hasPendingSync) saveOnline();
-  else loadReport(false, reportData.reportDate || todayKey());
+  else pollRemoteChanges();
 }, SYNC_INTERVAL_MS);
 })();

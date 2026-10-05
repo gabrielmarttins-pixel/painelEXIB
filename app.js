@@ -13,6 +13,7 @@ const { day27Highlight, fridayProgram, strategyPrograms, wednesdayNote, weekdayN
 const {
   cleanReportData,
   createSupabaseClient,
+  fetchRemoteReportMeta,
   fetchRemoteReport,
   formatLastUpdate,
   getReportSignature,
@@ -2159,6 +2160,12 @@ async function syncFromRemote(force = false) {
     }
   }
   if (force) saveStatus.textContent = 'Atualizando dados...';
+
+  if (!force && currentRemotePayload?._meta?.updatedAt) {
+    const { row: meta, error: metaError } = await fetchRemoteReportMeta(supabaseClient, dateInput.value);
+    if (metaError) return;
+    if (!meta?.atualizado_em || new Date(meta.atualizado_em).getTime() === new Date(currentRemotePayload._meta.updatedAt).getTime()) return;
+  }
 
   const { payload, error } = await fetchRemoteReport(supabaseClient, dateInput.value);
   if (error) {
