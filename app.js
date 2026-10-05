@@ -672,7 +672,14 @@ async function saveRemoteReport(data = getData()) {
 
   const latestSignature = latestPayload ? getReportSignature(latestPayload) : '';
   const localSignature = getReportSignature(data);
-  const hasConflict = latestPayload && latestSignature !== lastRemoteSignature && latestSignature !== localSignature;
+  const latestUpdatedAt = Date.parse(latestPayload?._meta?.updatedAt || '');
+  const loadedUpdatedAt = Date.parse(currentRemotePayload?._meta?.updatedAt || '');
+  const remoteChangedSinceLoad = latestPayload
+    && currentRemotePayload
+    && Number.isFinite(latestUpdatedAt)
+    && Number.isFinite(loadedUpdatedAt)
+    && latestUpdatedAt !== loadedUpdatedAt;
+  const hasConflict = remoteChangedSinceLoad && latestSignature !== localSignature;
   if (hasConflict) {
     saveStatus.textContent = 'Há alterações novas online';
     const shouldUpdate = confirm('Há alterações novas salvas por outro usuário. Atualizar antes de salvar?');
@@ -684,7 +691,7 @@ async function saveRemoteReport(data = getData()) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
       updateFooter();
       isLoading = false;
-      lastRemoteSignature = getReportSignature(getData());
+      lastRemoteSignature = latestSignature;
       if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(latestPayload._meta);
       saveStatus.textContent = 'Atualizado com dados online';
       hasPendingRemoteSave = false;
@@ -692,6 +699,7 @@ async function saveRemoteReport(data = getData()) {
     }
     saveStatus.textContent = 'Salvamento cancelado para proteger alterações mais recentes';
     if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(latestPayload._meta);
+    hasPendingRemoteSave = false;
     return;
   }
 
@@ -2199,7 +2207,7 @@ async function syncFromRemote(force = false) {
   localStorage.setItem(getDateStorageKey(dateInput.value), JSON.stringify(getData()));
   updateFooter();
   isLoading = false;
-  lastRemoteSignature = remoteSignature;
+  lastRemoteSignature = payload ? getReportSignature(payload) : '';
   initializeHistory(getData());
   if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(payload?._meta);
   saveStatus.textContent = 'Atualizado com dados online';
