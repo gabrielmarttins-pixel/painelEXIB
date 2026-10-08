@@ -110,10 +110,10 @@ async function saveRemoteReport(supabaseClient, data, previousPayload) {
     const { data: row, error } = await supabaseClient
       .from(SUPABASE_TABLE)
       .upsert({ id: getReportId(data.reportDate), dados: payload, atualizado_em: payload._meta.updatedAt }, { onConflict: 'id' })
-      .select('id, atualizado_em, dados')
+      .select('id, atualizado_em')
       .single();
 
-    return { payload: row?.dados || payload, row, error };
+    return { payload, row, error };
   } catch (error) {
     return { payload, row: null, error };
   }

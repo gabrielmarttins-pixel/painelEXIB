@@ -1003,13 +1003,33 @@ async function saveOnline() {
     return;
   }
 
-  const { payload: latestPayload, error: fetchError } = await fetchRemoteReport(supabaseClient, reportData.reportDate);
-  if (fetchError) {
-    console.error(fetchError);
+  let latestPayload = currentRemotePayload;
+  const { row: latestMeta, error: metaError } = await fetchRemoteReportMeta(supabaseClient, reportData.reportDate);
+  if (metaError) {
+    console.error(metaError);
     hasPendingSync = true;
     saveStatus.textContent = 'Salvo neste navegador; sincronização online pendente';
     if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: aguardando conexão com Supabase';
     return;
+  }
+
+  const remoteUpdatedAt = Date.parse(latestMeta?.atualizado_em || '');
+  const loadedUpdatedAt = Date.parse(currentRemotePayload?._meta?.updatedAt || '');
+  const needsFullFetch = latestMeta && (!currentRemotePayload
+    || !Number.isFinite(loadedUpdatedAt)
+    || remoteUpdatedAt !== loadedUpdatedAt);
+  if (needsFullFetch) {
+    const { payload, error } = await fetchRemoteReport(supabaseClient, reportData.reportDate);
+    if (error) {
+      console.error(error);
+      hasPendingSync = true;
+      saveStatus.textContent = 'Salvo neste navegador; sincronização online pendente';
+      if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: aguardando conexão com Supabase';
+      return;
+    }
+    latestPayload = payload;
+  } else if (!latestMeta) {
+    latestPayload = null;
   }
 
   const payloadBase = latestPayload || currentRemotePayload || reportData;

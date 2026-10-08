@@ -662,12 +662,31 @@ async function saveRemoteReport(data = getData()) {
   if (!supabaseClient) return;
   clearTimeout(saveTimer);
 
-  const { payload: latestPayload, error: fetchError } = await fetchRemoteReport(supabaseClient, data.reportDate);
-  if (fetchError) {
-    console.error(fetchError);
+  let latestPayload = currentRemotePayload;
+  const { row: latestMeta, error: metaError } = await fetchRemoteReportMeta(supabaseClient, data.reportDate);
+  if (metaError) {
+    console.error(metaError);
     saveStatus.textContent = 'Salvo neste navegador; online indisponível';
     if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: sem conexão com Supabase';
     return;
+  }
+
+  const remoteUpdatedAt = Date.parse(latestMeta?.atualizado_em || '');
+  const loadedUpdatedAtBeforeFetch = Date.parse(currentRemotePayload?._meta?.updatedAt || '');
+  const needsFullFetch = latestMeta && (!currentRemotePayload
+    || !Number.isFinite(loadedUpdatedAtBeforeFetch)
+    || remoteUpdatedAt !== loadedUpdatedAtBeforeFetch);
+  if (needsFullFetch) {
+    const { payload, error } = await fetchRemoteReport(supabaseClient, data.reportDate);
+    if (error) {
+      console.error(error);
+      saveStatus.textContent = 'Salvo neste navegador; online indisponível';
+      if (lastUpdateStatus) lastUpdateStatus.textContent = 'Última atualização: sem conexão com Supabase';
+      return;
+    }
+    latestPayload = payload;
+  } else if (!latestMeta) {
+    latestPayload = null;
   }
 
   const latestSignature = latestPayload ? getReportSignature(latestPayload) : '';
