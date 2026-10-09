@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Migrar Supabase para Cloudflare D1</title>
+  <style>
+    body { margin: 0; font: 16px/1.5 Arial, sans-serif; background: #f3f4f7; color: #15161a; }
+    main { max-width: 720px; margin: 48px auto; padding: 32px; background: #fff; border-radius: 20px; }
+    button { border: 0; border-radius: 999px; padding: 12px 20px; color: #fff; background: #1769ff; font-weight: 700; cursor: pointer; }
+    button:disabled { opacity: .55; cursor: wait; }
+    pre { min-height: 160px; padding: 16px; overflow: auto; white-space: pre-wrap; background: #f5f6f8; border-radius: 12px; }
+    .warning { color: #a43a00; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Migração Supabase para D1</h1>
+    <p>Use esta página uma única vez, depois de criar e vincular o banco D1 ao projeto Cloudflare Pages.</p>
+    <p class="warning"><strong>Antes de continuar:</strong> faça uma exportação CSV da tabela <code>relatorios_exibicao</code> no Supabase.</p>
+    <button id="migrate" type="button">Copiar todos os registros</button>
+    <pre id="status">Aguardando...</pre>
+  </main>
+  <script src="../config.js"></script>
+  <script>
+    const button = document.getElementById('migrate');
+    const status = document.getElementById('status');
+
+    function write(message) {
+      status.textContent += `${status.textContent ? '\n' : ''}${message}`;
+    }
+
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      status.textContent = '';
+      try {
+        const { SUPABASE_KEY, SUPABASE_TABLE, SUPABASE_URL } = window.GloboConfig;
+        write('Lendo registros do Supabase...');
+        const source = await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=id,dados,atualizado_em&order=id.asc&limit=1000`, {
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+          cache: 'no-store'
+        });
+        if (!source.ok) throw new Error(`Supabase respondeu ${source.status}.`);
+        const rows = await source.json();
+        write(`${rows.length} registro(s) encontrado(s).`);
+
+        for (let index = 0; index < rows.length; index += 1) {
+          const row = rows[index];
+          if (!/^relatorio-(?:dados-persistentes|\d{4}-\d{2}-\d{2})$/.test(row.id)) {
+            write(`Ignorado: ${row.id}`);
+            continue;
+          }
+          const target = await fetch(`/api/reports/${encodeURIComponent(row.id)}`, {
+            method: 'PUT',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ dados: row.dados, expectedUpdatedAt: null })
+          });
+          if (!target.ok) {
+            const problem = await target.json().catch(() => ({}));
+            throw new Error(`${row.id}: ${problem.error || `Cloudflare respondeu ${target.status}`}`);
+          }
+          write(`[${index + 1}/${rows.length}] ${row.id}`);
+        }
+        write('Migração concluída. Confira os dois painéis antes de desligar o Supabase.');
+      } catch (error) {
+        write(`ERRO: ${error.message}`);
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

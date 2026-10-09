@@ -6,6 +6,7 @@ const DATE_STORAGE_KEY = 'globo-df-exibicao-v2';
 const SUPABASE_URL = 'https://kveoxuqzywebqmtgtaho.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2ZW94dXF6eXdlYnFtdGd0YWhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMTc1OTAsImV4cCI6MjA5Nzc5MzU5MH0.pmyZERMf6iwrwlEEXYrqKHngyqRyR1aXk1Jxtl1AUM0';
 const SUPABASE_TABLE = 'relatorios_exibicao';
+const DATA_BACKEND = window.location.hostname.endsWith('.pages.dev') ? 'cloudflare' : 'supabase';
 
 const SYNC_INTERVAL_MS = 120000;
 const HISTORY_LIMIT = 25;
@@ -71,6 +72,7 @@ window.GloboConfig = {
   SUPABASE_URL,
   SUPABASE_KEY,
   SUPABASE_TABLE,
+  DATA_BACKEND,
   SYNC_INTERVAL_MS,
   HISTORY_LIMIT,
   sections,
