@@ -462,5 +462,8 @@ button:disabled{cursor:wait;opacity:.7}
 @media(max-width:560px){.history-actions{right:12px;bottom:12px}.history-button{width:36px;height:36px;font-size:20px}}
 @media print{.history-actions{display:none}}
 
+.section-heading-copy,.preview-section-title>div:first-child{flex:1;min-width:0}.section-title-line{display:flex;align-items:center;justify-content:space-between;gap:16px;min-width:0}.maestro-date-badge{display:inline-flex;align-items:center;justify-content:center;flex:none;padding:7px 11px;border-radius:999px;background:#eef6ff;color:#087bff;font-size:11px;font-weight:800;letter-spacing:.035em;white-space:nowrap}.maestro-date-badge[hidden]{display:none}
+@media(max-width:560px){.section-title-line{align-items:flex-start;flex-direction:column;gap:9px}}
+
 
 

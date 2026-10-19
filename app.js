@@ -56,6 +56,7 @@ let isRestoringHistory = false;
 const STRATEGY_TAB_KEYS = ['weekday', 'saturday', 'sunday'];
 let activeStrategyTab = 'weekday';
 let strategyTabsState = null;
+let maestroDate = '';
 
 function makeId() { return `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
 
@@ -89,6 +90,7 @@ function updateStrategyTabsUi() {
 
 function persistentSnapshotFrom(data = {}) {
   const snapshot = {
+    maestroDate: data.maestroDate || '',
     serviceHandoffHtml: data.serviceHandoffHtml || '',
     strategyTabs: normalizeStrategyTabs(data),
     _persistentHandoffInitialized: true,
@@ -502,6 +504,7 @@ function getData() {
   return {
     reportDate: dateInput.value,
     weekday: weekdayInput.value,
+    maestroDate,
     serviceHandoffHtml: persistentState?.serviceHandoffHtml ?? currentRemotePayload?.serviceHandoffHtml ?? '',
     _persistentHandoffInitialized: persistentState?._persistentHandoffInitialized === true,
     _persistentStrategyInitialized: true,
@@ -1006,6 +1009,7 @@ function withPersistentHighlights(data) {
   if (!data) return data;
   const persistentState = resolvePersistentState(loadCoordinatorPersistentState(), data.reportDate || dateInput.value || getTodayKey());
   let nextData = { ...data };
+  if (persistentState?.maestroDate) nextData.maestroDate = persistentState.maestroDate;
   PERSISTENT_COORDINATOR_SECTIONS.forEach(section => {
     if (persistentState && Object.prototype.hasOwnProperty.call(persistentState, section)) {
       if (section === 'programs') {
@@ -2011,6 +2015,7 @@ function loadLocalReport(reportDate = dateInput.value || getTodayKey()) {
 
 function renderReportData(data) {
   clearReportFields();
+  maestroDate = data?.maestroDate || '';
   if (data) {
     activeStrategyTab = strategyTabForDate(data.reportDate || dateInput.value);
     strategyTabsState = normalizeStrategyTabs(data);
@@ -2024,6 +2029,17 @@ function renderReportData(data) {
     Object.keys(sections).forEach(section => updateEmpty(section));
   }
   updateStrategyTabsUi();
+  updateMaestroDates();
+}
+
+function updateMaestroDates() {
+  const label = maestroDate ? `Maestro: ${formatReportDate(maestroDate)}` : '';
+  ['newsMaestroDate', 'strategyMaestroDate'].forEach(id => {
+    const badge = document.querySelector(`#${id}`);
+    if (!badge) return;
+    badge.textContent = label;
+    badge.hidden = !label;
+  });
 }
 
 async function loadReportForDate(reportDate, { silent = false } = {}) {
@@ -2103,6 +2119,8 @@ async function importMaestroFile(file) {
     if (!confirm(`Importar ${summary}\n\nOs dados existentes dessa data serão atualizados.`)) return;
     if (dateInput.value !== imported.date) await loadReportForDate(imported.date, { silent: true });
     beginHistoryAction();
+    maestroDate = imported.date;
+    updateMaestroDates();
 
     const newsContainer = document.querySelector(`#${sections.news.container}`);
     newsContainer.querySelectorAll('.item-card').forEach(item => item.remove());

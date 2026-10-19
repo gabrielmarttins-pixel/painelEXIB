@@ -79,6 +79,7 @@ function updateStrategyTabsUi() {
 
 function persistentSnapshotFrom(data = {}) {
   const snapshot = {
+    maestroDate: data.maestroDate || '',
     serviceHandoffHtml: data.serviceHandoffHtml || '',
     strategyTabs: normalizeStrategyTabs(data),
     _persistentHandoffInitialized: true,
@@ -693,12 +694,23 @@ function render() {
   renderNotes();
   renderNews();
   renderStrategy();
+  updateMaestroDates();
   renderGames();
   renderPrograms();
   renderLinks();
   bindServiceHandoffEditor();
   bindEditableCards();
   updateStrategyTabsUi();
+}
+
+function updateMaestroDates() {
+  const label = reportData.maestroDate ? `Maestro: ${formatReportDate(reportData.maestroDate)}` : '';
+  ['newsMaestroDate', 'strategyMaestroDate'].forEach(id => {
+    const badge = document.querySelector(`#${id}`);
+    if (!badge) return;
+    badge.textContent = label;
+    badge.hidden = !label;
+  });
 }
 
 function closeEditor() {
@@ -894,6 +906,7 @@ function applyPersistentCoordinatorData(data, persistentData) {
   const next = cleanReportData(data || {});
   if (!persistentData) return next;
   persistentData = resolvePersistentState(persistentData, next.reportDate || reportData.reportDate || todayKey());
+  if (persistentData.maestroDate) next.maestroDate = persistentData.maestroDate;
   if (persistentData._persistentHandoffInitialized === true || String(persistentData.serviceHandoffHtml || '').trim()) {
     next.serviceHandoffHtml = persistentData.serviceHandoffHtml || '';
   }
@@ -1314,6 +1327,7 @@ async function importMaestroFile(file) {
     if (!confirm(`Importar ${summary}\n\nOs dados existentes dessa data serão atualizados.`)) return;
     if (reportData.reportDate !== imported.date) await selectReportDate(imported.date);
     beginHistoryAction();
+    reportData.maestroDate = imported.date;
     reportData.news = imported.news.map(item => ({ ...item, id: makeId(), _default: false }));
     reportData.strategy = buildMaestroStrategy(imported.strategy, reportData.strategy, activeStrategyTab);
     syncCurrentStrategyTab();

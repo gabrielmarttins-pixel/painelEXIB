@@ -36,6 +36,7 @@ function cleanReportData(data = {}) {
   const clean = {
     reportDate: data.reportDate || '',
     weekday: data.weekday || '',
+    maestroDate: data.maestroDate || '',
     serviceHandoffHtml: data.serviceHandoffHtml || ''
   };
   Object.keys(sections).forEach(section => {
