@@ -9,6 +9,7 @@ const SUPABASE_TABLE = 'relatorios_exibicao';
 const DATA_BACKEND = window.location.hostname.endsWith('.pages.dev') ? 'cloudflare' : 'supabase';
 
 const SYNC_INTERVAL_MS = 120000;
+const SAVE_DELAY_MS = 1500;
 const HISTORY_LIMIT = 25;
 
 const sections = {
@@ -74,6 +75,7 @@ window.GloboConfig = {
   SUPABASE_TABLE,
   DATA_BACKEND,
   SYNC_INTERVAL_MS,
+  SAVE_DELAY_MS,
   HISTORY_LIMIT,
   sections,
   newsPresenters,

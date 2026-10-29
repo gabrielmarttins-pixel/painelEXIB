@@ -19,6 +19,11 @@ function cloudflareEndpoint(reportDate, meta = false) {
   return `/api/reports/${encodeURIComponent(getReportId(reportDate))}${suffix}`;
 }
 
+function legacyCloudflareEndpoint(reportDate, meta = false) {
+  const suffix = meta ? '?meta=1' : '';
+  return `/api/reports/${encodeURIComponent(`relatorio-${reportDate}`)}${suffix}`;
+}
+
 async function cloudflareResponse(response) {
   const body = await response.json().catch(() => ({}));
   if (response.ok) return { body, error: null };
@@ -29,7 +34,7 @@ async function cloudflareResponse(response) {
 }
 
 function getReportId(reportDate) {
-  return `relatorio-${reportDate || new Date().toISOString().slice(0, 10)}`;
+  return reportDate === 'dados-persistentes' ? 'relatorio-dados-persistentes' : 'relatorio-painel-unico';
 }
 
 function cleanReportData(data = {}) {
@@ -95,8 +100,11 @@ async function fetchRemoteReport(supabaseClient, reportDate) {
   if (!supabaseClient || !reportDate) return { payload: null, row: null, error: null };
   if (supabaseClient.provider === 'cloudflare') {
     try {
-      const { body, error } = await cloudflareResponse(await fetch(cloudflareEndpoint(reportDate), { cache: 'no-store' }));
-      return { payload: body?.dados || null, row: body || null, error };
+      let result = await cloudflareResponse(await fetch(cloudflareEndpoint(reportDate), { cache: 'no-store' }));
+      if (!result.body && !result.error && /^\d{4}-\d{2}-\d{2}$/.test(reportDate)) {
+        result = await cloudflareResponse(await fetch(legacyCloudflareEndpoint(reportDate), { cache: 'no-store' }));
+      }
+      return { payload: result.body?.dados || null, row: result.body || null, error: result.error };
     } catch (error) {
       return { payload: null, row: null, error };
     }
@@ -118,8 +126,11 @@ async function fetchRemoteReportMeta(supabaseClient, reportDate) {
   if (!supabaseClient || !reportDate) return { row: null, error: null };
   if (supabaseClient.provider === 'cloudflare') {
     try {
-      const { body, error } = await cloudflareResponse(await fetch(cloudflareEndpoint(reportDate, true), { cache: 'no-store' }));
-      return { row: body || null, error };
+      let result = await cloudflareResponse(await fetch(cloudflareEndpoint(reportDate, true), { cache: 'no-store' }));
+      if (!result.body && !result.error && /^\d{4}-\d{2}-\d{2}$/.test(reportDate)) {
+        result = await cloudflareResponse(await fetch(legacyCloudflareEndpoint(reportDate, true), { cache: 'no-store' }));
+      }
+      return { row: result.body || null, error: result.error };
     } catch (error) {
       return { row: null, error };
     }
@@ -141,7 +152,7 @@ async function saveRemoteReport(supabaseClient, data, previousPayload) {
   const payload = buildPayload(data, previousPayload);
   if (supabaseClient.provider === 'cloudflare') {
     try {
-      const response = await fetch(cloudflareEndpoint(data.reportDate), {
+      let response = await fetch(cloudflareEndpoint(data.reportDate), {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -149,6 +160,14 @@ async function saveRemoteReport(supabaseClient, data, previousPayload) {
           expectedUpdatedAt: previousPayload?._meta?.updatedAt || null
         })
       });
+      if (response.status === 409) {
+        const latest = await fetch(cloudflareEndpoint(data.reportDate), { cache: 'no-store' }).then(item => item.json()).catch(() => null);
+        response = await fetch(cloudflareEndpoint(data.reportDate), {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ dados: payload, expectedUpdatedAt: latest?.atualizado_em || null })
+        });
+      }
       const { body, error } = await cloudflareResponse(response);
       return { payload, row: body || null, error };
     } catch (error) {

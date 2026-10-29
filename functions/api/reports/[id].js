@@ -9,7 +9,7 @@ function json(data, status = 200) {
 }
 
 function validId(id) {
-  return /^relatorio-(?:dados-persistentes|\d{4}-\d{2}-\d{2})$/.test(id);
+  return /^relatorio-(?:painel-unico|dados-persistentes|\d{4}-\d{2}-\d{2})$/.test(id);
 }
 
 export async function onRequestGet({ env, params, request }) {

@@ -2,6 +2,7 @@
 const {
   STORAGE_KEY,
   SYNC_INTERVAL_MS,
+  SAVE_DELAY_MS,
   newsPresenters,
   teamCrests,
   countryCodes
@@ -112,7 +113,7 @@ function getOffsetDateKey(offset = 0, baseDate = todayKey()) {
 }
 
 function getDateStorageKey(reportDate = reportData.reportDate || todayKey()) {
-  return `${STORAGE_KEY}-${reportDate}`;
+  return STORAGE_KEY;
 }
 
 function updateDayButtons() {
@@ -527,7 +528,7 @@ function restoreHistorySnapshot(snapshot) {
   hasPendingSync = true;
   commitHistoryAction();
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
+  saveTimer = setTimeout(saveOnline, SAVE_DELAY_MS);
 }
 
 function undoChange() {
@@ -799,7 +800,7 @@ function clearStrategy() {
   commitHistoryAction();
   saveStatus.textContent = supabaseClient ? 'Grade restaurada; sincronização online agendada' : 'Grade restaurada neste navegador';
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
+  saveTimer = setTimeout(saveOnline, SAVE_DELAY_MS);
 }
 
 function removeStrategyItem(index) {
@@ -813,7 +814,7 @@ function removeStrategyItem(index) {
   commitHistoryAction();
   saveStatus.textContent = supabaseClient ? 'Programa removido da grade; sincronização online agendada' : 'Programa removido da grade neste navegador';
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
+  saveTimer = setTimeout(saveOnline, SAVE_DELAY_MS);
 }
 
 function addStrategyItem() {
@@ -830,7 +831,7 @@ function addStrategyItem() {
   if (card) openEditor('strategy', index, card);
   saveStatus.textContent = 'Novo programa adicionado à grade';
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
+  saveTimer = setTimeout(saveOnline, SAVE_DELAY_MS);
 }
 
 function moveStrategyItem(index, direction) {
@@ -847,7 +848,7 @@ function moveStrategyItem(index, direction) {
   commitHistoryAction();
   saveStatus.textContent = 'Ordem da grade atualizada';
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
+  saveTimer = setTimeout(saveOnline, SAVE_DELAY_MS);
 }
 
 function bindEditableCards() {
@@ -1079,10 +1080,11 @@ function scheduleSave() {
   hasPendingSync = true;
   saveStatus.textContent = supabaseClient ? 'Salvo localmente; sincronização online agendada' : 'Salvo neste navegador';
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
+  saveTimer = setTimeout(saveOnline, SAVE_DELAY_MS);
 }
 
 async function loadReport(force = false, reportDate = reportData.reportDate || todayKey()) {
+  reportDate = todayKey();
   if (isServiceHandoffActive() && !force) return;
   if (activeEditor && !force) return;
   if (force && hasPendingSync) {
@@ -1108,7 +1110,8 @@ async function loadReport(force = false, reportDate = reportData.reportDate || t
     ? localData
     : { reportDate };
   activeStrategyTab = strategyTabForDate(reportDate);
-  reportData = applyDefaults(applyPersistentCoordinatorData(remoteData || baseData, persistentData));
+  const panelData = { ...(remoteData || baseData), reportDate, weekday: weekdayFor(reportDate) };
+  reportData = applyDefaults(applyPersistentCoordinatorData(panelData, persistentData));
   saveLocal();
   render();
   initializeHistory(reportData);
@@ -1187,7 +1190,7 @@ async function copyPreviousEditableSections(sectionList, successLabel = 'Informa
   commitHistoryAction();
   saveStatus.textContent = supabaseClient ? `${successLabel}; sincronizacao online agendada` : `${successLabel} neste navegador`;
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveOnline, SYNC_INTERVAL_MS);
+  saveTimer = setTimeout(saveOnline, SAVE_DELAY_MS);
 }
 
 function maestroReminderOccurrence(now = new Date()) {
@@ -1325,7 +1328,6 @@ async function importMaestroFile(file) {
     if (!imported.news.length) throw new Error('Nenhum jornal local reconhecido foi encontrado no arquivo.');
     const summary = `${imported.news.length} jornais e dados de grade para ${formatReportDate(imported.date)}.`;
     if (!confirm(`Importar ${summary}\n\nOs dados existentes dessa data serão atualizados.`)) return;
-    if (reportData.reportDate !== imported.date) await selectReportDate(imported.date);
     beginHistoryAction();
     reportData.maestroDate = imported.date;
     reportData.news = imported.news.map(item => ({ ...item, id: makeId(), _default: false }));

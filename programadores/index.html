@@ -39,13 +39,8 @@
     <section class="preview-hero analyst-hero">
       <div>
         <p class="eyebrow">PAINEL DOS PROGRAMADORES</p>
-        <h1>Relatório diário</h1>
-        <p class="date" id="reportDateDisplay">Carregando data...</p>
-        <div class="day-actions analyst-day-actions">
-          <button class="day-button" data-day-offset="-1" type="button">Dia anterior</button>
-          <button class="day-button active" data-day-offset="0" type="button">Dia atual</button>
-          <button class="day-button" data-day-offset="1" type="button">Dia seguinte</button>
-        </div>
+        <h1>Painel de exibição</h1>
+        <p class="date" id="reportDateDisplay" hidden>Carregando data...</p>
         <p class="hero-copy">Clique nos cards de jornais, estratégia de grade e status dos programas locais para editar.</p>
       </div>
     </section>
@@ -122,7 +117,7 @@
     </section>
 
     <div class="report-download-panel" data-export-control>
-      <div><strong>Relatório do Painel Diário</strong><span>Gere um arquivo HTML com todas as informações da data selecionada.</span></div>
+      <div><strong>Relatório do painel</strong><span>Gere um arquivo HTML com todas as informações atuais.</span></div>
       <button class="button primary" id="generateHtmlReport" type="button">Gerar Relatório</button>
     </div>
 
@@ -135,10 +130,10 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20261009-1"></script>
+  <script src="config.js?v=20261029-1"></script>
   <script src="defaults.js?v=20260810-3"></script>
   <script src="maestro.js?v=20261004-1"></script>
-  <script src="storage.js?v=20261019-1"></script>
-  <script src="analistas.js?v=20261019-1"></script>
+  <script src="storage.js?v=20261029-1"></script>
+  <script src="analistas.js?v=20261029-1"></script>
 </body>
 </html>

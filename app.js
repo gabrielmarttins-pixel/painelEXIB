@@ -4,6 +4,7 @@ const {
   LEGACY_STORAGE_KEY,
   STORAGE_KEY,
   SYNC_INTERVAL_MS,
+  SAVE_DELAY_MS,
   countryCodes,
   newsPresenters,
   sections,
@@ -635,7 +636,7 @@ function scheduleRemoteSave(data = getData()) {
   remoteSaveTimer = setTimeout(() => {
     remoteSaveTimer = null;
     saveRemoteReport(data);
-  }, SYNC_INTERVAL_MS);
+  }, SAVE_DELAY_MS);
 }
 
 async function publishUpdates() {
@@ -701,29 +702,7 @@ async function saveRemoteReport(data = getData()) {
     && Number.isFinite(latestUpdatedAt)
     && Number.isFinite(loadedUpdatedAt)
     && latestUpdatedAt !== loadedUpdatedAt;
-  const hasConflict = remoteChangedSinceLoad && latestSignature !== localSignature;
-  if (hasConflict) {
-    saveStatus.textContent = 'Há alterações novas online';
-    const shouldUpdate = confirm('Há alterações novas salvas por outro usuário. Atualizar antes de salvar?');
-    if (shouldUpdate) {
-      isLoading = true;
-      currentRemotePayload = latestPayload;
-      renderReportData(cleanReportData(latestPayload));
-      applyDateDefaults();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
-      updateFooter();
-      isLoading = false;
-      lastRemoteSignature = latestSignature;
-      if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(latestPayload._meta);
-      saveStatus.textContent = 'Atualizado com dados online';
-      hasPendingRemoteSave = false;
-      return;
-    }
-    saveStatus.textContent = 'Salvamento cancelado para proteger alterações mais recentes';
-    if (lastUpdateStatus) lastUpdateStatus.textContent = formatLastUpdate(latestPayload._meta);
-    hasPendingRemoteSave = false;
-    return;
-  }
+  if (remoteChangedSinceLoad && latestSignature !== localSignature) currentRemotePayload = latestPayload;
 
   data.serviceHandoffHtml = latestPayload?.serviceHandoffHtml || data.serviceHandoffHtml || '';
   const { payload, row, error } = await saveRemoteReportToStorage(supabaseClient, data, latestPayload || currentRemotePayload);
@@ -781,7 +760,7 @@ function getOffsetDateKey(offset = 0, baseDate = getTodayKey()) {
 }
 
 function getDateStorageKey(reportDate = dateInput.value) {
-  return `${STORAGE_KEY}-${reportDate || getTodayKey()}`;
+  return STORAGE_KEY;
 }
 
 function updateDayButtons() {
@@ -2001,7 +1980,6 @@ function loadLocalReport(reportDate = dateInput.value || getTodayKey()) {
   try { data = JSON.parse(localStorage.getItem(getDateStorageKey(reportDate))); } catch { data = null; }
   if (data) return data;
   try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { data = null; }
-  if (data?.reportDate && data.reportDate !== reportDate) data = null;
   if (!data) {
     let dateStore;
     try { dateStore = JSON.parse(localStorage.getItem(DATE_STORAGE_KEY)); } catch { dateStore = null; }
@@ -2043,6 +2021,7 @@ function updateMaestroDates() {
 }
 
 async function loadReportForDate(reportDate, { silent = false } = {}) {
+  reportDate = getTodayKey();
   isLoading = true;
   setReportDate(reportDate);
   saveStatus.textContent = supabaseClient ? 'Carregando dados online...' : 'Carregando dados locais...';
@@ -2117,7 +2096,6 @@ async function importMaestroFile(file) {
     if (!imported.news.length) throw new Error('Nenhum jornal local reconhecido foi encontrado no arquivo.');
     const summary = `${imported.news.length} jornais e dados de grade para ${formatReportDate(imported.date)}.`;
     if (!confirm(`Importar ${summary}\n\nOs dados existentes dessa data serão atualizados.`)) return;
-    if (dateInput.value !== imported.date) await loadReportForDate(imported.date, { silent: true });
     beginHistoryAction();
     maestroDate = imported.date;
     updateMaestroDates();
@@ -2165,8 +2143,11 @@ async function load() {
   }
   const localData = withPersistentHighlights(loadLocalReport(getTodayKey()));
   const data = withPersistentHighlights(hasReportContent(remoteData) ? remoteData : localData || remoteData);
-  renderReportData(data);
-  setReportDate(data?.reportDate || getTodayKey());
+  const currentDate = getTodayKey();
+  setReportDate(currentDate);
+  const panelData = data ? { ...data, reportDate: currentDate, weekday: weekdayInput.value } : data;
+  renderReportData(panelData);
+  setReportDate(currentDate);
   applyDateDefaults();
   isLoading = false;
   const loadedData = getData();
