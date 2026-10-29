@@ -684,6 +684,25 @@ function renderLinks() {
       <span class="useful-link-label" aria-hidden="true">${escapeHtml(item.label)}</span>
     </a>
   `).join('');
+  requestAnimationFrame(updateLinkNavigation);
+}
+
+function updateLinkNavigation() {
+  const linksView = document.querySelector('#linksView');
+  const previous = document.querySelector('#linksPrev');
+  const next = document.querySelector('#linksNext');
+  if (!linksView || !previous || !next) return;
+  const hasOverflow = linksView.scrollWidth > linksView.parentElement.clientWidth + 2;
+  previous.hidden = !hasOverflow;
+  next.hidden = !hasOverflow;
+  previous.disabled = !hasOverflow || linksView.scrollLeft <= 2;
+  next.disabled = !hasOverflow || linksView.scrollLeft + linksView.clientWidth >= linksView.scrollWidth - 2;
+}
+
+function scrollLinks(direction) {
+  const linksView = document.querySelector('#linksView');
+  if (!linksView) return;
+  linksView.scrollBy({ left: direction * Math.max(240, linksView.clientWidth * 0.72), behavior: 'smooth' });
 }
 
 function render() {
@@ -1363,6 +1382,10 @@ document.querySelector('#maestroButton')?.addEventListener('click', () => docume
 document.querySelector('#maestroReminderConnect')?.addEventListener('click', () => document.querySelector('#maestroFileInput')?.click());
 document.querySelector('#maestroReminderDismiss')?.addEventListener('click', dismissMaestroReminder);
 document.querySelector('#generateHtmlReport')?.addEventListener('click', generateHtmlReport);
+document.querySelector('#linksPrev')?.addEventListener('click', () => scrollLinks(-1));
+document.querySelector('#linksNext')?.addEventListener('click', () => scrollLinks(1));
+document.querySelector('#linksView')?.addEventListener('scroll', updateLinkNavigation, { passive: true });
+window.addEventListener('resize', updateLinkNavigation);
 document.querySelector('#maestroFileInput')?.addEventListener('change', event => {
   const [file] = event.target.files || [];
   importMaestroFile(file).finally(() => { event.target.value = ''; });

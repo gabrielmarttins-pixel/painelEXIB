@@ -6,7 +6,7 @@
   <base href="../">
   <title>Painel dos Programadores - TV Globo DF</title>
   <link rel="icon" type="image/png" href="assets/plim-plim.png">
-  <link rel="stylesheet" href="styles.css?v=20261019-1">
+  <link rel="stylesheet" href="styles.css?v=20261029-2">
 </head>
 <body class="analyst-page">
   <header class="topbar">
@@ -33,7 +33,11 @@
 
   <main class="preview-shell analyst-shell">
     <section class="preview-section links-section links-top" id="linksSection">
-      <div class="preview-cards" id="linksView"></div>
+      <div class="links-carousel">
+        <button class="links-nav links-nav-prev" id="linksPrev" type="button" aria-label="Ver links anteriores" title="Links anteriores" data-export-control hidden>&lsaquo;</button>
+        <div class="preview-cards" id="linksView"></div>
+        <button class="links-nav links-nav-next" id="linksNext" type="button" aria-label="Ver próximos links" title="Próximos links" data-export-control hidden>&rsaquo;</button>
+      </div>
     </section>
 
     <section class="preview-hero analyst-hero">
@@ -134,6 +138,6 @@
   <script src="defaults.js?v=20260810-3"></script>
   <script src="maestro.js?v=20261004-1"></script>
   <script src="storage.js?v=20261029-1"></script>
-  <script src="analistas.js?v=20261029-1"></script>
+  <script src="analistas.js?v=20261029-2"></script>
 </body>
 </html>
