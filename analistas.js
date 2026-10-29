@@ -680,7 +680,6 @@ function renderLinks() {
   setSectionVisibility('linksSection', items.length);
   document.querySelector('#linksView').innerHTML = items.map(item => `
     <a class="useful-link" href="${escapeHtml(/^https?:\/\//i.test(item.url) ? item.url : `https://${item.url}`)}" target="_blank" rel="noopener" aria-label="${escapeHtml(item.label)}" title="${escapeHtml(item.label)}">
-      <span class="useful-link-initials" aria-hidden="true">${escapeHtml(getLinkInitials(item.label))}</span>
       <span class="useful-link-label" aria-hidden="true">${escapeHtml(item.label)}</span>
     </a>
   `).join('');
